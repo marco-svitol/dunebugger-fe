@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const WEBSOCKET_URL = process.env.REACT_APP_WSS_URL;
 const DEVICE_ID = "raspberry123";
@@ -11,6 +11,8 @@ export default function RaspberryMonitor() {
   const [logs, setLogs] = useState([]);
   const [connectionId, setConnectionId] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [logsVisible, setLogsVisible] = useState(true);
+  const logsEndRef = useRef(null);
 
   useEffect(() => {
     const reconnectInterval = 5000;  // 5 seconds retry interval
@@ -41,13 +43,18 @@ export default function RaspberryMonitor() {
       };
 
       socket.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        console.log("Received message:", message);
-      
-        switch (message.type) {
-          case "connection_id":
-            setConnectionId(message.id);
+        const eventData = JSON.parse(event.data);
+        //TODO: to remove
+        console.log("Received event data:", eventData);
+        
+
+        switch (eventData.type) {
+          case "system":
+            setConnectionId(eventData.connectionId);
             break;
+          case "message":
+            const message = JSON.parse(eventData.data)
+            //capire da chi arriva e a chi è destinato
           case "device_online":
             if (message.device_id === DEVICE_ID) {
               setIsOnline(true);
@@ -62,7 +69,7 @@ export default function RaspberryMonitor() {
             setGpioStates((prev) => ({ ...prev, [message.gpio]: message.value }));
             break;
           case "message":
-            setLogs((prev) => [message.data, ...prev]);
+            setLogs((prev) => [...prev, message.data]);
             break;
           default:
             console.warn("Unknown message type:", message);
@@ -97,6 +104,12 @@ export default function RaspberryMonitor() {
 
   }, []);
 
+  useEffect(() => {
+    if (logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs]);
+
   const joinGroup = (socket) => {
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ type: "joinGroup", group: GROUP_NAME }));
@@ -122,12 +135,22 @@ export default function RaspberryMonitor() {
           <li key={gpio}>{gpio}: {value}</li>
         ))}
       </ul>
-      <h3>Logs</h3>
-      <ul>
-        {logs.map((log, index) => (
-          <li key={index}>{log}</li>
-        ))}
-      </ul>
+      <h3>
+        Logs
+        <button onClick={() => setLogsVisible(!logsVisible)}>
+          {logsVisible ? "-" : "+"}
+        </button>
+      </h3>
+      {logsVisible && (
+        <div style={{ position: "relative" }}>
+          <textarea
+            style={{ width: "100%", height: "200px", backgroundColor: "black", color: "white" }}
+            value={logs.join("\n")}
+            readOnly
+          />
+          <div ref={logsEndRef} />
+        </div>
+      )}
     </div>
   );
 }

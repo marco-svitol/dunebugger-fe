@@ -1,11 +1,13 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { WebPubSubClient } from "@azure/web-pubsub-client";
+import "./dunebugger.css"; // Import the CSS file
 
 const WEBSOCKET_URL = process.env.REACT_APP_WSS_URL;
 const DEVICE_ID = "raspberry123";
 const GROUP_NAME = "velasquez";
 
 export default function RaspberryMonitor() {
-  const [ws, setWs] = useState(null);
+  const [client, setClient] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [gpioStates, setGpioStates] = useState({});
   const [logs, setLogs] = useState([]);
@@ -15,93 +17,40 @@ export default function RaspberryMonitor() {
   const logsEndRef = useRef(null);
 
   useEffect(() => {
-    const reconnectInterval = 5000;  // 5 seconds retry interval
-    const maxRetries = 5;
-    let retryCount = 0;
-
-    console.log("WebSocket supported:", "WebSocket" in window);
-
     if (!WEBSOCKET_URL) {
       console.error("WebSocket URL is not defined in environment variables");
       return;
     }
 
-    const connectWebSocket = () => {
-      console.log("Connecting to WebSocket:", WEBSOCKET_URL);
-      const socket = new WebSocket(WEBSOCKET_URL, 'json.webpubsub.azure.v1');
-    
-      socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
-      };
+    const webPubSubClient = new WebPubSubClient(WEBSOCKET_URL,  { autoRejoinGroups: true });
 
-      socket.onopen = () => {
-        console.log("Connected to WebSocket");
-        setWs(socket);
-        setIsConnected(true);
-        joinGroup(socket);
-        retryCount = 0;  // Reset retry count after successful connection
-      };
+    webPubSubClient.on("connected", (event) => {
+      console.log("Connected to Web PubSub with ID:", event.connectionId);
+      setConnectionId(event.connectionId);
+      setIsConnected(true);
+      joinGroup(webPubSubClient);
+      ping(webPubSubClient);
+    });
 
-      socket.onmessage = (event) => {
-        const eventData = JSON.parse(event.data);
-        //TODO: to remove
-        console.log("Received event data:", eventData);
-        
+    webPubSubClient.on("disconnected", (event) => {
+      console.log("WebSocket disconnected:", event);
+      setIsConnected(false);
+      setIsOnline(false);
+      setConnectionId(null);
+      handleDisconnection(event);
+    });
 
-        switch (eventData.type) {
-          case "system":
-            setConnectionId(eventData.connectionId);
-            break;
-          case "message":
-            const message = JSON.parse(eventData.data)
-            //capire da chi arriva e a chi è destinato
-          case "device_online":
-            if (message.device_id === DEVICE_ID) {
-              setIsOnline(true);
-              requestInitialState(socket);
-            }
-            break;
-          case "initial_state":
-            setGpioStates(message.gpio_states);
-            setLogs(message.logs);
-            break;
-          case "gpio_update":
-            setGpioStates((prev) => ({ ...prev, [message.gpio]: message.value }));
-            break;
-          case "message":
-            setLogs((prev) => [...prev, message.data]);
-            break;
-          default:
-            console.warn("Unknown message type:", message);
-        }
-      };
+    webPubSubClient.on("group-message", (message) => {
+      console.log("Received message:", message);
+      handleIncomingMessage(message);
+    });
 
-      socket.onclose = (event) => {
-        console.log("WebSocket disconnected", event.code, event.reason);
-        setIsConnected(false);
-        setIsOnline(false);
-        setConnectionId(null);
+    webPubSubClient.start();
+    setClient(webPubSubClient);
 
-        if (retryCount < maxRetries) {
-          console.log(`Retrying connection in ${reconnectInterval / 1000} seconds...`);
-          setTimeout(() => {
-            retryCount++;
-            connectWebSocket();
-          }, reconnectInterval);
-        } else {
-          console.error("Max retries reached. Could not reconnect.");
-        }
-      };
-    };
-
-    connectWebSocket();
     return () => {
-      // Cleanup on unmount
-      if (ws) {
-        ws.close();
-      }
+      webPubSubClient.stop();
     };
-
   }, []);
 
   useEffect(() => {
@@ -110,25 +59,65 @@ export default function RaspberryMonitor() {
     }
   }, [logs]);
 
-  const joinGroup = (socket) => {
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type: "joinGroup", group: GROUP_NAME }));
+  const joinGroup = async (client) => {
+    try {
+      await client.joinGroup(GROUP_NAME);
       console.log(`Joined group: ${GROUP_NAME}`);
+    } catch (error) {
+      console.error("Failed to join group:", error);
     }
   };
 
-  const requestInitialState = (socket) => {
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type: "request_initial_state", device_id: DEVICE_ID }));
+  const ping = async (client) => {
+    try {
+      await client.sendToGroup(GROUP_NAME, {
+        type: "ping",
+        source: "client",
+        destination: "controller",
+      },  "json", { noEcho: true });
+      console.log("Sending alive ping");
+    } catch (error) {
+      console.error("Failed to send alive ping:", error);
     }
   };
 
+  const handleIncomingMessage = useCallback((eventData) => {
+    const message = eventData.message.data;
+  
+    switch (message.type) {
+      case "log":
+        setLogs((prev) => [...prev, message.body]);
+        break;
+      case "ping":
+        if (message.body === "pong") {
+          setIsOnline(true);
+        }
+        break;
+      case "state":
+        setGpioStates(message.body);
+        break;
+      case "gpio_update":
+        setGpioStates((prev) => ({ ...prev, [message.gpio]: message.value }));
+        break;
+      default:
+        console.warn("Unknown message type:", message);
+    }
+  }, [client]);  // Ensure dependencies are correctly managed
+
+  const handleDisconnection = (event) => {
+    console.log("Client disconnected:", event);
+    // Add any additional logic you want to handle on disconnection
+  };
+  
   return (
     <div>
       <h2>Raspberry Monitor</h2>
       <p>WebSocket Status: {isConnected ? "Connected" : "Disconnected"}</p>
       <p>Connection ID: {connectionId || "N/A"}</p>
-      <p>Device Status: {isOnline ? "Online" : "Offline"}</p>
+      <p>Device Status: 
+        <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
+        {isOnline ? "Online" : "Offline"}
+      </p>
       <h3>GPIO States</h3>
       <ul>
         {Object.entries(gpioStates).map(([gpio, value]) => (

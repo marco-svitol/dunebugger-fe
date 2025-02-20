@@ -1,11 +1,11 @@
 import React from "react";
-import RaspberryMonitor from "./components/dunebugger";
+import SmartDunebugger from "./components/dunebugger";
 
 function App() {
   return (
     <div className="App">
-      <h1>Raspberry Monitor Dashboard</h1>
-      <RaspberryMonitor />
+      <h1>Smart Dunebugger</h1>
+      <SmartDunebugger />
     </div>
   );
 }

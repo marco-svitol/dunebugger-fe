@@ -11,6 +11,14 @@ h2 {
   color: #333;
 }
 
+h2.connected {
+  color: black;
+}
+
+h2.disconnected {
+  color: lightgray;
+}
+
 .status-circle {
   display: inline-block;
   width: 10px;

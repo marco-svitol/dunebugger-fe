@@ -3,10 +3,11 @@ import { WebPubSubClient } from "@azure/web-pubsub-client";
 import "./dunebugger.css"; // Import the CSS file
 
 const WEBSOCKET_URL = process.env.REACT_APP_WSS_URL;
-const DEVICE_ID = "raspberry123";
 const GROUP_NAME = "velasquez";
+const PING_INTERVAL = 5000; // 5 seconds
+const PONG_TIMEOUT = 10000; // 10 seconds
 
-export default function RaspberryMonitor() {
+export default function SmartDunebugger() {
   const [client, setClient] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [gpioStates, setGpioStates] = useState({});
@@ -15,6 +16,7 @@ export default function RaspberryMonitor() {
   const [isConnected, setIsConnected] = useState(false);
   const [logsVisible, setLogsVisible] = useState(true);
   const logsEndRef = useRef(null);
+  const pongTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (!WEBSOCKET_URL) {
@@ -22,14 +24,14 @@ export default function RaspberryMonitor() {
       return;
     }
 
-    const webPubSubClient = new WebPubSubClient(WEBSOCKET_URL,  { autoRejoinGroups: true });
+    const webPubSubClient = new WebPubSubClient(WEBSOCKET_URL, { autoRejoinGroups: true });
 
     webPubSubClient.on("connected", (event) => {
       console.log("Connected to Web PubSub with ID:", event.connectionId);
       setConnectionId(event.connectionId);
       setIsConnected(true);
       joinGroup(webPubSubClient);
-      ping(webPubSubClient);
+      startPingPong(webPubSubClient);
     });
 
     webPubSubClient.on("disconnected", (event) => {
@@ -37,7 +39,7 @@ export default function RaspberryMonitor() {
       setIsConnected(false);
       setIsOnline(false);
       setConnectionId(null);
-      handleDisconnection(event);
+      clearTimeout(pongTimeoutRef.current);
     });
 
     webPubSubClient.on("group-message", (message) => {
@@ -50,6 +52,7 @@ export default function RaspberryMonitor() {
 
     return () => {
       webPubSubClient.stop();
+      clearTimeout(pongTimeoutRef.current);
     };
   }, []);
 
@@ -68,22 +71,34 @@ export default function RaspberryMonitor() {
     }
   };
 
-  const ping = async (client) => {
-    try {
-      await client.sendToGroup(GROUP_NAME, {
-        type: "ping",
-        source: "client",
-        destination: "controller",
-      },  "json", { noEcho: true });
-      console.log("Sending alive ping");
-    } catch (error) {
-      console.error("Failed to send alive ping:", error);
-    }
+  const startPingPong = (client) => {
+    const sendPing = async () => {
+      try {
+        await client.sendToGroup(GROUP_NAME, {
+          type: "ping",
+          source: "client",
+          destination: "controller",
+        }, "json", { noEcho: true });
+        console.log("Sending alive ping");
+
+        pongTimeoutRef.current = setTimeout(() => {
+          setIsOnline(false);
+          console.log("Pong response not received, marking as offline");
+        }, PONG_TIMEOUT);
+      } catch (error) {
+        console.error("Failed to send alive ping:", error);
+      }
+    };
+
+    sendPing();
+    const pingInterval = setInterval(sendPing, PING_INTERVAL);
+
+    return () => clearInterval(pingInterval);
   };
 
   const handleIncomingMessage = useCallback((eventData) => {
     const message = eventData.message.data;
-  
+
     switch (message.type) {
       case "log":
         setLogs((prev) => [...prev, message.body]);
@@ -91,6 +106,7 @@ export default function RaspberryMonitor() {
       case "ping":
         if (message.body === "pong") {
           setIsOnline(true);
+          clearTimeout(pongTimeoutRef.current);
         }
         break;
       case "state":
@@ -102,18 +118,11 @@ export default function RaspberryMonitor() {
       default:
         console.warn("Unknown message type:", message);
     }
-  }, [client]);  // Ensure dependencies are correctly managed
+  }, [client]);
 
-  const handleDisconnection = (event) => {
-    console.log("Client disconnected:", event);
-    // Add any additional logic you want to handle on disconnection
-  };
-  
   return (
     <div>
-      <h2>Raspberry Monitor</h2>
-      <p>WebSocket Status: {isConnected ? "Connected" : "Disconnected"}</p>
-      <p>Connection ID: {connectionId || "N/A"}</p>
+      <h2 className={isConnected ? "connected" : "disconnected"}>Smart Dunebugger</h2>
       <p>Device Status: 
         <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
         {isOnline ? "Online" : "Offline"}

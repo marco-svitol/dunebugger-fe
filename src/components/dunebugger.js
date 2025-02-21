@@ -120,6 +120,20 @@ export default function SmartDunebugger() {
     }
   }, [client]);
 
+  const handleShowStatus = async () => {
+    if (client) {
+      try {
+        await client.sendToGroup(GROUP_NAME, {
+          type: "command",
+          body: "s",
+        }, "json", { noEcho: true });
+        console.log("Sent show status command");
+      } catch (error) {
+        console.error("Failed to send show status command:", error);
+      }
+    }
+  };
+
   return (
     <div>
       <h2 className={isConnected ? "connected" : "disconnected"}>Smart Dunebugger</h2>
@@ -127,6 +141,7 @@ export default function SmartDunebugger() {
         <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
         {isOnline ? "Online" : "Offline"}
       </p>
+      <button onClick={handleShowStatus}>Show Status</button>
       <h3>GPIO States</h3>
       <ul>
         {Object.entries(gpioStates).map(([gpio, value]) => (

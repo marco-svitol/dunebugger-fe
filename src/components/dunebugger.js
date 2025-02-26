@@ -1,13 +1,39 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { WebPubSubClient } from "@azure/web-pubsub-client";
+import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
 
-const WEBSOCKET_URL = process.env.REACT_APP_WSS_URL;
 const GROUP_NAME = "velasquez";
-const PING_INTERVAL = 5000; // 5 seconds
-const PONG_TIMEOUT = 10000; // 10 seconds
+const PING_INTERVAL = 15000; // 5 seconds
+const PONG_TIMEOUT = 30000; // 10 seconds
+
+const Profile = ({ setWssUrl }) => {
+  const { user, isAuthenticated, isLoading } = useAuth0();
+
+  useEffect(() => {
+    if (isAuthenticated && user.wss_url) {
+      setWssUrl(user.wss_url);
+    }
+  }, [isAuthenticated, user, setWssUrl]);
+
+  if (isLoading) {
+    return <div>Loading ...</div>;
+  }
+
+  return (
+    isAuthenticated && (
+      <div>
+        {/* <img src={user.picture} alt={user.name} /> */}
+        <p>{user.name}</p>
+        {/* <p>{user.nickname}</p> */}
+        {/* <p>{user.email}</p> */}
+      </div>
+    )
+  );
+};
 
 export default function SmartDunebugger() {
+  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
   const [client, setClient] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [gpioStates, setGpioStates] = useState({});
@@ -15,16 +41,26 @@ export default function SmartDunebugger() {
   const [connectionId, setConnectionId] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [logsVisible, setLogsVisible] = useState(true);
+  const [wssUrl, setWssUrl] = useState(null);
   const logsEndRef = useRef(null);
   const pongTimeoutRef = useRef(null);
 
   useEffect(() => {
-    if (!WEBSOCKET_URL) {
-      console.error("WebSocket URL is not defined in environment variables");
-      return;
+    if (wssUrl) {
+      startWebSocket(wssUrl);
     }
+  }, [wssUrl]);
 
-    const webPubSubClient = new WebPubSubClient(WEBSOCKET_URL, { autoRejoinGroups: true });
+  // not working
+  //this is a custom hook that will scroll to the bottom of the logs textarea
+  useEffect(() => {
+    if (logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs]);
+
+  const startWebSocket = (wssUrl) => {
+    const webPubSubClient = new WebPubSubClient(wssUrl, { autoRejoinGroups: true });
 
     webPubSubClient.on("connected", (event) => {
       console.log("Connected to Web PubSub with ID:", event.connectionId);
@@ -54,13 +90,7 @@ export default function SmartDunebugger() {
       webPubSubClient.stop();
       clearTimeout(pongTimeoutRef.current);
     };
-  }, []);
-
-  useEffect(() => {
-    if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [logs]);
+  };
 
   const joinGroup = async (client) => {
     try {
@@ -79,11 +109,11 @@ export default function SmartDunebugger() {
           source: "client",
           destination: "controller",
         }, "json", { noEcho: true });
-        console.log("Sending alive ping");
+        //console.log("Sending alive ping");
 
         pongTimeoutRef.current = setTimeout(() => {
           setIsOnline(false);
-          console.log("Pong response not received, marking as offline");
+          //console.log("Pong response not received, marking as offline");
         }, PONG_TIMEOUT);
       } catch (error) {
         console.error("Failed to send alive ping:", error);
@@ -134,6 +164,17 @@ export default function SmartDunebugger() {
     }
   };
 
+  const handleLogin = async () => {
+    await loginWithRedirect();
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("wss_url");
+    const encodedReturnTo = encodeURIComponent(`${window.location.origin}`);
+    const logoutUrl = `https://dunebugger.eu.auth0.com/v2/logout?client_id=${process.env.REACT_APP_AUTH0_CLIENT_ID}&returnTo=${encodedReturnTo}`;
+    logout({ returnTo: window.location.origin, client_id: process.env.REACT_APP_AUTH0_CLIENT_ID });
+  };
+
   return (
     <div>
       <h2 className={isConnected ? "connected" : "disconnected"}>Smart Dunebugger</h2>
@@ -141,8 +182,23 @@ export default function SmartDunebugger() {
         <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
         {isOnline ? "Online" : "Offline"}
       </p>
+      {!isAuthenticated ? (
+        <button onClick={handleLogin}>Login</button>
+      ) : (
+        <button onClick={handleLogout}>Logout</button>
+      )}
+      <Profile setWssUrl={setWssUrl} />
+      {/* <h3>Connection ID</h3>
+      <p>{connectionId}</p> */}
+      <h3>Commands</h3>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "er" }, "json")}>Enable random actions</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "dr" }, "json")}>Disable random acions</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "c" }, "json")}>Cycle start</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "cs" }, "json")}>Cycle stop</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "so" }, "json")}>Set off state</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "sb" }, "json")}>Set standby state</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "h" }, "json")}>Help</button>
       <button onClick={handleShowStatus}>Show Status</button>
-      <h3>GPIO States</h3>
       <ul>
         {Object.entries(gpioStates).map(([gpio, value]) => (
           <li key={gpio}>{gpio}: {value}</li>

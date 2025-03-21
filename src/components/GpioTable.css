@@ -1,0 +1,41 @@
+.table-container {
+  margin: 20px auto;
+  max-width: 90%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  text-align: left;
+}
+
+thead {
+  background-color: #282c34;
+  color: white;
+}
+
+th {
+  cursor: pointer;
+  padding: 10px;
+  position: relative;
+}
+
+th:hover {
+  background-color: #3a3f47;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #f1f1f1;
+}

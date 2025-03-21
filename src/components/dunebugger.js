@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { WebPubSubClient } from "@azure/web-pubsub-client";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
+import GpioTable from "./GpioTable";
 
 const GROUP_NAME = "velasquez";
 const PING_INTERVAL = 15000; // 5 seconds
@@ -65,6 +66,7 @@ export default function SmartDunebugger() {
     webPubSubClient.on("connected", (event) => {
       console.log("Connected to Web PubSub with ID:", event.connectionId);
       setConnectionId(event.connectionId);
+      sessionStorage.setItem("connectionId", event.connectionId);
       setIsConnected(true);
       joinGroup(webPubSubClient);
       startPingPong(webPubSubClient);
@@ -104,10 +106,12 @@ export default function SmartDunebugger() {
   const startPingPong = (client) => {
     const sendPing = async () => {
       try {
+        const storedConnectionId = sessionStorage.getItem("connectionId");
         await client.sendToGroup(GROUP_NAME, {
           type: "ping",
           source: "client",
           destination: "controller",
+          connectionId: storedConnectionId,
         }, "json", { noEcho: true });
         //console.log("Sending alive ping");
 
@@ -128,34 +132,38 @@ export default function SmartDunebugger() {
 
   const handleIncomingMessage = useCallback((eventData) => {
     const message = eventData.message.data;
-
+    const incomingConnectionId = eventData.message.data.destination;
+    const storedConnectionId = sessionStorage.getItem("connectionId");
+    if (incomingConnectionId && (incomingConnectionId !== storedConnectionId)) {
+      console.log("Ignoring message from another connection:", eventData.message.data);
+      return;
+    }
     switch (message.type) {
       case "log":
         setLogs((prev) => [...prev, message.body]);
         break;
       case "ping":
-        if (message.body === "pong") {
-          setIsOnline(true);
-          clearTimeout(pongTimeoutRef.current);
-        }
+        setIsOnline(true);
+        clearTimeout(pongTimeoutRef.current);
         break;
       case "state":
         setGpioStates(message.body);
         break;
       case "gpio_update":
-        setGpioStates((prev) => ({ ...prev, [message.gpio]: message.value }));
+        setGpioStates((prev) => ({ ...prev, [message.gpio]: message.state }));
         break;
       default:
         console.warn("Unknown message type:", message);
     }
-  }, [client]);
+  }, [client, connectionId]);
 
   const handleShowStatus = async () => {
     if (client) {
       try {
         await client.sendToGroup(GROUP_NAME, {
-          type: "command",
-          body: "s",
+          type: "request_initial_state",
+          body: "null",
+          connectionId: client._connectionId, // Include connectionId
         }, "json", { noEcho: true });
         console.log("Sent show status command");
       } catch (error) {
@@ -188,22 +196,22 @@ export default function SmartDunebugger() {
         <button onClick={handleLogout}>Logout</button>
       )}
       <Profile setWssUrl={setWssUrl} />
-      {/* <h3>Connection ID</h3>
-      <p>{connectionId}</p> */}
+      <h3>GPIO States</h3>
+      <GpioTable 
+        gpioStates={gpioStates || []} 
+        client={client}
+        GROUP_NAME={GROUP_NAME}
+        connectionId={connectionId}
+      />
       <h3>Commands</h3>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "er" }, "json")}>Enable random actions</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "dr" }, "json")}>Disable random acions</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "c" }, "json")}>Cycle start</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "cs" }, "json")}>Cycle stop</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "so" }, "json")}>Set off state</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "sb" }, "json")}>Set standby state</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "h" }, "json")}>Help</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "er", connectionId: connectionId }, "json")}>Enable random actions</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "dr", connectionId: connectionId }, "json")}>Disable random acions</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "c", connectionId: connectionId }, "json")}>Cycle start</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "cs", connectionId: connectionId }, "json")}>Cycle stop</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "so", connectionId: connectionId }, "json")}>Set off state</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "sb", connectionId: connectionId }, "json")}>Set standby state</button>
+      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "h", connectionId: connectionId }, "json")}>Help</button>
       <button onClick={handleShowStatus}>Show Status</button>
-      <ul>
-        {Object.entries(gpioStates).map(([gpio, value]) => (
-          <li key={gpio}>{gpio}: {value}</li>
-        ))}
-      </ul>
       <h3>
         Logs
         <button onClick={() => setLogsVisible(!logsVisible)}>

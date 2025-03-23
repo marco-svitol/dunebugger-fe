@@ -26,6 +26,7 @@ export default function SmartDunebugger() {
   // const [isConnected, setIsConnected] = useState(false);
   const [logsVisible, setLogsVisible] = useState(false);
   const [wssUrl, setWssUrl] = useState(null);
+  const [isFooterExpanded, setIsFooterExpanded] = useState(false);
   const logsEndRef = useRef(null);
   const pongTimeoutRef = useRef(null);
 
@@ -42,7 +43,7 @@ export default function SmartDunebugger() {
           "json",
           { noEcho: true }
         );
-        console.log(`Sent request: ${type} with body: ${body}`);
+        // console.log(`Sent request: ${type} with body: ${body}`);
       } catch (error) {
         console.error(`Failed to send request: ${type}`, error);
       }
@@ -54,7 +55,7 @@ export default function SmartDunebugger() {
     const incomingConnectionId = eventData.message.data.destination;
     const storedConnectionId = sessionStorage.getItem("connectionId");
     if (incomingConnectionId !== "broadcast" && (incomingConnectionId !== storedConnectionId)) {
-      console.log("Ignoring message for another destination:", eventData.message.data);
+      // console.log("Ignoring message for another destination:", eventData.message.data);
       return;
     }
     switch (message.type) {
@@ -115,6 +116,10 @@ export default function SmartDunebugger() {
     }
   }, [isOnline, client, sendRequest]);
 
+  const toggleFooter = () => {
+    setIsFooterExpanded((prev) => !prev);
+  };
+
   return (
     <div className="smart-dunebugger">
       {/* Header Bar */}
@@ -168,23 +173,31 @@ export default function SmartDunebugger() {
           )}
         </div>
       </div>
-      <footer className="bottom-bar">
-        <div className="sequence-controls">
-          <SequenceSwitches
-            sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
-            client={client}
-            GROUP_NAME={GROUP_NAME}
-            connectionId={connectionId}
-          />
-        </div>
-        <div className="commands">
-          <button onClick={() => sendRequest("command", "so")}>Set off state</button>
-          <button onClick={() => sendRequest("command", "sb")}>Set standby state</button>
-          <button onClick={() => sendRequest("request_gpio_state", "null")}>Show Status</button>
-          <button onClick={() => sendRequest("request_sequence", "main")}>Show Main Sequence</button>
-        </div>
+
+      {/* Footer */}
+      <footer className={`bottom-bar ${isFooterExpanded ? "expanded" : "collapsed"}`}>
+        <div className="footer-toggle" onClick={toggleFooter}></div>
+        {isFooterExpanded && (
+          <>
+            <div className="sequence-controls">
+              <h3>Sequence Controls</h3>
+              <SequenceSwitches
+                sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
+                client={client}
+                GROUP_NAME={GROUP_NAME}
+                connectionId={connectionId}
+              />
+            </div>
+            <div className="commands">
+              <h3>Commands</h3>
+              <button onClick={() => sendRequest("command", "so")}>Set off state</button>
+              <button onClick={() => sendRequest("command", "sb")}>Set standby state</button>
+              <button onClick={() => sendRequest("request_gpio_state", "null")}>Show Status</button>
+              <button onClick={() => sendRequest("request_sequence", "main")}>Show Main Sequence</button>
+            </div>
+          </>
+        )}
       </footer>
     </div>
   );
-
 }

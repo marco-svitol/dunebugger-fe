@@ -3,6 +3,8 @@ import { WebPubSubClient } from "@azure/web-pubsub-client";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
 import GpioTable from "./GpioTable";
+import SequenceSwitches from "./SequenceSwitches";
+import SequenceTimeline from "./SequenceTimeline";
 
 const GROUP_NAME = "velasquez";
 const PING_INTERVAL = 15000; // 5 seconds
@@ -38,6 +40,12 @@ export default function SmartDunebugger() {
   const [client, setClient] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [gpioStates, setGpioStates] = useState({});
+  const [sequenceState, setSequenceState] = useState({
+    random_actions: false,
+    cycle_running: false,
+    start_button_enabled: false,
+  });
+  const [sequence, setSequence] = useState([]);
   const [logs, setLogs] = useState([]);
   const [connectionId, setConnectionId] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -134,7 +142,7 @@ export default function SmartDunebugger() {
     const message = eventData.message.data;
     const incomingConnectionId = eventData.message.data.destination;
     const storedConnectionId = sessionStorage.getItem("connectionId");
-    if (incomingConnectionId && (incomingConnectionId !== storedConnectionId)) {
+    if (incomingConnectionId != "broadcast" && (incomingConnectionId !== storedConnectionId)) {
       console.log("Ignoring message from another connection:", eventData.message.data);
       return;
     }
@@ -146,11 +154,14 @@ export default function SmartDunebugger() {
         setIsOnline(true);
         clearTimeout(pongTimeoutRef.current);
         break;
-      case "state":
+      case "gpio_state":
         setGpioStates(message.body);
         break;
-      case "gpio_update":
-        setGpioStates((prev) => ({ ...prev, [message.gpio]: message.state }));
+      case "sequence_state":
+        setSequenceState(message.body);
+        break;
+      case "sequence":
+        setSequence(message.body);
         break;
       default:
         console.warn("Unknown message type:", message);
@@ -161,7 +172,7 @@ export default function SmartDunebugger() {
     if (client) {
       try {
         await client.sendToGroup(GROUP_NAME, {
-          type: "request_initial_state",
+          type: "request_gpio_state",
           body: "null",
           connectionId: client._connectionId, // Include connectionId
         }, "json", { noEcho: true });
@@ -171,6 +182,21 @@ export default function SmartDunebugger() {
       }
     }
   };
+
+  const handleShowSequence = async () => {
+    if (client) {
+      try {
+        await client.sendToGroup(GROUP_NAME, {
+          type: "request_sequence",
+          body: "main",
+          connectionId: client._connectionId, // Include connectionId
+        }, "json", { noEcho: true });
+        console.log("Sent show main sequence command");
+      } catch (error) {
+        console.error("Failed to send show main sequence command:", error);
+      }
+    }
+  }
 
   const handleLogin = async () => {
     await loginWithRedirect();
@@ -203,15 +229,19 @@ export default function SmartDunebugger() {
         GROUP_NAME={GROUP_NAME}
         connectionId={connectionId}
       />
+      <SequenceTimeline sequence={sequence || []} />
+      <SequenceSwitches
+        sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
+        client={client}
+        GROUP_NAME={GROUP_NAME}
+        connectionId={connectionId}
+      />
       <h3>Commands</h3>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "er", connectionId: connectionId }, "json")}>Enable random actions</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "dr", connectionId: connectionId }, "json")}>Disable random acions</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "c", connectionId: connectionId }, "json")}>Cycle start</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "cs", connectionId: connectionId }, "json")}>Cycle stop</button>
       <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "so", connectionId: connectionId }, "json")}>Set off state</button>
       <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "sb", connectionId: connectionId }, "json")}>Set standby state</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "h", connectionId: connectionId }, "json")}>Help</button>
       <button onClick={handleShowStatus}>Show Status</button>
+      <button onClick={handleShowSequence}>Show Main Sequence</button>
+
       <h3>
         Logs
         <button onClick={() => setLogsVisible(!logsVisible)}>

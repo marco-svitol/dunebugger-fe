@@ -23,10 +23,9 @@ export default function SmartDunebugger() {
   const [sequence, setSequence] = useState([]);
   const [logs, setLogs] = useState([]);
   const [connectionId, setConnectionId] = useState(null);
-  const [setIsConnected] = useState(false);
+  // const [isConnected, setIsConnected] = useState(false);
   const [logsVisible, setLogsVisible] = useState(false);
   const [wssUrl, setWssUrl] = useState(null);
-  const [isFooterExpanded, setIsFooterExpanded] = useState(false);
   const logsEndRef = useRef(null);
   const pongTimeoutRef = useRef(null);
 
@@ -85,7 +84,7 @@ export default function SmartDunebugger() {
       const webSocketClient = startWebSocket(
         wssUrl,
         setConnectionId,
-        setIsConnected,
+        // setIsConnected,
         setIsOnline,
         handleIncomingMessage,
         pongTimeoutRef,
@@ -94,8 +93,8 @@ export default function SmartDunebugger() {
       );
       setClient(webSocketClient);
     }
-  }, [wssUrl, setIsConnected, handleIncomingMessage]);
-
+  // }, [wssUrl, setIsConnected, handleIncomingMessage]);
+  }, [wssUrl, handleIncomingMessage]);
   // not working
   //this is a custom hook that will scroll to the bottom of the logs textarea
   useEffect(() => {
@@ -115,10 +114,6 @@ export default function SmartDunebugger() {
       fetchStates();
     }
   }, [isOnline, client, sendRequest]);
-
-  const toggleFooter = () => {
-    setIsFooterExpanded((prev) => !prev);
-  };
 
   return (
     <div className="smart-dunebugger">
@@ -173,31 +168,23 @@ export default function SmartDunebugger() {
           )}
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className={`bottom-bar ${isFooterExpanded ? "expanded" : "collapsed"}`}>
-        <div className="footer-toggle" onClick={toggleFooter}></div>
-        {isFooterExpanded && (
-          <>
-            <div className="sequence-controls">
-              <h3>Sequence Controls</h3>
-              <SequenceSwitches
-                sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
-                client={client}
-                GROUP_NAME={GROUP_NAME}
-                connectionId={connectionId}
-              />
-            </div>
-            <div className="commands">
-              <h3>Commands</h3>
-              <button onClick={() => sendRequest("command", "so")}>Set off state</button>
-              <button onClick={() => sendRequest("command", "sb")}>Set standby state</button>
-              <button onClick={() => sendRequest("request_gpio_state", "null")}>Show Status</button>
-              <button onClick={() => sendRequest("request_sequence", "main")}>Show Main Sequence</button>
-            </div>
-          </>
-        )}
+      <footer className="bottom-bar">
+        <div className="sequence-controls">
+          <SequenceSwitches
+            sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
+            client={client}
+            GROUP_NAME={GROUP_NAME}
+            connectionId={connectionId}
+          />
+        </div>
+        <div className="commands">
+          <button onClick={() => sendRequest("command", "so")}>Set off state</button>
+          <button onClick={() => sendRequest("command", "sb")}>Set standby state</button>
+          <button onClick={() => sendRequest("request_gpio_state", "null")}>Show Status</button>
+          <button onClick={() => sendRequest("request_sequence", "main")}>Show Main Sequence</button>
+        </div>
       </footer>
     </div>
   );
+
 }

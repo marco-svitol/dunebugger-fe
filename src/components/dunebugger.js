@@ -23,13 +23,13 @@ export default function SmartDunebugger() {
   const [sequence, setSequence] = useState([]);
   const [logs, setLogs] = useState([]);
   const [connectionId, setConnectionId] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [setIsConnected] = useState(false);
   const [logsVisible, setLogsVisible] = useState(false);
   const [wssUrl, setWssUrl] = useState(null);
   const logsEndRef = useRef(null);
   const pongTimeoutRef = useRef(null);
 
-  const sendRequest = async (type, body) => {
+  const sendRequest = useCallback(async (type, body) => {
     if (client) {
       try {
         await client.sendToGroup(
@@ -47,56 +47,13 @@ export default function SmartDunebugger() {
         console.error(`Failed to send request: ${type}`, error);
       }
     }
-  };
-
-  useEffect(() => {
-    if (wssUrl) {
-      const webSocketClient = startWebSocket(
-        wssUrl,
-        setConnectionId,
-        setIsConnected,
-        setIsOnline,
-        handleIncomingMessage,
-        pongTimeoutRef,
-        GROUP_NAME,
-        startPingPong
-      );
-      setClient(webSocketClient);
-    }
-  }, [wssUrl]);
-
-  // not working
-  //this is a custom hook that will scroll to the bottom of the logs textarea
-  useEffect(() => {
-    if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [logs]);
-
-  useEffect(() => {
-    if (isOnline && client) {
-      const fetchStates = async () => {
-        await sendRequest("request_gpio_state", "null"); // Request GPIO state
-        await sendRequest("request_sequence_state", "null"); // Request sequence state
-        await sendRequest("request_sequence", "main"); // Request sequence
-      };
-
-      fetchStates();
-    }
-  }, [isOnline, client, connectionId]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("wss_url");
-    const encodedReturnTo = encodeURIComponent(`${window.location.origin}`);
-    const logoutUrl = `https://dunebugger.eu.auth0.com/v2/logout?client_id=${process.env.REACT_APP_AUTH0_CLIENT_ID}&returnTo=${encodedReturnTo}`;
-    logout({ returnTo: window.location.origin, client_id: process.env.REACT_APP_AUTH0_CLIENT_ID });
-  };
+  }, [client, connectionId]);
 
   const handleIncomingMessage = useCallback((eventData) => {
     const message = eventData.message.data;
     const incomingConnectionId = eventData.message.data.destination;
     const storedConnectionId = sessionStorage.getItem("connectionId");
-    if (incomingConnectionId != "broadcast" && (incomingConnectionId !== storedConnectionId)) {
+    if (incomingConnectionId !== "broadcast" && (incomingConnectionId !== storedConnectionId)) {
       console.log("Ignoring message for another destination:", eventData.message.data);
       return;
     }
@@ -120,9 +77,43 @@ export default function SmartDunebugger() {
       default:
         console.warn("Unknown message type:", message);
     }
-  }, 
-  [client, connectionId]
-);
+  }, [setLogs, setIsOnline, pongTimeoutRef, setGpioStates, setSequenceState, setSequence]);
+
+  useEffect(() => {
+    if (wssUrl) {
+      const webSocketClient = startWebSocket(
+        wssUrl,
+        setConnectionId,
+        setIsConnected,
+        setIsOnline,
+        handleIncomingMessage,
+        pongTimeoutRef,
+        GROUP_NAME,
+        startPingPong
+      );
+      setClient(webSocketClient);
+    }
+  }, [wssUrl, setIsConnected, handleIncomingMessage]);
+
+  // not working
+  //this is a custom hook that will scroll to the bottom of the logs textarea
+  useEffect(() => {
+    if (logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs]);
+
+  useEffect(() => {
+    if (isOnline && client) {
+      const fetchStates = async () => {
+        await sendRequest("request_gpio_state", "null"); // Request GPIO state
+        await sendRequest("request_sequence_state", "null"); // Request sequence state
+        await sendRequest("request_sequence", "main"); // Request sequence
+      };
+
+      fetchStates();
+    }
+  }, [isOnline, client, sendRequest]);
 
 return (
   <div className="smart-dunebugger">

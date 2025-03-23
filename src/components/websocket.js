@@ -1,20 +1,21 @@
 import { WebPubSubClient } from "@azure/web-pubsub-client";
 
-export const startWebSocket = (wssUrl, setConnectionId, setIsConnected, setIsOnline, handleIncomingMessage, pongTimeoutRef, GROUP_NAME, startPingPong) => {
+export const startWebSocket = (wssUrl, setConnectionId, setIsOnline, handleIncomingMessage, pongTimeoutRef, GROUP_NAME, startPingPong) => {
+// export const startWebSocket = (wssUrl, setConnectionId, setIsConnected, setIsOnline, handleIncomingMessage, pongTimeoutRef, GROUP_NAME, startPingPong) => {
   const webPubSubClient = new WebPubSubClient(wssUrl, { autoRejoinGroups: true });
 
   webPubSubClient.on("connected", (event) => {
     console.log("Connected to Web PubSub with ID:", event.connectionId);
     setConnectionId(event.connectionId);
     sessionStorage.setItem("connectionId", event.connectionId);
-    setIsConnected(true);
+    // setIsConnected(true);
     joinGroup(webPubSubClient, GROUP_NAME);
     startPingPong(webPubSubClient, GROUP_NAME, setIsOnline, pongTimeoutRef);
   });
 
   webPubSubClient.on("disconnected", (event) => {
     console.log("WebSocket disconnected:", event);
-    setIsConnected(false);
+    // setIsConnected(false);
     setIsOnline(false);
     setConnectionId(null);
     clearTimeout(pongTimeoutRef.current);

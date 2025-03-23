@@ -1,42 +1,17 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { WebPubSubClient } from "@azure/web-pubsub-client";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
+import Profile from "./Profile";
+import { startWebSocket } from "./websocket";
+import { startPingPong } from "./pingpong";
 import GpioTable from "./GpioTable";
 import SequenceSwitches from "./SequenceSwitches";
 import SequenceTimeline from "./SequenceTimeline";
 
 const GROUP_NAME = "velasquez";
-const PING_INTERVAL = 15000; // 5 seconds
-const PONG_TIMEOUT = 30000; // 10 seconds
-
-const Profile = ({ setWssUrl }) => {
-  const { user, isAuthenticated, isLoading } = useAuth0();
-
-  useEffect(() => {
-    if (isAuthenticated && user.wss_url) {
-      setWssUrl(user.wss_url);
-    }
-  }, [isAuthenticated, user, setWssUrl]);
-
-  if (isLoading) {
-    return <div>Loading ...</div>;
-  }
-
-  return (
-    isAuthenticated && (
-      <div>
-        {/* <img src={user.picture} alt={user.name} /> */}
-        <p>{user.name}</p>
-        {/* <p>{user.nickname}</p> */}
-        {/* <p>{user.email}</p> */}
-      </div>
-    )
-  );
-};
 
 export default function SmartDunebugger() {
-  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
+  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
   const [client, setClient] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [gpioStates, setGpioStates] = useState({});
@@ -49,14 +24,44 @@ export default function SmartDunebugger() {
   const [logs, setLogs] = useState([]);
   const [connectionId, setConnectionId] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [logsVisible, setLogsVisible] = useState(true);
+  const [logsVisible, setLogsVisible] = useState(false);
   const [wssUrl, setWssUrl] = useState(null);
   const logsEndRef = useRef(null);
   const pongTimeoutRef = useRef(null);
 
+  const sendRequest = async (type, body) => {
+    if (client) {
+      try {
+        await client.sendToGroup(
+          GROUP_NAME,
+          {
+            type: type,
+            body: body,
+            connectionId: connectionId,
+          },
+          "json",
+          { noEcho: true }
+        );
+        console.log(`Sent request: ${type} with body: ${body}`);
+      } catch (error) {
+        console.error(`Failed to send request: ${type}`, error);
+      }
+    }
+  };
+
   useEffect(() => {
     if (wssUrl) {
-      startWebSocket(wssUrl);
+      const webSocketClient = startWebSocket(
+        wssUrl,
+        setConnectionId,
+        setIsConnected,
+        setIsOnline,
+        handleIncomingMessage,
+        pongTimeoutRef,
+        GROUP_NAME,
+        startPingPong
+      );
+      setClient(webSocketClient);
     }
   }, [wssUrl]);
 
@@ -68,74 +73,23 @@ export default function SmartDunebugger() {
     }
   }, [logs]);
 
-  const startWebSocket = (wssUrl) => {
-    const webPubSubClient = new WebPubSubClient(wssUrl, { autoRejoinGroups: true });
+  useEffect(() => {
+    if (isOnline && client) {
+      const fetchStates = async () => {
+        await sendRequest("request_gpio_state", "null"); // Request GPIO state
+        await sendRequest("request_sequence_state", "null"); // Request sequence state
+        await sendRequest("request_sequence", "main"); // Request sequence
+      };
 
-    webPubSubClient.on("connected", (event) => {
-      console.log("Connected to Web PubSub with ID:", event.connectionId);
-      setConnectionId(event.connectionId);
-      sessionStorage.setItem("connectionId", event.connectionId);
-      setIsConnected(true);
-      joinGroup(webPubSubClient);
-      startPingPong(webPubSubClient);
-    });
-
-    webPubSubClient.on("disconnected", (event) => {
-      console.log("WebSocket disconnected:", event);
-      setIsConnected(false);
-      setIsOnline(false);
-      setConnectionId(null);
-      clearTimeout(pongTimeoutRef.current);
-    });
-
-    webPubSubClient.on("group-message", (message) => {
-      console.log("Received message:", message);
-      handleIncomingMessage(message);
-    });
-
-    webPubSubClient.start();
-    setClient(webPubSubClient);
-
-    return () => {
-      webPubSubClient.stop();
-      clearTimeout(pongTimeoutRef.current);
-    };
-  };
-
-  const joinGroup = async (client) => {
-    try {
-      await client.joinGroup(GROUP_NAME);
-      console.log(`Joined group: ${GROUP_NAME}`);
-    } catch (error) {
-      console.error("Failed to join group:", error);
+      fetchStates();
     }
-  };
+  }, [isOnline, client, connectionId]);
 
-  const startPingPong = (client) => {
-    const sendPing = async () => {
-      try {
-        const storedConnectionId = sessionStorage.getItem("connectionId");
-        await client.sendToGroup(GROUP_NAME, {
-          type: "ping",
-          source: "client",
-          destination: "controller",
-          connectionId: storedConnectionId,
-        }, "json", { noEcho: true });
-        //console.log("Sending alive ping");
-
-        pongTimeoutRef.current = setTimeout(() => {
-          setIsOnline(false);
-          //console.log("Pong response not received, marking as offline");
-        }, PONG_TIMEOUT);
-      } catch (error) {
-        console.error("Failed to send alive ping:", error);
-      }
-    };
-
-    sendPing();
-    const pingInterval = setInterval(sendPing, PING_INTERVAL);
-
-    return () => clearInterval(pingInterval);
+  const handleLogout = () => {
+    localStorage.removeItem("wss_url");
+    const encodedReturnTo = encodeURIComponent(`${window.location.origin}`);
+    const logoutUrl = `https://dunebugger.eu.auth0.com/v2/logout?client_id=${process.env.REACT_APP_AUTH0_CLIENT_ID}&returnTo=${encodedReturnTo}`;
+    logout({ returnTo: window.location.origin, client_id: process.env.REACT_APP_AUTH0_CLIENT_ID });
   };
 
   const handleIncomingMessage = useCallback((eventData) => {
@@ -143,7 +97,7 @@ export default function SmartDunebugger() {
     const incomingConnectionId = eventData.message.data.destination;
     const storedConnectionId = sessionStorage.getItem("connectionId");
     if (incomingConnectionId != "broadcast" && (incomingConnectionId !== storedConnectionId)) {
-      console.log("Ignoring message from another connection:", eventData.message.data);
+      console.log("Ignoring message for another destination:", eventData.message.data);
       return;
     }
     switch (message.type) {
@@ -166,98 +120,150 @@ export default function SmartDunebugger() {
       default:
         console.warn("Unknown message type:", message);
     }
-  }, [client, connectionId]);
+  }, 
+  [client, connectionId]
+);
 
-  const handleShowStatus = async () => {
-    if (client) {
-      try {
-        await client.sendToGroup(GROUP_NAME, {
-          type: "request_gpio_state",
-          body: "null",
-          connectionId: client._connectionId, // Include connectionId
-        }, "json", { noEcho: true });
-        console.log("Sent show status command");
-      } catch (error) {
-        console.error("Failed to send show status command:", error);
-      }
-    }
-  };
-
-  const handleShowSequence = async () => {
-    if (client) {
-      try {
-        await client.sendToGroup(GROUP_NAME, {
-          type: "request_sequence",
-          body: "main",
-          connectionId: client._connectionId, // Include connectionId
-        }, "json", { noEcho: true });
-        console.log("Sent show main sequence command");
-      } catch (error) {
-        console.error("Failed to send show main sequence command:", error);
-      }
-    }
-  }
-
-  const handleLogin = async () => {
-    await loginWithRedirect();
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("wss_url");
-    const encodedReturnTo = encodeURIComponent(`${window.location.origin}`);
-    const logoutUrl = `https://dunebugger.eu.auth0.com/v2/logout?client_id=${process.env.REACT_APP_AUTH0_CLIENT_ID}&returnTo=${encodedReturnTo}`;
-    logout({ returnTo: window.location.origin, client_id: process.env.REACT_APP_AUTH0_CLIENT_ID });
-  };
-
-  return (
-    <div>
-      <h2 className={isConnected ? "connected" : "disconnected"}>Smart Dunebugger</h2>
-      <p>Device Status: 
+return (
+  <div className="smart-dunebugger">
+    {/* Header Bar */}
+    <header className={`header-bar ${isOnline ? "connected" : "disconnected"}`}>
+      <h1>Smart Dunebugger</h1>
+      <div className="status-container">
         <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
-        {isOnline ? "Online" : "Offline"}
-      </p>
+        <span className="group-status">
+          {GROUP_NAME} {isOnline ? "online" : "offline"}
+        </span>
+      </div>
       {!isAuthenticated ? (
-        <button onClick={handleLogin}>Login</button>
+        <button className="auth-button" onClick={loginWithRedirect}>
+          Login
+        </button>
       ) : (
-        <button onClick={handleLogout}>Logout</button>
+        <button className="auth-button" onClick={logout}>
+          Logout {user?.name}
+        </button>
       )}
       <Profile setWssUrl={setWssUrl} />
-      <h3>GPIO States</h3>
-      <GpioTable 
-        gpioStates={gpioStates || []} 
-        client={client}
-        GROUP_NAME={GROUP_NAME}
-        connectionId={connectionId}
-      />
-      <SequenceTimeline sequence={sequence || []} />
-      <SequenceSwitches
-        sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
-        client={client}
-        GROUP_NAME={GROUP_NAME}
-        connectionId={connectionId}
-      />
-      <h3>Commands</h3>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "so", connectionId: connectionId }, "json")}>Set off state</button>
-      <button onClick={() => client.sendToGroup(GROUP_NAME, { type: "command", body: "sb", connectionId: connectionId }, "json")}>Set standby state</button>
-      <button onClick={handleShowStatus}>Show Status</button>
-      <button onClick={handleShowSequence}>Show Main Sequence</button>
+    </header>
 
-      <h3>
-        Logs
-        <button onClick={() => setLogsVisible(!logsVisible)}>
-          {logsVisible ? "-" : "+"}
-        </button>
-      </h3>
-      {logsVisible && (
-        <div style={{ position: "relative" }}>
-          <textarea
-            style={{ width: "100%", height: "200px", backgroundColor: "black", color: "white" }}
-            value={logs.join("\n")}
-            readOnly
-          />
-          <div ref={logsEndRef} />
-        </div>
-      )}
+    {/* Main Content */}
+    <div className="content">
+      <div className="right-section">
+        <h3>Sequence Timeline</h3>
+        <SequenceTimeline sequence={sequence || []} />
+        <h3>GPIO States</h3>
+        <GpioTable
+          gpioStates={gpioStates || []}
+          client={client}
+          GROUP_NAME={GROUP_NAME}
+          connectionId={connectionId}
+        />
+        <h3>
+          Logs
+          <button onClick={() => setLogsVisible(!logsVisible)}>
+            {logsVisible ? "-" : "+"}
+          </button>
+        </h3>
+        {logsVisible && (
+          <div style={{ position: "relative" }}>
+            <textarea
+              style={{ width: "100%", height: "200px", backgroundColor: "black", color: "white" }}
+              value={logs.join("\n")}
+              readOnly
+            />
+            <div ref={logsEndRef} />
+          </div>
+        )}
+      </div>
     </div>
-  );
+    <footer className="bottom-bar">
+      <div className="sequence-controls">
+        <SequenceSwitches
+          sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
+          client={client}
+          GROUP_NAME={GROUP_NAME}
+          connectionId={connectionId}
+        />
+      </div>
+      <div className="commands">
+        <button onClick={() => sendRequest("command", "so")}>Set off state</button>
+        <button onClick={() => sendRequest("command", "sb")}>Set standby state</button>
+        <button onClick={() => sendRequest("request_gpio_state", "null")}>Show Status</button>
+        <button onClick={() => sendRequest("request_sequence", "main")}>Show Main Sequence</button>
+      </div>
+    </footer>
+  </div>
+);
+
+// return (
+//   <div className="smart-dunebugger">
+//     {/* Header Bar */}
+//     <header className={`header-bar ${isOnline ? "connected" : "disconnected"}`}>
+//       <h1>Smart Dunebugger</h1>
+//       <div className="status-container">
+//         <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
+//         <span className="group-status">
+//           {GROUP_NAME} {isOnline ? "online" : "offline"}
+//         </span>
+//       </div>
+//       {!isAuthenticated ? (
+//         <button className="auth-button" onClick={loginWithRedirect}>
+//           Login
+//         </button>
+//       ) : (
+//         <button className="auth-button" onClick={logout}>
+//           Logout {user?.name}
+//         </button>
+//       )}
+//       <Profile setWssUrl={setWssUrl} />
+//     </header>
+
+//     {/* Main Content */}
+//     <div className="content">
+//       <div className="left-section">
+//         <h3>Sequence Controls</h3>
+//         <SequenceSwitches
+//           sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
+//           client={client}
+//           GROUP_NAME={GROUP_NAME}
+//           connectionId={connectionId}
+//         />
+//         <h3>Commands</h3>
+//         <button onClick={() => sendRequest("command", "so")}>Set off state</button>
+//         <button onClick={() => sendRequest("command", "sb")}>Set standby state</button>
+//         <button onClick={() => sendRequest("request_gpio_state", "null")}>Show Status</button>
+//         <button onClick={() => sendRequest("request_sequence", "main")}>Show Main Sequence</button>
+//       </div>
+//       <div className="right-section">
+//         <h3>Sequence Timeline</h3>
+//         <SequenceTimeline sequence={sequence || []} />
+//         <h3>GPIO States</h3>
+//         <GpioTable
+//           gpioStates={gpioStates || []}
+//           client={client}
+//           GROUP_NAME={GROUP_NAME}
+//           connectionId={connectionId}
+//         />
+//         <h3>
+//           Logs
+//           <button onClick={() => setLogsVisible(!logsVisible)}>
+//             {logsVisible ? "-" : "+"}
+//           </button>
+//         </h3>
+//         {logsVisible && (
+//           <div style={{ position: "relative" }}>
+//             <textarea
+//               style={{ width: "100%", height: "200px", backgroundColor: "black", color: "white" }}
+//               value={logs.join("\n")}
+//               readOnly
+//             />
+//             <div ref={logsEndRef} />
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   </div>
+// );
+
 }

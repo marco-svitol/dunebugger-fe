@@ -71,3 +71,216 @@ button {
 button:hover {
   background-color: #0056b3;
 }
+
+/* Main Layout */
+.smart-dunebugger {
+  display: flex;
+  flex-direction: column; /* Ensure the header is at the top */
+  height: 100vh;
+  overflow: hidden;
+}
+
+.content {
+  margin-bottom: 120px; /* Add space for the bottom bar */
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.left-section {
+  width: 300px; /* Fixed width for the left section */
+  padding: 20px;
+  background-color: #f4f4f4;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto; /* Allow scrolling if content overflows */
+}
+
+.left-section button {
+  width: calc(100% + 10%); /* Ensure button labels are visible with extra space */
+  max-width: 100%; /* Prevent buttons from overflowing */
+}
+
+.right-section {
+  flex: 1; /* Right section takes up the remaining space */
+  padding: 20px;
+  overflow-y: auto; /* Allow scrolling if content overflows */
+}
+
+.connected {
+  color: green;
+}
+
+.disconnected {
+  color: red;
+}
+
+.status-circle {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.status-circle.online {
+  background-color: green;
+}
+
+.status-circle.offline {
+  background-color: red;
+}
+
+button {
+  padding: 10px 15px;
+  margin: 5px 0;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Header Bar */
+.header-bar {
+  display: flex; /* Make the header a horizontal flex container */
+  align-items: center; /* Vertically center the content */
+  justify-content: space-between; /* Space out the elements */
+  padding: 10px 20px; /* Add padding for spacing */
+  color: white; /* Text color */
+  font-size: 16px; /* Font size */
+  position: fixed; /* Fix the header at the top */
+  top: 0; /* Position at the top */
+  left: 0; /* Align to the left */
+  right: 0; /* Align to the right */
+  z-index: 1000; /* Ensure it stays on top of other elements */
+}
+
+.header-bar.connected {
+  background-color: lightblue; /* Background color when connected */
+}
+
+.header-bar.disconnected {
+  background-color: lightcoral; /* Background color when disconnected */
+}
+
+.header-bar h1 {
+  margin: 0; /* Remove default margin */
+  font-size: 20px; /* Font size for the title */
+}
+
+.status-container {
+  display: flex; /* Align status elements horizontally */
+  align-items: center; /* Vertically center the status elements */
+  gap: 10px; /* Add spacing between the status elements */
+}
+
+.status-circle {
+  display: inline-block; /* Inline-block for the circle */
+  width: 10px; /* Circle width */
+  height: 10px; /* Circle height */
+  border-radius: 50%; /* Make it a circle */
+}
+
+.status-circle.online {
+  background-color: green; /* Green for online */
+}
+
+.status-circle.offline {
+  background-color: red; /* Red for offline */
+}
+
+.group-status {
+  font-size: 14px; /* Font size for the group status */
+  font-weight: bold; /* Bold text */
+}
+
+.auth-button {
+  background-color: #007bff; /* Button background color */
+  color: white; /* Button text color */
+  border: none; /* Remove border */
+  padding: 8px 12px; /* Add padding */
+  border-radius: 4px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+}
+
+.auth-button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Bottom Bar */
+.bottom-bar {
+  display: flex;
+  justify-content: space-between; /* Space out the sequence controls and commands */
+  align-items: center; /* Vertically center the content */
+  padding: 10px 20px;
+  background-color: #f4f4f4;
+  border-top: 1px solid #ddd;
+  position: fixed; /* Fix the bottom bar at the bottom of the page */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000; /* Ensure it stays on top of other elements */
+}
+
+.sequence-controls {
+  display: flex; /* Align sequence controls in a single line */
+  gap: 10px; /* Add spacing between controls */
+  flex: 1; /* Take up available space */
+}
+
+.commands {
+  display: flex; /* Align commands in a single line */
+  justify-content: flex-end; /* Align commands to the right */
+  gap: 10px; /* Add spacing between buttons */
+}
+
+/* For screens smaller than 768px (e.g., tablets and mobile devices) */
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column; /* Stack the left and right sections vertically */
+  }
+
+  .left-section {
+    width: 100%; /* Make the left section take up the full width */
+    border-right: none; /* Remove the right border */
+    border-bottom: 1px solid #ddd; /* Add a bottom border for separation */
+  }
+
+  .right-section {
+    width: 100%; /* Make the right section take up the full width */
+  }
+}
+
+/* For screens smaller than 480px (e.g., small mobile devices) */
+@media (max-width: 480px) {
+  .header-bar {
+    flex-direction: column; /* Stack the header elements vertically */
+    align-items: flex-start; /* Align items to the left */
+    gap: 10px; /* Add spacing between elements */
+  }
+
+  .header-bar h1 {
+    font-size: 18px; /* Reduce the font size for the title */
+  }
+
+  .auth-button {
+    padding: 6px 10px; /* Reduce button padding */
+    font-size: 14px; /* Reduce button font size */
+  }
+
+  .status-container {
+    gap: 5px; /* Reduce spacing between status elements */
+  }
+}

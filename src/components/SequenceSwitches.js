@@ -36,35 +36,37 @@ function SequenceSwitches({ sequenceState, client, GROUP_NAME, connectionId }) {
 
   return (
     <div className="sequence-switches">
-      <h3>Sequence Controls</h3>
       <div className="switch-container">
-        <label>
-          Random Actions
-          <input
-            type="checkbox"
-            checked={sequenceState.random_actions}
-            onChange={() => handleToggle("random_actions")}
-          />
-        </label>
-      </div>
-      <div className="switch-container">
-        <label>
-          Cycle
+        <label>Cycle</label>
+        <label className="switch">
           <input
             type="checkbox"
             checked={sequenceState.cycle_running}
             onChange={() => handleToggle("cycle_running")}
           />
+          <span className="slider"></span>
         </label>
       </div>
       <div className="switch-container">
-        <label>
-          Start Button
+        <label>Start Button</label>
+        <label className="switch">
           <input
             type="checkbox"
             checked={sequenceState.start_button_enabled}
             onChange={() => handleToggle("start_button_enabled")}
           />
+          <span className="slider"></span>
+        </label>
+      </div>
+      <div className="switch-container">
+        <label>Random Actions</label>
+        <label className="switch">
+          <input
+            type="checkbox"
+            checked={sequenceState.random_actions}
+            onChange={() => handleToggle("random_actions")}
+          />
+          <span className="slider"></span>
         </label>
       </div>
     </div>

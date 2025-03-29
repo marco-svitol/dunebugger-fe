@@ -1,53 +1,66 @@
 .timeline-container {
-  margin: 20px;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+  font-family: Arial, sans-serif;
+  padding: 16px;
 }
 
-.timeline-container h3 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.timeline {
+.timeline-wrapper {
   position: relative;
-  height: 100px;
-  border-top: 2px solid #ccc;
-  margin: 20px 0;
+  border: 1px solid #ccc;
+  padding: 16px;
   overflow-x: auto;
   white-space: nowrap;
 }
 
-.timeline-event {
-  position: absolute;
-  top: -20px;
-  transform: translateX(-50%);
-  text-align: center;
+.audio-track,
+.track {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
-.timeline-flag {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 5px 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: inline-block;
-  min-width: 100px;
-}
-
-.timeline-time {
+.track-label {
+  width: 150px;
   font-weight: bold;
-  color: #333;
+  text-align: right;
+  margin-right: 8px;
 }
 
-.timeline-command {
-  font-size: 14px;
-  color: #555;
+.track-timeline {
+  position: relative;
+  flex: 1;
+  height: 24px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  overflow: hidden;
 }
 
-.timeline-action {
+.track-segment {
+  position: absolute;
+  height: 100%;
+  border-radius: 4px;
+}
+
+.audio-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: #007bff;
+}
+
+.time-axis {
+  position: relative;
+  height: 24px;
+  margin-top: 16px;
+  margin-left: 160px; /* Start the time axis 150px from the left */
+  border-top: 1px solid #ccc;
+}
+
+.time-marker {
+  position: absolute;
+  top: -12px;
   font-size: 12px;
-  color: #777;
+  color: #666;
+  text-align: center;
+  transform: translateX(-50%);
 }

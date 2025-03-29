@@ -1,5 +1,4 @@
-/* dunebugger.css */
-
+/* General Styles */
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f4;
@@ -72,6 +71,11 @@ button:hover {
   background-color: #0056b3;
 }
 
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
 /* Main Layout */
 .smart-dunebugger {
   display: flex;
@@ -81,7 +85,9 @@ button:hover {
 }
 
 .content {
-  margin-bottom: 120px; /* Add space for the bottom bar */
+  margin: 0; /* Remove any existing margin */
+  padding-top: 60px; /* Add padding equal to the height of the header */
+  /*padding-bottom: 40px; /* Add padding equal to the height of the footer */
   display: flex;
   flex: 1;
   overflow: hidden;
@@ -109,13 +115,13 @@ button:hover {
   overflow-y: auto; /* Allow scrolling if content overflows */
 }
 
-.connected {
+/* .connected {
   color: green;
 }
 
 .disconnected {
   color: red;
-}
+} */
 
 .status-circle {
   display: inline-block;
@@ -133,31 +139,13 @@ button:hover {
   background-color: red;
 }
 
-button {
-  padding: 10px 15px;
-  margin: 5px 0;
-  border: none;
-  border-radius: 4px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
-
-button:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
 /* Header Bar */
 .header-bar {
   display: flex; /* Make the header a horizontal flex container */
   align-items: center; /* Vertically center the content */
-  justify-content: space-between; /* Space out the elements */
+  justify-content: space-between; /* Space out the left and right sections */
   padding: 10px 20px; /* Add padding for spacing */
+  background-color: #333; /* Dark background for the header */
   color: white; /* Text color */
   font-size: 16px; /* Font size */
   position: fixed; /* Fix the header at the top */
@@ -167,17 +155,41 @@ button:disabled {
   z-index: 1000; /* Ensure it stays on top of other elements */
 }
 
-.header-bar.connected {
+/* Left Section of the Header */
+.header-left {
+  display: flex; /* Align items horizontally */
+  align-items: center; /* Vertically center the content */
+  gap: 10px; /* Add spacing between elements */
+}
+
+/* Right Section of the Header */
+.header-right {
+  display: flex; /* Align items horizontally */
+  align-items: center; /* Vertically center the content */
+  gap: 15px; /* Add spacing between the status container and the Login/Logout button */
+}
+
+.header-bar.online {
   background-color: lightblue; /* Background color when connected */
 }
 
-.header-bar.disconnected {
-  background-color: lightcoral; /* Background color when disconnected */
+.header-bar.offline {
+  background-color: rgb(199, 196, 153); /* Background color when disconnected */
 }
 
 .header-bar h1 {
   margin: 0; /* Remove default margin */
   font-size: 20px; /* Font size for the title */
+  color: #666;
+}
+
+.hamburger-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  margin-right: 10px; /* Add spacing between the button and the title */
 }
 
 .status-container {
@@ -186,24 +198,41 @@ button:disabled {
   gap: 10px; /* Add spacing between the status elements */
 }
 
-.status-circle {
-  display: inline-block; /* Inline-block for the circle */
-  width: 10px; /* Circle width */
-  height: 10px; /* Circle height */
-  border-radius: 50%; /* Make it a circle */
+.hub-status {
+  font-size: 14px;
+  font-weight: bold;
+  color: #666;
 }
 
-.status-circle.online {
-  background-color: green; /* Green for online */
+.hub-status.connected .hub-status {
+  color: green;
 }
 
-.status-circle.offline {
-  background-color: red; /* Red for offline */
+.hub-status.disconnected .hub-status {
+  color: red;
+}
+
+.hub-status-circle {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 20px;
+  margin-right: 5px;
+}
+
+.hub-status-circle.connected {
+  background-color: green;
+}
+
+.hub-status-circle.disconnected {
+  background-color: red;
 }
 
 .group-status {
   font-size: 14px; /* Font size for the group status */
   font-weight: bold; /* Bold text */
+  color: #666;
 }
 
 .auth-button {
@@ -221,66 +250,108 @@ button:disabled {
 
 /* Bottom Bar */
 .bottom-bar {
+  position: fixed; /* Ensure the footer stays at the bottom */
   display: flex;
-  justify-content: space-between; /* Space out the sequence controls and commands */
-  align-items: center; /* Vertically center the content */
+  flex-direction: column; /* Stack elements vertically */
+  justify-content: center; /* Center the content */
+  align-items: center; /* Center the content horizontally */
   padding: 10px 20px;
-  background-color: #f4f4f4;
+  background-color: lightblue !important; /* Ensure the light blue background is applied */
   border-top: 1px solid #ddd;
-  position: fixed; /* Fix the bottom bar at the bottom of the page */
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 1000; /* Ensure it stays on top of other elements */
+  z-index: 1000;
+  transition: transform 0.3s ease-in-out;
 }
 
-.sequence-controls {
-  display: flex; /* Align sequence controls in a single line */
-  gap: 10px; /* Add spacing between controls */
-  flex: 1; /* Take up available space */
+.bottom-bar.collapsed {
+  height: 40px; /* Increase the height for better visibility */
+  justify-content: center; /* Center the toggle arrow */
+  padding: 5px 0; /* Add some padding to ensure the arrow is visible */
+  background-color: lightblue; /* Ensure the background color remains consistent */
+}
+
+.bottom-bar.expanded {
+  height: auto; /* Allow the footer to expand */
+  flex-direction: column; /* Stack elements vertically */
+  align-items: center; /* Center the arrow and content */
+  padding: 20px;
+  gap: 20px; /* Add spacing between the sections */
+}
+
+.sequence-controls,
+.commands {
+  margin-top: 50px;
+}
+
+.sequence-controls button:hover,
+.commands button:hover {
+  background-color: #b5bbda;
 }
 
 .commands {
-  display: flex; /* Align commands in a single line */
-  justify-content: flex-end; /* Align commands to the right */
+  display: flex; /* Align buttons in a single row */
+  justify-content: flex-end; /* Align buttons to the right */
   gap: 10px; /* Add spacing between buttons */
+  margin-left: auto; /* Push the commands section to the right */
+  align-items: center; /* Vertically center the buttons */
+  margin-top: 20px;
 }
 
-/* For screens smaller than 768px (e.g., tablets and mobile devices) */
+/* Overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.overlay-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #161616;
+  cursor: pointer;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+/* Mobile-Specific Styles */
 @media (max-width: 768px) {
-  .content {
-    flex-direction: column; /* Stack the left and right sections vertically */
+  /* Hide hub-status text on mobile */
+  .hub-status {
+    display: none; /* Hide the hub-status text */
   }
 
-  .left-section {
-    width: 100%; /* Make the left section take up the full width */
-    border-right: none; /* Remove the right border */
-    border-bottom: 1px solid #ddd; /* Add a bottom border for separation */
+  /* Hide group-status text on mobile */
+  .group-status {
+    display: none; /* Hide the group-status text */
   }
 
-  .right-section {
-    width: 100%; /* Make the right section take up the full width */
-  }
-}
-
-/* For screens smaller than 480px (e.g., small mobile devices) */
-@media (max-width: 480px) {
-  .header-bar {
-    flex-direction: column; /* Stack the header elements vertically */
-    align-items: flex-start; /* Align items to the left */
-    gap: 10px; /* Add spacing between elements */
-  }
-
-  .header-bar h1 {
-    font-size: 18px; /* Reduce the font size for the title */
-  }
-
-  .auth-button {
-    padding: 6px 10px; /* Reduce button padding */
-    font-size: 14px; /* Reduce button font size */
-  }
-
+  /* Adjust spacing for the status circles */
   .status-container {
-    gap: 5px; /* Reduce spacing between status elements */
+    gap: 5px; /* Reduce spacing between elements */
+  }
+
+  .header-left {
+    gap: 5px; /* Reduce spacing between the hamburger, title, and hub-status-circle */
   }
 }

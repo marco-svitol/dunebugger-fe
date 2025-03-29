@@ -13,7 +13,7 @@ const GROUP_NAME = "velasquez";
 export default function SmartDunebugger() {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
   const [client, setClient] = useState(null);
-  const [isOnline, setIsOnline] = useState(false);
+  const [isOnline, setIsOnline] = useState(false); // Device connection state
   const [gpioStates, setGpioStates] = useState({});
   const [sequenceState, setSequenceState] = useState({
     random_actions: false,
@@ -23,10 +23,10 @@ export default function SmartDunebugger() {
   const [sequence, setSequence] = useState([]);
   const [logs, setLogs] = useState([]);
   const [connectionId, setConnectionId] = useState(null);
-  // const [isConnected, setIsConnected] = useState(false);
+  const [gpioVisible, setGpioVisible] = useState(false);
   const [logsVisible, setLogsVisible] = useState(false);
   const [wssUrl, setWssUrl] = useState(null);
-  const [isFooterExpanded, setIsFooterExpanded] = useState(false);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const logsEndRef = useRef(null);
   const pongTimeoutRef = useRef(null);
 
@@ -115,46 +115,66 @@ export default function SmartDunebugger() {
       fetchStates();
     }
   }, [isOnline, client, sendRequest]);
-
-  const toggleFooter = () => {
-    setIsFooterExpanded((prev) => !prev);
+  
+  const toggleOverlay = () => {
+    setIsOverlayOpen((prev) => !prev);
   };
 
   return (
     <div className="smart-dunebugger">
       {/* Header Bar */}
-      <header className={`header-bar ${isOnline ? "connected" : "disconnected"}`}>
-        <h1>Smart Dunebugger</h1>
-        <div className="status-container">
-          <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
-          <span className="group-status">
-            {GROUP_NAME} {isOnline ? "online" : "offline"}
+      <header className={`header-bar ${isOnline ? "online" : "offline"}`}>
+        {/* Left Section */}
+        <div className="header-left">
+          <button className="hamburger-button" onClick={toggleOverlay}>
+            ☰
+          </button>
+          <h1>Smart Dunebugger</h1>
+          <span className={`hub-status-circle ${connectionId ? "connected" : "disconnected"}`}></span>
+          <span className={`hub-status ${connectionId ? "connected" : "disconnected"}`}>
+            message hub: {connectionId ? "connected" : "disconnected"}
           </span>
         </div>
-        {!isAuthenticated ? (
-          <button className="auth-button" onClick={loginWithRedirect}>
-            Login
-          </button>
-        ) : (
-          <button className="auth-button" onClick={logout}>
-            Logout {user?.name}
-          </button>
-        )}
-        <Profile setWssUrl={setWssUrl} />
+
+        {/* Right Section */}
+        <div className="header-right">
+          <div className="status-container">
+            <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
+            <span className="group-status">
+              {GROUP_NAME} {isOnline ? "online" : "offline"}
+            </span>
+          </div>
+          {!isAuthenticated ? (
+            <button className="auth-button" onClick={loginWithRedirect}>
+              Login
+            </button>
+          ) : (
+            <button className="auth-button" onClick={logout}>
+              Logout {user?.name}
+            </button>
+          )}
+          <Profile setWssUrl={setWssUrl} />
+        </div>
       </header>
 
       {/* Main Content */}
       <div className="content">
         <div className="right-section">
-          <h3>Sequence Timeline</h3>
           <SequenceTimeline sequence={sequence || []} />
-          <h3>GPIO States</h3>
-          <GpioTable
-            gpioStates={gpioStates || []}
-            client={client}
-            GROUP_NAME={GROUP_NAME}
-            connectionId={connectionId}
-          />
+          <h3>
+            GPIO States
+            <button onClick={() => setGpioVisible(!gpioVisible)}>
+              {gpioVisible ? "-" : "+"}
+            </button>
+          </h3>
+          {gpioVisible && (
+            <GpioTable
+              gpioStates={gpioStates || []}
+              client={client}
+              GROUP_NAME={GROUP_NAME}
+              connectionId={connectionId}
+            />
+          )}
           <h3>
             Logs
             <button onClick={() => setLogsVisible(!logsVisible)}>
@@ -174,13 +194,14 @@ export default function SmartDunebugger() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className={`bottom-bar ${isFooterExpanded ? "expanded" : "collapsed"}`}>
-        <div className="footer-toggle" onClick={toggleFooter}></div>
-        {isFooterExpanded && (
-          <>
+      {/* Overlay */}
+      {isOverlayOpen && (
+        <div className="overlay">
+          <div className="overlay-content">
+            <button className="close-button" onClick={toggleOverlay}>
+              ✖
+            </button>
             <div className="sequence-controls">
-              <h3>Sequence Controls</h3>
               <SequenceSwitches
                 sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
                 client={client}
@@ -189,15 +210,14 @@ export default function SmartDunebugger() {
               />
             </div>
             <div className="commands">
-              <h3>Commands</h3>
               <button onClick={() => sendRequest("command", "so")}>Set off state</button>
               <button onClick={() => sendRequest("command", "sb")}>Set standby state</button>
               <button onClick={() => sendRequest("request_gpio_state", "null")}>Show Status</button>
               <button onClick={() => sendRequest("request_sequence", "main")}>Show Main Sequence</button>
             </div>
-          </>
-        )}
-      </footer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

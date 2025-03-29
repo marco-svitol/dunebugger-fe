@@ -1,6 +1,13 @@
 import { WebPubSubClient } from "@azure/web-pubsub-client";
 
-export const startWebSocket = (wssUrl, setConnectionId, setIsOnline, handleIncomingMessage, pongTimeoutRef, GROUP_NAME, startPingPong) => {
+export const startWebSocket = (
+  wssUrl, 
+  setConnectionId,
+  setIsOnline, 
+  handleIncomingMessage, 
+  pongTimeoutRef, 
+  GROUP_NAME, 
+  startPingPong) => {
 // export const startWebSocket = (wssUrl, setConnectionId, setIsConnected, setIsOnline, handleIncomingMessage, pongTimeoutRef, GROUP_NAME, startPingPong) => {
   const webPubSubClient = new WebPubSubClient(wssUrl, { autoRejoinGroups: true });
 

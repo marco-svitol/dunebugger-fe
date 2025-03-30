@@ -15,7 +15,7 @@ function SequenceTimeline({ sequence }) {
   }
 
   const totalTime = Math.max(...sequence.sequence.map((ev) => parseFloat(ev.time)));
-  const zoomFactor = 100 ;
+  const zoomFactor = 100;
 
   // Group events by "switch" actions
   const switchEvents = sequence.sequence.filter((ev) => ev.command === "switch");
@@ -156,7 +156,24 @@ const trackColors = [
                   width: `${((segment.end - segment.start) / totalTime) * zoomFactor}%`,
                   backgroundColor: trackColor,
                 }}
-                title={`${action}: ${segment.start}s - ${segment.end}s`}
+                onMouseEnter={(e) =>
+                  setTooltip({
+                    visible: true,
+                    text: `${action}: ${segment.start}s - ${segment.end}s`,
+                    x: e.clientX,
+                    y: e.clientY,
+                  })
+                }
+                onMouseLeave={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
+                onTouchStart={(e) =>
+                  setTooltip({
+                    visible: true,
+                    text: `${action}: ${segment.start}s - ${segment.end}s`,
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY,
+                  })
+                }
+                onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
               />
             ))}
           </div>

@@ -1,14 +1,15 @@
 .timeline-container {
   font-family: Arial, sans-serif;
   padding: 16px;
+  overflow-x: auto; /* Enable horizontal scrolling */
 }
 
 .timeline-wrapper {
   position: relative;
   border: 1px solid #ccc;
   padding: 16px;
-  overflow-x: auto;
   white-space: nowrap;
+  min-width: 1000px; /* Set minimum width */
 }
 
 .audio-track,

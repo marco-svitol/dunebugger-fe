@@ -3,8 +3,6 @@ import "./SequenceTimeline.css";
 import { FaMusic, FaWaveSquare } from "react-icons/fa";
 
 function SequenceTimeline({ sequence }) {
-  const [zoomLevel, setZoomLevel] = useState(1);
-
   if (!sequence || !sequence.sequence || sequence.sequence.length === 0) {
     return (
       <div className="timeline-container">
@@ -15,7 +13,7 @@ function SequenceTimeline({ sequence }) {
   }
 
   const totalTime = Math.max(...sequence.sequence.map((ev) => parseFloat(ev.time)));
-  const zoomFactor = 100 * zoomLevel;
+  const zoomFactor = 100 ;
 
   // Group events by "switch" actions
   const switchEvents = sequence.sequence.filter((ev) => ev.command === "switch");
@@ -176,13 +174,6 @@ const trackColors = [
             );
           })}
         </div>
-      </div>
-
-      {/* Zoom Controls */}
-      <div className="zoom-controls">
-        <button onClick={() => setZoomLevel((p) => Math.max(p - 0.5, 1))}>-</button>
-        <span>Zoom: {zoomLevel}x</span>
-        <button onClick={() => setZoomLevel((p) => Math.min(p + 0.5, 5))}>+</button>
       </div>
     </div>
   );

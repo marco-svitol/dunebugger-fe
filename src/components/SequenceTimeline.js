@@ -3,6 +3,8 @@ import "./SequenceTimeline.css";
 import { FaMusic, FaWaveSquare } from "react-icons/fa";
 
 function SequenceTimeline({ sequence }) {
+  const [tooltip, setTooltip] = useState({ visible: false, text: "", x: 0, y: 0 });
+
   if (!sequence || !sequence.sequence || sequence.sequence.length === 0) {
     return (
       <div className="timeline-container">
@@ -71,13 +73,13 @@ const trackColors = [
       const action = ev.action.toLowerCase();
       let Icon;
       let iconColor = "#007bff"; // Default color for icons
-      let tooltip = `${ev.action} at ${ev.time}s`;
+      let tooltipText = `${ev.action} at ${ev.time}s`;
   
       if (action === "playmusic") {
         Icon = FaMusic;
       } else if (action === "playsfx") {
         Icon = FaWaveSquare;
-        tooltip += ` ( ${ev.parameter})`; // Add parameter to tooltip
+        tooltipText += ` (${ev.parameter})`;
       } else if (action === "fadeout") {
         Icon = FaMusic;
         iconColor = "#808080"; // Grey color for fadeout
@@ -91,7 +93,24 @@ const trackColors = [
             left: `${position}%`,
             color: iconColor, // Apply the color dynamically
           }}
-          title={tooltip} // Updated tooltip
+          onMouseEnter={(e) =>
+            setTooltip({
+              visible: true,
+              text: tooltipText,
+              x: e.clientX,
+              y: e.clientY,
+            })
+          }
+          onMouseLeave={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
+          onTouchStart={(e) =>
+            setTooltip({
+              visible: true,
+              text: tooltipText,
+              x: e.touches[0].clientX,
+              y: e.touches[0].clientY,
+            })
+          }
+          onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
         >
           <Icon />
         </div>
@@ -175,6 +194,15 @@ const trackColors = [
           })}
         </div>
       </div>
+
+      {tooltip.visible && (
+        <div
+          className="custom-tooltip"
+          style={{ top: tooltip.y + 10, left: tooltip.x + 10 }}
+        >
+          {tooltip.text}
+        </div>
+      )}
     </div>
   );
 }

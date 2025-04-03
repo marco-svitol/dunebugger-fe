@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./SequenceTimeline.css";
 import { FaMusic, FaWaveSquare } from "react-icons/fa";
 
-function SequenceTimeline({ sequence }) {
+function SequenceTimeline({ sequence, playingTime }) {
   const [tooltip, setTooltip] = useState({ visible: false, text: "", x: 0, y: 0 });
 
   if (!sequence || !sequence.sequence || sequence.sequence.length === 0) {
@@ -118,6 +118,19 @@ const trackColors = [
     });
   };
 
+  const renderTrackLabels = (tracks) => {
+    return (
+      <div className="track-labels">
+        <div key="audio" className="track-label">Audio</div>
+        {Object.keys(tracks).map((action, idx) => (
+          <div key={idx} className="track-label">
+            {action}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   const renderTracks = (tracks) => {
     return Object.entries(tracks).map(([action, events], trackIndex) => {
       const segments = [];
@@ -145,7 +158,7 @@ const trackColors = [
   
       return (
         <div key={trackIndex} className="track">
-          <div className="track-label">{action}</div>
+          
           <div className="track-timeline">
             {segments.map((segment, idx) => (
               <div
@@ -182,33 +195,53 @@ const trackColors = [
     });
   };
 
+    // Calculate position for playing time marker
+  const playingTimePosition = playingTime !== undefined ? 
+    `${(playingTime / totalTime) * zoomFactor}%` : null;
+
   return (
     <div className="timeline-container">
       <h3>Sequence Timeline</h3>
       <div className="timeline-wrapper">
-        {/* Audio Track */}
-        <div className="audio-track">
-          <div className="track-label">Audio</div>
-          <div className="track-timeline">{renderAudioIcons(audioEvents)}</div>
+
+        {/* Track Labels */}
+        <div className="labels-column">
+          {renderTrackLabels(tracks)}
         </div>
 
-        {/* Switch Tracks */}
-        {renderTracks(tracks)}
+        {/* Tracks */}
+        <div className="tracks-column">
+          {/* Audio Track */}
+          <div className="audio-track">
+            <div className="track-timeline">{renderAudioIcons(audioEvents)}</div>
+          </div>
 
-        {/* Time Axis */}
-        <div className="time-axis">
-          {Array.from({ length: Math.ceil(totalTime / 10) + 1 }, (_, i) => {
-            const t = i * 10;
-            return (
-              <div
-                key={t}
-                className="time-marker"
-                style={{ left: `${(t / totalTime) * zoomFactor}%` }}
-              >
-                {t}s
-              </div>
-            );
-          })}
+          {/* Switch Tracks */}
+          {renderTracks(tracks)}
+
+          {/* Playing Time Marker */}
+          {playingTimePosition && (
+            <div 
+              className="playing-time-marker" 
+              style={{ left: playingTimePosition }}
+            />
+          )}
+
+          {/* Time Axis */}
+          <div className="time-axis">
+            {Array.from({ length: Math.ceil(totalTime / 10) + 1 }, (_, i) => {
+              const t = i * 10;
+              return (
+                <div
+                  key={t}
+                  className="time-marker"
+                  style={{ left: `${(t / totalTime) * zoomFactor}%` }}
+                >
+                  {t}s
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 

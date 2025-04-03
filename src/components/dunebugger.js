@@ -21,6 +21,7 @@ export default function SmartDunebugger() {
     start_button_enabled: false,
   });
   const [sequence, setSequence] = useState([]);
+  const [playingTime, setPlayingTime] = useState(0);
   const [logs, setLogs] = useState([]);
   const [connectionId, setConnectionId] = useState(null);
   const [gpioVisible, setGpioVisible] = useState(false);
@@ -74,6 +75,9 @@ export default function SmartDunebugger() {
         break;
       case "sequence":
         setSequence(message.body);
+        break;
+      case "playing_time":
+        setPlayingTime(message.body);
         break;
       default:
         console.warn("Unknown message type:", message);
@@ -160,7 +164,7 @@ export default function SmartDunebugger() {
       {/* Main Content */}
       <div className="content">
         <div className="right-section">
-          <SequenceTimeline sequence={sequence || []} />
+          <SequenceTimeline sequence={sequence || []} playingTime={playingTime || 0} />
           <h3>
             GPIO States
             <button onClick={() => setGpioVisible(!gpioVisible)}>

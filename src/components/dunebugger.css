@@ -355,3 +355,26 @@ button:disabled {
 }
 
 /* Mobile-Specific Styles */
+@media screen and (max-width: 768px) {
+  .header-left h1 {
+    display: none; /* Hide the Smart Dunebugger title on mobile */
+  }
+  
+  /* Adjust spacing when title is hidden */
+  .header-left {
+    gap: 5px; /* Reduce spacing between elements */
+  }
+  
+  /* Make header more compact on mobile */
+  .header-bar {
+    padding: 10px;
+  }
+
+  .hub-status {
+    display: none; /* Hide the hub status on mobile */
+  }
+
+  .group-status {
+    display: none; /* Hide the group status on mobile */
+  }
+}

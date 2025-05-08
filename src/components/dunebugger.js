@@ -2,17 +2,17 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
 import Profile from "./Profile";
-import { startWebSocket } from "./websocket";
-import { startPingPong } from "./pingpong";
+import WebSocketManager from "./websocket";
 import GpioTable from "./GpioTable";
 import SequenceSwitches from "./SequenceSwitches";
 import SequenceTimeline from "./SequenceTimeline";
 
 const GROUP_NAME = "velasquez";
+const HEARTBEAT_TIMEOUT = 65000; // 65 seconds
 
 export default function SmartDunebugger() {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
-  const [client, setClient] = useState(null);
+  const [wsClient, setWSClient] = useState(null);
   const [isOnline, setIsOnline] = useState(false); // Device connection state
   const [gpioStates, setGpioStates] = useState({});
   const [sequenceState, setSequenceState] = useState({
@@ -29,77 +29,27 @@ export default function SmartDunebugger() {
   const [wssUrl, setWssUrl] = useState(null);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const logsEndRef = useRef(null);
-  const pongTimeoutRef = useRef(null);
-
-  const sendRequest = useCallback(async (type, body) => {
-    if (client) {
-      try {
-        await client.sendToGroup(
-          GROUP_NAME,
-          {
-            type: type,
-            body: body,
-            connectionId: connectionId,
-          },
-          "json",
-          { noEcho: true }
-        );
-        // console.log(`Sent request: ${type} with body: ${body}`);
-      } catch (error) {
-        console.error(`Failed to send request: ${type}`, error);
-      }
-    }
-  }, [client, connectionId]);
-
-  const handleIncomingMessage = useCallback((eventData) => {
-    const message = eventData.message.data;
-    const incomingConnectionId = eventData.message.data.destination;
-    const storedConnectionId = sessionStorage.getItem("connectionId");
-    if (incomingConnectionId !== "broadcast" && (incomingConnectionId !== storedConnectionId)) {
-      // console.log("Ignoring message for another destination:", eventData.message.data);
-      return;
-    }
-    switch (message.type) {
-      case "log":
-        setLogs((prev) => [...prev, message.body]);
-        break;
-      case "ping":
-        setIsOnline(true);
-        clearTimeout(pongTimeoutRef.current);
-        break;
-      case "gpio_state":
-        setGpioStates(message.body);
-        break;
-      case "sequence_state":
-        setSequenceState(message.body);
-        break;
-      case "sequence":
-        setSequence(message.body);
-        break;
-      case "playing_time":
-        setPlayingTime(message.body);
-        break;
-      default:
-        console.warn("Unknown message type:", message);
-    }
-  }, [setLogs, setIsOnline, pongTimeoutRef, setGpioStates, setSequenceState, setSequence]);
-
+  const heartBeatTimeoutRef = useRef(null);
+  
   useEffect(() => {
     if (wssUrl) {
-      const webSocketClient = startWebSocket(
+      const webSocketClient = new WebSocketManager(
         wssUrl,
         setConnectionId,
-        // setIsConnected,
         setIsOnline,
-        handleIncomingMessage,
-        pongTimeoutRef,
+        setLogs,
+        setGpioStates,
+        setSequenceState,
+        setSequence,
+        setPlayingTime,
+        heartBeatTimeoutRef,
         GROUP_NAME,
-        startPingPong
+        HEARTBEAT_TIMEOUT
       );
-      setClient(webSocketClient);
+      setWSClient(webSocketClient);
     }
-  // }, [wssUrl, setIsConnected, handleIncomingMessage]);
-  }, [wssUrl, handleIncomingMessage]);
+  }, [wssUrl]);
+  
   // not working
   //this is a custom hook that will scroll to the bottom of the logs textarea
   useEffect(() => {
@@ -109,16 +59,14 @@ export default function SmartDunebugger() {
   }, [logs]);
 
   useEffect(() => {
-    if (isOnline && client) {
+    if (isOnline && wsClient) {
       const fetchStates = async () => {
-        await sendRequest("request_gpio_state", "null"); // Request GPIO state
-        await sendRequest("request_sequence_state", "null"); // Request sequence state
-        await sendRequest("request_sequence", "main"); // Request sequence
+        await wsClient.sendRequest("refresh", "null"); // Request GPIO state
       };
 
       fetchStates();
     }
-  }, [isOnline, client, sendRequest]);
+  }, [isOnline, wsClient]);
   
   const toggleOverlay = () => {
     setIsOverlayOpen((prev) => !prev);
@@ -154,7 +102,8 @@ export default function SmartDunebugger() {
             </button>
           ) : (
             <button className="auth-button" onClick={logout}>
-              Logout {user?.name}
+              Logout 
+              {/* {user?.name} */}
             </button>
           )}
           <Profile setWssUrl={setWssUrl} />
@@ -174,8 +123,7 @@ export default function SmartDunebugger() {
           {gpioVisible && (
             <GpioTable
               gpioStates={gpioStates || []}
-              client={client}
-              GROUP_NAME={GROUP_NAME}
+              wsClient={wsClient}
               connectionId={connectionId}
             />
           )}
@@ -208,16 +156,15 @@ export default function SmartDunebugger() {
             <div className="sequence-controls">
               <SequenceSwitches
                 sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
-                client={client}
-                GROUP_NAME={GROUP_NAME}
+                wsClient={wsClient}
                 connectionId={connectionId}
               />
             </div>
             <div className="commands">
-              <button onClick={() => sendRequest("command", "so")}>Set off state</button>
-              <button onClick={() => sendRequest("command", "sb")}>Set standby state</button>
-              <button onClick={() => sendRequest("request_gpio_state", "null")}>Show Status</button>
-              <button onClick={() => sendRequest("request_sequence", "main")}>Show Main Sequence</button>
+              <button className="refresh-button" onClick={() => wsClient.sendRequest("refresh", "null")}>Refresh</button>
+              <button onClick={() => wsClient.sendRequest("dunebugger_set", "so")}>Off state</button>
+              <button onClick={() => wsClient.sendRequest("dunebugger_set", "sb")}>Standby state</button>
+              <button>Upload Sequence</button>
             </div>
           </div>
         </div>

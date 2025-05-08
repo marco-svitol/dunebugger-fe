@@ -1,7 +1,7 @@
 import React from "react";
 import "./SequenceSwitches.css"; // Optional: Add a CSS file for switch-specific styles if needed.
 
-function SequenceSwitches({ sequenceState, client, GROUP_NAME, connectionId }) {
+function SequenceSwitches({ sequenceState, wsClient, connectionId }) {
   const handleToggle = (key) => {
     let command = "";
 
@@ -21,15 +21,11 @@ function SequenceSwitches({ sequenceState, client, GROUP_NAME, connectionId }) {
     }
 
     // Send the command to the group
-    if (client) {
-      client.sendToGroup(
-        GROUP_NAME,
-        {
-          type: "command",
-          body: command,
-          connectionId: connectionId,
-        },
-        "json"
+    if (wsClient) {
+      wsClient.sendRequest(
+        "dunebugger_set",
+        command,
+        connectionId
       );
     }
   };

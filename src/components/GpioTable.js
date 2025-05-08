@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./GpioTable.css"; // Optional: Add a CSS file for table-specific styles if needed.
 
-function GpioTable({ gpioStates, client, GROUP_NAME, connectionId }) {
+function GpioTable({ gpioStates, wsClient, connectionId }) {
   const [sortedData, setSortedData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
@@ -34,15 +34,11 @@ function GpioTable({ gpioStates, client, GROUP_NAME, connectionId }) {
     const command = `#${gpio.pin} ${newSwitchState.toLowerCase()}`;
 
     // Send the command to the group
-    if (client) {
-      client.sendToGroup(
-        GROUP_NAME,
-        {
-          type: "command",
-          body: command,
-          connectionId: connectionId,
-        },
-        "json"
+    if (wsClient) {
+      wsClient.sendRequest(
+        "dunebugger_set",
+        command,
+        connectionId,
       );
     }
 

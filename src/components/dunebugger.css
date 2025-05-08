@@ -318,7 +318,7 @@ button:disabled {
   padding: 20px;
   border-radius: 8px;
   width: 90%;
-  max-width: 400px;
+  max-width: 600px;
   text-align: center;
   position: relative;
 }
@@ -334,24 +334,24 @@ button:disabled {
   right: 20px;
 }
 
-/* Mobile-Specific Styles */
-@media (max-width: 768px) {
-  /* Hide hub-status text on mobile */
-  .hub-status {
-    display: none; /* Hide the hub-status text */
-  }
-
-  /* Hide group-status text on mobile */
-  .group-status {
-    display: none; /* Hide the group-status text */
-  }
-
-  /* Adjust spacing for the status circles */
-  .status-container {
-    gap: 5px; /* Reduce spacing between elements */
-  }
-
-  .header-left {
-    gap: 5px; /* Reduce spacing between the hamburger, title, and hub-status-circle */
-  }
+/* Make overlay buttons uniform size */
+.commands button {
+  width: 140px; /* Fixed width for all buttons */
+  height: 40px; /* Fixed height for all buttons */
+  margin: 5px;
+  white-space: nowrap; /* Prevents text from wrapping */
+  overflow: hidden; /* Hides overflow text */
+  text-overflow: ellipsis; /* Shows ellipsis for overflow text */
 }
+
+/* Green refresh button style */
+.refresh-button {
+  background-color: green !important;
+  color: white !important;
+}
+
+.refresh-button:hover {
+  background-color: darkgreen !important;
+}
+
+/* Mobile-Specific Styles */

@@ -30,7 +30,8 @@ export default function SmartDunebugger() {
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const logsEndRef = useRef(null);
   const heartBeatTimeoutRef = useRef(null);
-  
+  const overlayRef = useRef(null);
+
   useEffect(() => {
     if (wssUrl) {
       const webSocketClient = new WebSocketManager(
@@ -49,7 +50,7 @@ export default function SmartDunebugger() {
       setWSClient(webSocketClient);
     }
   }, [wssUrl]);
-  
+
   // not working
   //this is a custom hook that will scroll to the bottom of the logs textarea
   useEffect(() => {
@@ -67,9 +68,17 @@ export default function SmartDunebugger() {
       fetchStates();
     }
   }, [isOnline, wsClient]);
-  
+
   const toggleOverlay = () => {
     setIsOverlayOpen((prev) => !prev);
+  };
+
+  // Handle clicking outside the overlay to close it
+  const handleOverlayClick = (event) => {
+    // Check if the click was on the overlay background (not its content)
+    if (overlayRef.current && event.target === overlayRef.current) {
+      setIsOverlayOpen(false);
+    }
   };
 
   return (
@@ -148,11 +157,8 @@ export default function SmartDunebugger() {
 
       {/* Overlay */}
       {isOverlayOpen && (
-        <div className="overlay">
+        <div className="overlay" ref={overlayRef} onClick={handleOverlayClick}>
           <div className="overlay-content">
-            <button className="close-button" onClick={toggleOverlay}>
-              ✖
-            </button>
             <div className="sequence-controls">
               <SequenceSwitches
                 sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}

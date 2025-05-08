@@ -282,7 +282,7 @@ button:disabled {
 
 .sequence-controls,
 .commands {
-  margin-top: 50px;
+  margin-top: 10px; /* Reduced from 50px to 10px */
 }
 
 .sequence-controls button:hover,
@@ -321,17 +321,6 @@ button:disabled {
   max-width: 600px;
   text-align: center;
   position: relative;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #161616;
-  cursor: pointer;
-  position: absolute;
-  top: 20px;
-  right: 20px;
 }
 
 /* Make overlay buttons uniform size */

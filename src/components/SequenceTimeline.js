@@ -8,7 +8,6 @@ function SequenceTimeline({ sequence, playingTime }) {
   if (!sequence || !sequence.sequence || sequence.sequence.length === 0) {
     return (
       <div className="timeline-container">
-        <h3>Sequence Timeline</h3>
         <p>No events to display</p>
       </div>
     );
@@ -201,7 +200,6 @@ const trackColors = [
 
   return (
     <div className="timeline-container">
-      <h3>Sequence Timeline</h3>
       <div className="timeline-wrapper">
 
         {/* Track Labels */}

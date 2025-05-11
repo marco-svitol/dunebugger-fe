@@ -1,0 +1,273 @@
+.action-bar {
+  position: fixed;
+  top: 60px; /* Position right below the header */
+  left: 0;
+  right: 0;
+  height: 60px; /* Increased height from 50px to 60px */
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #ddd;
+  z-index: 900;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center; /* Center items vertically */
+  padding: 0 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  /* Add a thin separator line at the top */
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+/* Add online/offline states for action bar */
+.action-bar.online {
+  background-color: rgb(173, 216, 230); /* Light blue when online */
+}
+
+/* Specific styling for Upload Sequence, Off State and Standby state buttons when online */
+.action-bar.online button:not(.refresh-button):not(.start-button):not(.stop-button) {
+  background-color: #0069ff; /* RGB 0, 105, 255 */
+  border-color: #0069ff; /* RGB 0, 105, 255 */
+  color: #ffffff; /* RGB 255, 255, 255 */
+}
+
+.action-bar.offline {
+  background-color: rgb(158, 157, 121); /* Same as header when offline */
+  color: white;
+}
+
+/* Style adjustments for buttons in offline state */
+.action-bar.offline button,
+.action-bar.offline .switch-container label {
+  color: white;
+  opacity: 0.7;
+}
+
+/* Specific styling for Upload Sequence, Off State and Standby state buttons when offline */
+.action-bar.offline button:not(.refresh-button):not(.start-button):not(.stop-button) {
+  background-color: #7b7b7b; /* RGB 123, 123, 123 */
+  border-color: #7b7b7b; /* RGB 123, 123, 123 */
+  color: #ffffff;
+}
+
+.action-bar.offline .slider {
+  background-color: #6c757d;
+}
+
+.action-bar-content {
+  display: flex;
+  align-items: center; /* Ensure vertical centering */
+  justify-content: flex-start; /* Align content to the start */
+  width: 100%;
+  height: 100%; /* Take full height of the action bar */
+}
+
+/* Control styles for different pages */
+.main-controls,
+.sequence-controls,
+.gpios-controls,
+.scheduler-controls,
+.analytics-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center; /* Ensure vertical centering within control groups */
+  height: 100%; /* Take full height */
+  margin-top: 0px;
+}
+
+/* Button styles */
+.action-bar button {
+  padding: 8px 15px; /* Slightly larger padding for better touchability */
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  color: #333;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s, border-color 0.2s;
+  height: 36px; /* Fixed height for consistency */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-bar button:hover {
+  background-color: #e3e3e3;
+  border-color: #aaa;
+}
+
+.action-bar .refresh-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+}
+
+.action-bar .refresh-button:hover {
+  background-color: #388e3c;
+}
+
+/* Start/Stop buttons styles */
+.start-stop-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  height: 100%; /* Take full height */
+}
+
+.action-bar .start-button {
+  background-color: #4CAF50; /* Green */
+  color: white;
+  border: none;
+  font-weight: bold;
+}
+
+.action-bar .start-button:hover {
+  background-color: #45a049;
+}
+
+.action-bar .stop-button {
+  background-color: #f44336; /* Red */
+  color: white;
+  border: none;
+  font-weight: bold;
+}
+
+.action-bar .stop-button:hover {
+  background-color: #d32f2f;
+}
+
+/* Sequence switches styles */
+.sequence-switches {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  height: 100%; /* Take full height */
+}
+
+.switch-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  /* Enhanced transitions for smoother animation */
+  transition: 0.3s cubic-bezier(0.45, 0.05, 0.55, 0.95); 
+  border-radius: 24px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: rgb(255, 255, 255); /* Changed to white for better contrast */
+  /* Enhanced transitions for smoother animation */
+  transition: 0.3s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Add a subtle pulse effect when changing state */
+input:checked + .slider {
+  background-color: #007bff;
+  animation: pulse 0.3s;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px); /* Increased to make motion more visible */
+}
+
+/* Enhance behavior for focus and hover states */
+input:focus + .slider {
+  box-shadow: 0 0 2px #007bff;
+}
+
+.switch:hover .slider:before {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Disabled state styling */
+input:disabled + .slider {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Define pulse animation */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+  }
+}
+
+/* Style for Add Schedule button */
+.add-schedule-button {
+  background-color: #0069ff; /* RGB 0, 105, 255 */
+  border-color: #0069ff; /* RGB 0, 105, 255 */
+  color: #ffffff; /* RGB 255, 255, 255 */
+}
+
+.add-schedule-button:hover {
+  background-color: #0052cc;
+  border-color: #0052cc;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .action-bar {
+    padding: 0 10px;
+    height: auto;
+    min-height: 60px; /* Increased from 40px to match the new desktop height */
+  }
+  
+  .action-bar-content {
+    flex-wrap: wrap;
+    padding: 10px 0; /* Increased padding for better spacing */
+  }
+  
+  .sequence-controls,
+  .gpios-controls,
+  .start-stop-buttons {
+    flex-wrap: wrap;
+    justify-content: center; /* Center items on mobile */
+  }
+  
+  .action-bar button {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    height: 32px; /* Slightly smaller height on mobile */
+  }
+  
+  .sequence-switches {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+}

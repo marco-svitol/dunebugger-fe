@@ -13,6 +13,7 @@
   display: flex;
   gap: 15px;
   margin: 20px 0;
+  align-items: center;
 }
 
 .start-button, 
@@ -31,7 +32,7 @@
   color: white;
 }
 
-.start-button:hover {
+.start-button:hover:not(:disabled) {
   background-color: #45a049;
 }
 
@@ -40,8 +41,25 @@
   color: white;
 }
 
-.stop-button:hover {
+.stop-button:hover:not(:disabled) {
   background-color: #d32f2f;
+}
+
+.start-button:disabled,
+.stop-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cycle-status {
+  margin-left: 15px;
+  padding: 8px 15px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 4px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  color: #333;
 }
 
 .dashboard-info {
@@ -54,5 +72,12 @@
 @media (max-width: 768px) {
   .control-buttons {
     flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .cycle-status {
+    margin-left: 0;
+    margin-top: 15px;
+    width: 100%;
   }
 }

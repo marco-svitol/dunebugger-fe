@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./MainPage.css";
 
-const MainPage = ({ wsClient, connectionId }) => {
+const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState }) => {
+  const [cycleStatus, setCycleStatus] = useState("Cycle not running");
+  const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
+  
   // Get GROUP_NAME from the parent component via props or use a constant if needed
   const GROUP_NAME = "velasquez"; // This should ideally come from props
   
@@ -19,6 +22,35 @@ const MainPage = ({ wsClient, connectionId }) => {
     }
   };
 
+  // Calculate total sequence length
+  const getTotalCycleLength = () => {
+    if (!sequence || !sequence.sequence || sequence.sequence.length === 0) return 0;
+    return Math.max(...sequence.sequence.map((ev) => parseFloat(ev.time)));
+  };
+
+  // Update cycle status based on playing time
+  useEffect(() => {
+    if (playingTime !== undefined) {
+      setLastPlayingTimeUpdate(Date.now());
+      const totalCycleLength = getTotalCycleLength();
+      const countdown = totalCycleLength - playingTime;
+      setCycleStatus(`Cycle running: ${countdown.toFixed(1)}s remaining`);
+    }
+  }, [playingTime, sequence]);
+
+  // Check for timeout on playing time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Date.now() - lastPlayingTimeUpdate > 15000) { // 10 seconds timeout
+        setCycleStatus("Cycle not running");
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lastPlayingTimeUpdate]);
+
+  // Determine if cycle is running based on cycle status text
+  const isCycleRunning = cycleStatus.includes("Cycle running");
+
   return (
     <div className="main-page">
       <h2>Connected to {GROUP_NAME}</h2>
@@ -27,15 +59,18 @@ const MainPage = ({ wsClient, connectionId }) => {
           <button 
             className="start-button" 
             onClick={handleStart}
+            disabled={isCycleRunning}
           >
             Start
           </button>
           <button 
             className="stop-button" 
             onClick={handleStop}
+            disabled={!isCycleRunning}
           >
             Stop
           </button>
+          <div className="cycle-status">{cycleStatus}</div>
         </div>
         <div className="dashboard-info">
           <p>This is the main control page for your device monitoring and control.</p>

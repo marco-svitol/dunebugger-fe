@@ -106,7 +106,13 @@ export default function SmartDunebugger() {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case "main":
-        return <MainPage wsClient={wsClient} connectionId={connectionId} />;
+        return <MainPage 
+          wsClient={wsClient} 
+          connectionId={connectionId} 
+          sequence={sequence} 
+          playingTime={playingTime}
+          sequenceState={sequenceState}
+        />;
       case "sequence":
         return (
           <SequencePage
@@ -142,7 +148,7 @@ export default function SmartDunebugger() {
         {/* Left Section */}
         <div className="header-left">
           <button className="hamburger-button" onClick={toggleMenu}>
-            <img src="/Dunebugger_Logo_transparent_192.png" alt="Menu" className="hamburger-logo" />
+            <img src="/Dunebugger_Logo_transparent_2.png" alt="Menu" className="hamburger-logo" />
           </button>
           <h1>Dunebugger - {getPageTitle()}</h1>
           <span className={`hub-status-circle ${connectionId ? "connected" : "disconnected"}`}></span>

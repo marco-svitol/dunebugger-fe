@@ -86,8 +86,7 @@ button:disabled {
 
 .content {
   margin: 0; /* Remove any existing margin */
-  padding-top: 60px; /* Add padding equal to the height of the header */
-  /*padding-bottom: 40px; /* Add padding equal to the height of the footer */
+  padding-top: 110px; /* Updated: Add padding equal to header + action bar height */
   display: flex;
   flex: 1;
   overflow: hidden;
@@ -114,14 +113,6 @@ button:disabled {
   padding: 20px;
   overflow-y: auto; /* Allow scrolling if content overflows */
 }
-
-/* .connected {
-  color: green;
-}
-
-.disconnected {
-  color: red;
-} */
 
 .status-circle {
   display: inline-block;
@@ -174,7 +165,7 @@ button:disabled {
 }
 
 .header-bar.offline {
-  background-color: rgb(199, 196, 153); /* Background color when disconnected */
+  background-color: rgb(158, 157, 121); /* Background color when disconnected */
 }
 
 .header-bar h1 {
@@ -189,7 +180,17 @@ button:disabled {
   color: white;
   font-size: 24px;
   cursor: pointer;
-  margin-right: 10px; /* Add spacing between the button and the title */
+  margin-right: 10px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hamburger-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
 }
 
 .status-container {
@@ -365,5 +366,10 @@ button:disabled {
 
   .group-status {
     display: none; /* Hide the group status on mobile */
+  }
+  
+  /* Update content padding for mobile */
+  .content {
+    padding-top: 100px; /* Slightly less padding on mobile */
   }
 }

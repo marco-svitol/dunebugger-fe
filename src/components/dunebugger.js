@@ -3,9 +3,13 @@ import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
 import Profile from "./Profile";
 import WebSocketManager from "./websocket";
-import GpioTable from "./GpioTable";
-import SequenceSwitches from "./SequenceSwitches";
-import SequenceTimeline from "./SequenceTimeline";
+import Menu from "./Menu"; // Import the new Menu component
+import MainPage from "./MainPage";
+import SequencePage from "./SequencePage";
+import GPIOsPage from "./GPIOsPage";
+import SchedulerPage from "./SchedulerPage";
+import AnalyticsPage from "./AnalyticsPage";
+import ActionBar from "./ActionBar"; // Import the ActionBar component
 
 const GROUP_NAME = "velasquez";
 const HEARTBEAT_TIMEOUT = 65000; // 65 seconds
@@ -24,13 +28,33 @@ export default function SmartDunebugger() {
   const [playingTime, setPlayingTime] = useState(0);
   const [logs, setLogs] = useState([]);
   const [connectionId, setConnectionId] = useState(null);
-  const [gpioVisible, setGpioVisible] = useState(false);
-  const [logsVisible, setLogsVisible] = useState(false);
   const [wssUrl, setWssUrl] = useState(null);
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-  const logsEndRef = useRef(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState("main");
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const heartBeatTimeoutRef = useRef(null);
-  const overlayRef = useRef(null);
+  const logsEndRef = useRef(null);
+
+  // Get page title for the header
+  const getPageTitle = () => {
+    switch (currentPage) {
+      case "main": return "Main";
+      case "sequence": return "Sequence";
+      case "gpios": return "GPIOs";
+      case "scheduler": return "Scheduler";
+      case "analytics": return "Analytics";
+      default: return "Main";
+    }
+  };
+
+  // Handle window resize to detect mobile view
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (wssUrl) {
@@ -51,8 +75,6 @@ export default function SmartDunebugger() {
     }
   }, [wssUrl]);
 
-  // not working
-  //this is a custom hook that will scroll to the bottom of the logs textarea
   useEffect(() => {
     if (logsEndRef.current) {
       logsEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -69,15 +91,47 @@ export default function SmartDunebugger() {
     }
   }, [isOnline, wsClient]);
 
-  const toggleOverlay = () => {
-    setIsOverlayOpen((prev) => !prev);
+  const toggleMenu = () => {
+    setIsMenuOpen((prev) => !prev);
   };
 
-  // Handle clicking outside the overlay to close it
-  const handleOverlayClick = (event) => {
-    // Check if the click was on the overlay background (not its content)
-    if (overlayRef.current && event.target === overlayRef.current) {
-      setIsOverlayOpen(false);
+  const handleNavigate = (page) => {
+    setCurrentPage(page);
+    if (isMobile) {
+      setIsMenuOpen(false); // Close menu on mobile after navigation
+    }
+  };
+
+  // Render the current page based on the navigation state
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case "main":
+        return <MainPage wsClient={wsClient} connectionId={connectionId} />;
+      case "sequence":
+        return (
+          <SequencePage
+            sequence={sequence}
+            playingTime={playingTime}
+            sequenceState={sequenceState}
+            wsClient={wsClient}
+            connectionId={connectionId}
+          />
+        );
+      case "gpios":
+        return (
+          <GPIOsPage
+            gpioStates={gpioStates}
+            logs={logs}
+            wsClient={wsClient}
+            connectionId={connectionId}
+          />
+        );
+      case "scheduler":
+        return <SchedulerPage />;
+      case "analytics":
+        return <AnalyticsPage />;
+      default:
+        return <MainPage wsClient={wsClient} connectionId={connectionId} />;
     }
   };
 
@@ -87,10 +141,10 @@ export default function SmartDunebugger() {
       <header className={`header-bar ${isOnline ? "online" : "offline"}`}>
         {/* Left Section */}
         <div className="header-left">
-          <button className="hamburger-button" onClick={toggleOverlay}>
-            ☰
+          <button className="hamburger-button" onClick={toggleMenu}>
+            <img src="/Dunebugger_Logo_transparent_192.png" alt="Menu" className="hamburger-logo" />
           </button>
-          <h1>Smart Dunebugger</h1>
+          <h1>Dunebugger - {getPageTitle()}</h1>
           <span className={`hub-status-circle ${connectionId ? "connected" : "disconnected"}`}></span>
           <span className={`hub-status ${connectionId ? "connected" : "disconnected"}`}>
             message hub: {connectionId ? "connected" : "disconnected"}
@@ -107,74 +161,41 @@ export default function SmartDunebugger() {
           </div>
           {!isAuthenticated ? (
             <button className="auth-button" onClick={loginWithRedirect}>
-              Login
+              Sign In
             </button>
           ) : (
             <button className="auth-button" onClick={logout}>
-              Logout 
-              {/* {user?.name} */}
+              Sign Out
             </button>
           )}
           <Profile setWssUrl={setWssUrl} />
         </div>
       </header>
 
+      {/* Action Bar */}
+      <ActionBar 
+        currentPage={currentPage} 
+        wsClient={wsClient} 
+        connectionId={connectionId} 
+        sequenceState={sequenceState}
+        isOnline={isOnline}
+      />
+
+      {/* Navigation Menu */}
+      <Menu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onNavigate={handleNavigate}
+        currentPage={currentPage}
+        isMobile={isMobile}
+      />
+
       {/* Main Content */}
       <div className="content">
         <div className="right-section">
-          <SequenceTimeline sequence={sequence || []} playingTime={playingTime || 0} />
-          <h3>
-            GPIO States
-            <button onClick={() => setGpioVisible(!gpioVisible)}>
-              {gpioVisible ? "-" : "+"}
-            </button>
-          </h3>
-          {gpioVisible && (
-            <GpioTable
-              gpioStates={gpioStates || []}
-              wsClient={wsClient}
-              connectionId={connectionId}
-            />
-          )}
-          <h3>
-            Logs
-            <button onClick={() => setLogsVisible(!logsVisible)}>
-              {logsVisible ? "-" : "+"}
-            </button>
-          </h3>
-          {logsVisible && (
-            <div style={{ position: "relative" }}>
-              <textarea
-                style={{ width: "100%", height: "200px", backgroundColor: "black", color: "white" }}
-                value={logs.join("\n")}
-                readOnly
-              />
-              <div ref={logsEndRef} />
-            </div>
-          )}
+          {renderCurrentPage()}
         </div>
       </div>
-
-      {/* Overlay */}
-      {isOverlayOpen && (
-        <div className="overlay" ref={overlayRef} onClick={handleOverlayClick}>
-          <div className="overlay-content">
-            <div className="sequence-controls">
-              <SequenceSwitches
-                sequenceState={sequenceState || { random_actions: false, cycle_running: false, start_button_enabled: false }}
-                wsClient={wsClient}
-                connectionId={connectionId}
-              />
-            </div>
-            <div className="commands">
-              <button className="refresh-button" onClick={() => wsClient.sendRequest("refresh", "null")}>Refresh</button>
-              <button onClick={() => wsClient.sendRequest("dunebugger_set", "so")}>Off state</button>
-              <button onClick={() => wsClient.sendRequest("dunebugger_set", "sb")}>Standby state</button>
-              <button>Upload Sequence</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

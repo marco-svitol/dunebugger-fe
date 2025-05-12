@@ -1,9 +1,28 @@
 import React, { useState, useEffect } from "react";
 import "./GpioTable.css"; // Optional: Add a CSS file for table-specific styles if needed.
 
+// Define initial column visibility
+const initialColumns = {
+  pin: true,
+  label: true,
+  mode: true,
+  state: true,
+  switch: true,
+};
+
+// Function to get initial visible columns from localStorage or use defaults
+const getInitialVisibleColumns = () => {
+  const storedVisibleColumns = localStorage.getItem("gpioTableVisibleColumns");
+  if (storedVisibleColumns) {
+    return JSON.parse(storedVisibleColumns);
+  }
+  return initialColumns;
+};
+
 function GpioTable({ gpioStates, wsClient, connectionId }) {
   const [sortedData, setSortedData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [visibleColumns, setVisibleColumns] = useState(getInitialVisibleColumns());
 
   // Update sortedData whenever gpioStates changes
   useEffect(() => {
@@ -11,6 +30,11 @@ function GpioTable({ gpioStates, wsClient, connectionId }) {
       setSortedData(gpioStates);
     }
   }, [gpioStates]);
+
+  // Update localStorage whenever visibleColumns changes
+  useEffect(() => {
+    localStorage.setItem("gpioTableVisibleColumns", JSON.stringify(visibleColumns));
+  }, [visibleColumns]);
 
   const handleSort = (key) => {
     let direction = "asc";
@@ -50,53 +74,84 @@ function GpioTable({ gpioStates, wsClient, connectionId }) {
     );
   };
 
+  const handleColumnVisibilityChange = (columnName) => {
+    setVisibleColumns((prev) => ({
+      ...prev,
+      [columnName]: !prev[columnName],
+    }));
+  };
+
   return (
     <div className="table-container">
+      <div className="column-selectors">
+        {Object.keys(initialColumns).map((columnName) => (
+          <label key={columnName} style={{ marginRight: "10px" }}>
+            <input
+              type="checkbox"
+              checked={visibleColumns[columnName]}
+              onChange={() => handleColumnVisibilityChange(columnName)}
+            />
+            {columnName.charAt(0).toUpperCase() + columnName.slice(1)}
+          </label>
+        ))}
+      </div>
       {sortedData.length === 0 ? (
         <p>No GPIO data available</p>
       ) : (
         <table>
           <thead>
             <tr>
-              <th className={`sortable ${sortConfig.key === "pin" ? sortConfig.direction : ""}`} onClick={() => handleSort("pin")}>
-                Pin
-              </th>
-              <th className={`sortable ${sortConfig.key === "label" ? sortConfig.direction : ""}`} onClick={() => handleSort("label")}>
-                Label
-              </th>
-              <th className={`sortable ${sortConfig.key === "mode" ? sortConfig.direction : ""}`} onClick={() => handleSort("mode")}>
-                Mode
-              </th>
-              <th className={`sortable ${sortConfig.key === "state" ? sortConfig.direction : ""}`} onClick={() => handleSort("state")}>
-                State
-              </th>
-              <th className={`sortable ${sortConfig.key === "switch" ? sortConfig.direction : ""}`} onClick={() => handleSort("switch")}>
-                Switch
-              </th>
+              {visibleColumns.pin && (
+                <th className={`sortable ${sortConfig.key === "pin" ? sortConfig.direction : ""}`} onClick={() => handleSort("pin")}>
+                  Pin
+                </th>
+              )}
+              {visibleColumns.label && (
+                <th className={`sortable ${sortConfig.key === "label" ? sortConfig.direction : ""}`} onClick={() => handleSort("label")}>
+                  Label
+                </th>
+              )}
+              {visibleColumns.mode && (
+                <th className={`sortable ${sortConfig.key === "mode" ? sortConfig.direction : ""}`} onClick={() => handleSort("mode")}>
+                  Mode
+                </th>
+              )}
+              {visibleColumns.state && (
+                <th className={`sortable ${sortConfig.key === "state" ? sortConfig.direction : ""}`} onClick={() => handleSort("state")}>
+                  State
+                </th>
+              )}
+              {visibleColumns.switch && (
+                <th className={`sortable ${sortConfig.key === "switch" ? sortConfig.direction : ""}`} onClick={() => handleSort("switch")}>
+                  Switch
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {sortedData.map((gpio, index) => (
               <tr key={index}>
-                <td>{gpio.pin}</td>
-                <td>{gpio.label}</td>
-                <td>{gpio.mode}</td>
-                <td>{gpio.state}</td>
-                <td>
-                  <button
-                    onClick={() => handleSwitchToggle(index)}
-                    disabled={gpio.mode !== "OUTPUT"}
-                    style={{
-                      backgroundColor: gpio.mode !== "OUTPUT" ? "lightgrey" : gpio.switch === "ON" ? "green" : "grey",
-                      color: "white",
-                      border: "none",
-                      padding: "5px 10px",
-                      cursor: gpio.mode !== "OUTPUT" ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    {gpio.switch}
-                  </button>
-                </td>
+                {visibleColumns.pin && <td>{gpio.pin}</td>}
+                {visibleColumns.label && <td>{gpio.label}</td>}
+                {visibleColumns.mode && <td>{gpio.mode}</td>}
+                {visibleColumns.state && <td>{gpio.state}</td>}
+                {visibleColumns.switch && (
+                  <td>
+                    <button
+                      onClick={() => handleSwitchToggle(index)}
+                      disabled={gpio.mode !== "OUTPUT"}
+                      style={{
+                        backgroundColor: gpio.mode !== "OUTPUT" ? "lightgrey" : gpio.switch === "ON" ? "green" : "grey",
+                        color: "white",
+                        border: "none",
+                        padding: "5px 10px",
+                        cursor: gpio.mode !== "OUTPUT" ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {gpio.switch}
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

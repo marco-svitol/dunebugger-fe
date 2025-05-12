@@ -25,7 +25,7 @@ export default function SmartDunebugger() {
     start_button_enabled: false,
   });
   const [sequence, setSequence] = useState([]);
-  const [playingTime, setPlayingTime] = useState(0);
+  const [playingTime, setPlayingTime] = useState(null); // Initialize as null to indicate no time is playing
   const [logs, setLogs] = useState([]);
   const [connectionId, setConnectionId] = useState(null);
   const [wssUrl, setWssUrl] = useState(null);

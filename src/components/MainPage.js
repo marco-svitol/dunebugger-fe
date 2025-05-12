@@ -4,6 +4,8 @@ import "./MainPage.css";
 const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState }) => {
   const [cycleStatus, setCycleStatus] = useState("Cycle not running");
   const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
+  const [progress, setProgress] = useState(0);
+  const [totalCycleLength, setTotalCycleLength] = useState(0);
   
   // Get GROUP_NAME from the parent component via props or use a constant if needed
   const GROUP_NAME = "velasquez"; // This should ideally come from props
@@ -30,11 +32,16 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
 
   // Update cycle status based on playing time
   useEffect(() => {
-    if (playingTime !== undefined) {
+    if (playingTime > 0 && playingTime !== undefined && playingTime !== null) {
       setLastPlayingTimeUpdate(Date.now());
-      const totalCycleLength = getTotalCycleLength();
-      const countdown = totalCycleLength - playingTime;
-      setCycleStatus(`Cycle running: ${countdown.toFixed(1)}s remaining`);
+      const cycleLength = getTotalCycleLength();
+      setTotalCycleLength(cycleLength);
+      
+      const countdown = cycleLength - playingTime;
+      const progressPercentage = (playingTime / cycleLength) * 100;
+      
+      setProgress(progressPercentage);
+      setCycleStatus(`${countdown.toFixed(1)}s remaining`);
     }
   }, [playingTime, sequence]);
 
@@ -43,13 +50,14 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
     const interval = setInterval(() => {
       if (Date.now() - lastPlayingTimeUpdate > 15000) { // 10 seconds timeout
         setCycleStatus("Cycle not running");
+        setProgress(0);
       }
     }, 1000);
     return () => clearInterval(interval);
   }, [lastPlayingTimeUpdate]);
 
   // Determine if cycle is running based on cycle status text
-  const isCycleRunning = cycleStatus.includes("Cycle running");
+  const isCycleRunning = !cycleStatus.includes("Cycle not running");
 
   return (
     <div className="main-page">
@@ -70,7 +78,21 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
           >
             Stop
           </button>
-          <div className="cycle-status">{cycleStatus}</div>
+          <div className="cycle-status-container">
+            {isCycleRunning ? (
+              <>
+                <div className="progress-bar-container">
+                  <div 
+                    className="progress-bar-fill" 
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+                <div className="cycle-status">{cycleStatus}</div>
+              </>
+            ) : (
+              <div className="cycle-status">Cycle not running</div>
+            )}
+          </div>
         </div>
         <div className="dashboard-info">
           <p>This is the main control page for your device monitoring and control.</p>

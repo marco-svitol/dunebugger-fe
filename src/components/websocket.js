@@ -12,7 +12,9 @@ class WebSocketManager {
     setPlayingTime,
     heartBeatTimeoutRef,
     GROUP_NAME,
-    HEARTBEAT_TIMEOUT
+    HEARTBEAT_TIMEOUT,
+    setSchedule,
+    setScheduleNext
   ) {
     this.wssUrl = wssUrl;
     this.setConnectionId = setConnectionId;
@@ -25,6 +27,8 @@ class WebSocketManager {
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
     this.GROUP_NAME = GROUP_NAME;
     this.HEARTBEAT_TIMEOUT = HEARTBEAT_TIMEOUT;
+    this.setSchedule = setSchedule;
+    this.setScheduleNext = setScheduleNext;
     this.client = new WebPubSubClient(this.wssUrl, { autoRejoinGroups: true });
     this.startWebSocket();
   }
@@ -156,6 +160,14 @@ class WebSocketManager {
 
       case "playing_time":
         this.setPlayingTime(message.body);
+        break;
+
+      case "schedule":
+        this.setSchedule(message.body);
+        break;
+
+      case "schedule_next":
+        this.setScheduleNext(message.body);
         break;
 
       default:

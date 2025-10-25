@@ -34,6 +34,22 @@ export default function SmartDunebugger() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const heartBeatTimeoutRef = useRef(null);
   const logsEndRef = useRef(null);
+  // Add new state variables for schedule and scheduleNext
+  const [schedule, setSchedule] = useState({
+    daily: [],
+    weekly: {
+      monday: [],
+      tuesday: [],
+      wednesday: [],
+      thursday: [],
+      friday: [],
+      saturday: [],
+      sunday: []
+    },
+    onetime: []
+  });
+  const [scheduleNext, setScheduleNext] = useState(null);
+  const [availableStates, setAvailableStates] = useState([]);
 
   // Get page title for the header
   const getPageTitle = () => {
@@ -69,7 +85,9 @@ export default function SmartDunebugger() {
         setPlayingTime,
         heartBeatTimeoutRef,
         GROUP_NAME,
-        HEARTBEAT_TIMEOUT
+        HEARTBEAT_TIMEOUT,
+        setSchedule,
+        setScheduleNext
       );
       setWSClient(webSocketClient);
     }
@@ -85,6 +103,8 @@ export default function SmartDunebugger() {
     if (isOnline && wsClient) {
       const fetchStates = async () => {
         await wsClient.sendRequest("refresh", "null"); // Request GPIO state
+        // Also request schedule data
+        await wsClient.sendRequest("get_schedule", "null");
       };
 
       fetchStates();
@@ -133,13 +153,52 @@ export default function SmartDunebugger() {
           />
         );
       case "scheduler":
-        return <SchedulerPage />;
+        return (
+          <SchedulerPage 
+            schedule={schedule}
+            scheduleNext={scheduleNext}
+            wsClient={wsClient}
+            connectionId={connectionId}
+            isOnline={isOnline}
+            availableStates={availableStates}
+          />
+        );
       case "analytics":
         return <AnalyticsPage />;
       default:
         return <MainPage wsClient={wsClient} connectionId={connectionId} />;
     }
   };
+
+  // Fetch available states when online
+  useEffect(() => {
+    if (isOnline && wsClient) {
+      wsClient.sendRequest("get_states", "null");
+    }
+  }, [isOnline, wsClient]);
+
+  // Add handler for states response
+  useEffect(() => {
+    const handleStatesResponse = (e) => {
+      if (e && e.data && e.data.subject === "states") {
+        try {
+          const data = JSON.parse(e.data.body);
+          if (data && data.states) {
+            setAvailableStates(data.states);
+          }
+        } catch (error) {
+          console.error("Error parsing states data:", error);
+        }
+      }
+    };
+
+    // Add event listener for the custom event
+    window.addEventListener("states_response", handleStatesResponse);
+
+    return () => {
+      window.removeEventListener("states_response", handleStatesResponse);
+    };
+  }, []);
 
   return (
     <div className="smart-dunebugger">

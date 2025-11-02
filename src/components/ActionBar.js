@@ -1,11 +1,14 @@
 import React from "react";
 import "./ActionBar.css";
 
-const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnline }) => {
+const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnline, showMessage }) => {
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
     if (wsClient && isOnline) {
       wsClient.sendRequest("dunebugger_set", "c", connectionId);
+      if (showMessage) {
+        showMessage("Start command sent to DuneBugger device", "info");
+      }
     }
   };
   
@@ -13,6 +16,9 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   const handleStop = () => {
     if (wsClient && isOnline) {
       wsClient.sendRequest("dunebugger_set", "cs", connectionId);
+      if (showMessage) {
+        showMessage("Stop command sent to DuneBugger device", "info");
+      }
     }
   };
 
@@ -84,7 +90,14 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
           <div className="sequence-controls">
             <button 
               className="refresh-button" 
-              onClick={() => wsClient && wsClient.sendRequest("refresh", "null")}
+              onClick={() => {
+                if (wsClient) {
+                  wsClient.sendRequest("refresh", "null");
+                  if (showMessage) {
+                    showMessage("Refresh command sent", "info");
+                  }
+                }
+              }}
               disabled={!isOnline}
             >
               Refresh
@@ -98,20 +111,41 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
           <div className="gpios-controls">
             <button 
               className="refresh-button" 
-              onClick={() => wsClient && wsClient.sendRequest("refresh", "null")}
+              onClick={() => {
+                if (wsClient) {
+                  wsClient.sendRequest("refresh", "null");
+                  if (showMessage) {
+                    showMessage("Refresh command sent", "info");
+                  }
+                }
+              }}
               disabled={!isOnline}
             >
               Refresh
             </button>
             <StartStopButtons />
             <button 
-              onClick={() => wsClient && wsClient.sendRequest("dunebugger_set", "so")}
+              onClick={() => {
+                if (wsClient) {
+                  wsClient.sendRequest("dunebugger_set", "so");
+                  if (showMessage) {
+                    showMessage("Set to Off state command sent", "info");
+                  }
+                }
+              }}
               disabled={!isOnline}
             >
               Off state
             </button>
             <button 
-              onClick={() => wsClient && wsClient.sendRequest("dunebugger_set", "sb")}
+              onClick={() => {
+                if (wsClient) {
+                  wsClient.sendRequest("dunebugger_set", "sb");
+                  if (showMessage) {
+                    showMessage("Set to Standby state command sent", "info");
+                  }
+                }
+              }}
               disabled={!isOnline}
             >
               Standby state
@@ -123,7 +157,14 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
           <div className="scheduler-controls">
             <button 
               className="refresh-button" 
-              onClick={() => wsClient && wsClient.sendRequest("refresh", "null")}
+              onClick={() => {
+                if (wsClient) {
+                  wsClient.sendRequest("refresh", "null");
+                  if (showMessage) {
+                    showMessage("Refresh command sent", "info");
+                  }
+                }
+              }}
               disabled={!isOnline}
             >
               Refresh

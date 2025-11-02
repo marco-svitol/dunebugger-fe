@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
 import Profile from "./Profile";
@@ -10,6 +10,7 @@ import GPIOsPage from "./GPIOsPage";
 import SchedulerPage from "./SchedulerPage";
 import AnalyticsPage from "./AnalyticsPage";
 import ActionBar from "./ActionBar"; // Import the ActionBar component
+import MessagesContainer from "./MessagesContainer"; // Import the MessagesContainer component
 
 const GROUP_NAME = "velasquez";
 const HEARTBEAT_TIMEOUT = 65000; // 65 seconds
@@ -32,6 +33,8 @@ export default function SmartDunebugger() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [hasShownLoginMessage, setHasShownLoginMessage] = useState(false);
+  const showMessageRef = useRef(null);
   const heartBeatTimeoutRef = useRef(null);
   const logsEndRef = useRef(null);
 
@@ -55,6 +58,21 @@ export default function SmartDunebugger() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Show login success message when user authenticates
+  useEffect(() => {
+    if (isAuthenticated && !hasShownLoginMessage && user && showMessageRef.current) {
+      showMessageRef.current("Connected to DuneBugger Portal", "success");
+      setHasShownLoginMessage(true);
+    }
+  }, [isAuthenticated, hasShownLoginMessage, user]);
+
+  // Reset login message flag when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setHasShownLoginMessage(false);
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (wssUrl) {
@@ -142,66 +160,76 @@ export default function SmartDunebugger() {
   };
 
   return (
-    <div className="smart-dunebugger">
-      {/* Header Bar */}
-      <header className={`header-bar ${isOnline ? "online" : "offline"}`}>
-        {/* Left Section */}
-        <div className="header-left">
-          <button className="hamburger-button" onClick={toggleMenu}>
-            <img src="/Dunebugger_Logo_transparent_2.png" alt="Menu" className="hamburger-logo" />
-          </button>
-          <h1>Dunebugger - {getPageTitle()}</h1>
-          <span className={`hub-status-circle ${connectionId ? "connected" : "disconnected"}`}></span>
-          <span className={`hub-status ${connectionId ? "connected" : "disconnected"}`}>
-            message hub: {connectionId ? "connected" : "disconnected"}
-          </span>
-        </div>
+    <MessagesContainer>
+      {({ showMessage }) => {
+        // Store the showMessage function in ref for use in useEffect
+        showMessageRef.current = showMessage;
+        
+        return (
+          <div className="smart-dunebugger">
+            {/* Header Bar */}
+            <header className={`header-bar ${isOnline ? "online" : "offline"}`}>
+              {/* Left Section */}
+              <div className="header-left">
+                <button className="hamburger-button" onClick={toggleMenu}>
+                  <img src="/Dunebugger_Logo_transparent_2.png" alt="Menu" className="hamburger-logo" />
+                </button>
+                <h1>Dunebugger - {getPageTitle()}</h1>
+                <span className={`hub-status-circle ${connectionId ? "connected" : "disconnected"}`}></span>
+                <span className={`hub-status ${connectionId ? "connected" : "disconnected"}`}>
+                  message hub: {connectionId ? "connected" : "disconnected"}
+                </span>
+              </div>
 
-        {/* Right Section */}
-        <div className="header-right">
-          <div className="status-container">
-            <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
-            <span className="group-status">
-              {GROUP_NAME} {isOnline ? "online" : "offline"}
-            </span>
+              {/* Right Section */}
+              <div className="header-right">
+                <div className="status-container">
+                  <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
+                  <span className="group-status">
+                    {GROUP_NAME} {isOnline ? "online" : "offline"}
+                  </span>
+                </div>
+                {!isAuthenticated ? (
+                  <button className="auth-button" onClick={loginWithRedirect}>
+                    Sign In
+                  </button>
+                ) : (
+                  <button className="auth-button" onClick={logout}>
+                    Sign Out
+                  </button>
+                )}
+                <Profile setWssUrl={setWssUrl} />
+              </div>
+            </header>
+
+            {/* Action Bar */}
+            <ActionBar 
+              currentPage={currentPage} 
+              wsClient={wsClient} 
+              connectionId={connectionId} 
+              sequenceState={sequenceState}
+              isOnline={isOnline}
+              showMessage={showMessage}
+            />
+
+            {/* Navigation Menu */}
+            <Menu
+              isOpen={isMenuOpen}
+              onClose={() => setIsMenuOpen(false)}
+              onNavigate={handleNavigate}
+              currentPage={currentPage}
+              isMobile={isMobile}
+            />
+
+            {/* Main Content */}
+            <div className="content">
+              <div className="right-section">
+                {renderCurrentPage()}
+              </div>
+            </div>
           </div>
-          {!isAuthenticated ? (
-            <button className="auth-button" onClick={loginWithRedirect}>
-              Sign In
-            </button>
-          ) : (
-            <button className="auth-button" onClick={logout}>
-              Sign Out
-            </button>
-          )}
-          <Profile setWssUrl={setWssUrl} />
-        </div>
-      </header>
-
-      {/* Action Bar */}
-      <ActionBar 
-        currentPage={currentPage} 
-        wsClient={wsClient} 
-        connectionId={connectionId} 
-        sequenceState={sequenceState}
-        isOnline={isOnline}
-      />
-
-      {/* Navigation Menu */}
-      <Menu
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        onNavigate={handleNavigate}
-        currentPage={currentPage}
-        isMobile={isMobile}
-      />
-
-      {/* Main Content */}
-      <div className="content">
-        <div className="right-section">
-          {renderCurrentPage()}
-        </div>
-      </div>
-    </div>
+        );
+      }}
+    </MessagesContainer>
   );
 }

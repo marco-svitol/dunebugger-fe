@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./MainPage.css";
 
-const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState }) => {
+const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState, showMessage }) => {
   const [cycleStatus, setCycleStatus] = useState("Cycle not running");
   const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
   const [progress, setProgress] = useState(0);
@@ -14,6 +14,9 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
   const handleStart = () => {
     if (wsClient) {
       wsClient.sendRequest("dunebugger_set", "c", connectionId);
+      if (showMessage) {
+        showMessage("Start command sent to DuneBugger device", "info");
+      }
     }
   };
   
@@ -21,6 +24,9 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
   const handleStop = () => {
     if (wsClient) {
       wsClient.sendRequest("dunebugger_set", "cs", connectionId);
+      if (showMessage) {
+        showMessage("Stop command sent to DuneBugger device", "info");
+      }
     }
   };
 

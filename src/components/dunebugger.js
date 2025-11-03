@@ -121,7 +121,7 @@ export default function SmartDunebugger() {
   };
 
   // Render the current page based on the navigation state
-  const renderCurrentPage = () => {
+  const renderCurrentPage = (showMessage) => {
     switch (currentPage) {
       case "main":
         return <MainPage 
@@ -130,6 +130,7 @@ export default function SmartDunebugger() {
           sequence={sequence} 
           playingTime={playingTime}
           sequenceState={sequenceState}
+          showMessage={showMessage}
         />;
       case "sequence":
         return (
@@ -210,6 +211,8 @@ export default function SmartDunebugger() {
               sequenceState={sequenceState}
               isOnline={isOnline}
               showMessage={showMessage}
+              playingTime={playingTime}
+              sequence={sequence}
             />
 
             {/* Navigation Menu */}
@@ -224,7 +227,7 @@ export default function SmartDunebugger() {
             {/* Main Content */}
             <div className="content">
               <div className="right-section">
-                {renderCurrentPage()}
+                {renderCurrentPage(showMessage)}
               </div>
             </div>
           </div>

@@ -1,7 +1,38 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./ActionBar.css";
 
-const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnline, showMessage }) => {
+const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnline, showMessage, playingTime, sequence }) => {
+  const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
+  const [cycleStatus, setCycleStatus] = useState("Cycle not running");
+
+  // Calculate total sequence length
+  const getTotalCycleLength = useCallback(() => {
+    if (!sequence || !sequence.sequence || sequence.sequence.length === 0) return 0;
+    return Math.max(...sequence.sequence.map((ev) => parseFloat(ev.time)));
+  }, [sequence]);
+
+  // Update cycle status based on playing time (same logic as MainPage)
+  useEffect(() => {
+    if (playingTime > 0 && playingTime !== undefined && playingTime !== null) {
+      setLastPlayingTimeUpdate(Date.now());
+      const cycleLength = getTotalCycleLength();
+      const countdown = cycleLength - playingTime;
+      setCycleStatus(`${countdown.toFixed(1)}s remaining`);
+    }
+  }, [playingTime, getTotalCycleLength]);
+
+  // Check for timeout on playing time updates (same logic as MainPage)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Date.now() - lastPlayingTimeUpdate > 15000) { // 15 seconds timeout
+        setCycleStatus("Cycle not running");
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lastPlayingTimeUpdate]);
+
+  // Determine if cycle is running based on cycle status text (same logic as MainPage)
+  const isCycleRunning = !cycleStatus.includes("Cycle not running");
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
     if (wsClient && isOnline) {
@@ -25,8 +56,20 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   // Custom component for Start/Stop buttons to avoid repetition
   const StartStopButtons = () => (
     <div className="start-stop-buttons">
-      <button className="start-button" onClick={handleStart} disabled={!isOnline}>Start</button>
-      <button className="stop-button" onClick={handleStop} disabled={!isOnline}>Stop</button>
+      <button 
+        className="start-button" 
+        onClick={handleStart} 
+        disabled={!isOnline || isCycleRunning}
+      >
+        Start
+      </button>
+      <button 
+        className="stop-button" 
+        onClick={handleStop} 
+        disabled={!isOnline || !isCycleRunning}
+      >
+        Stop
+      </button>
     </div>
   );
 

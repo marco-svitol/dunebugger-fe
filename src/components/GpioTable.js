@@ -55,7 +55,7 @@ function GpioTable({ gpioStates, wsClient, connectionId }) {
   const handleSwitchToggle = (index) => {
     const gpio = sortedData[index];
     const newSwitchState = gpio.switch === "ON" ? "OFF" : "ON";
-    const command = `#${gpio.pin} ${newSwitchState.toLowerCase()}`;
+    const command = `sw ${gpio.pin} ${newSwitchState.toLowerCase()}`;
 
     // Send the command to the group
     if (wsClient) {

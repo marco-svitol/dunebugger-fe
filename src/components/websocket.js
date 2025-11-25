@@ -12,7 +12,8 @@ class WebSocketManager {
     setPlayingTime,
     heartBeatTimeoutRef,
     GROUP_NAME,
-    HEARTBEAT_TIMEOUT
+    HEARTBEAT_TIMEOUT,
+    showMessageRef
   ) {
     this.wssUrl = wssUrl;
     this.setConnectionId = setConnectionId;
@@ -25,6 +26,7 @@ class WebSocketManager {
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
     this.GROUP_NAME = GROUP_NAME;
     this.HEARTBEAT_TIMEOUT = HEARTBEAT_TIMEOUT;
+    this.showMessageRef = showMessageRef;
     this.client = new WebPubSubClient(this.wssUrl, { autoRejoinGroups: true });
     this.startWebSocket();
   }
@@ -130,6 +132,25 @@ class WebSocketManager {
     switch (message.subject) {
       case "log":
         this.setLogs((prev) => [...prev, message.body]);
+        
+        // Show popup message if showMessage function is available and message has proper structure
+        if (this.showMessageRef && this.showMessageRef.current && message.body && typeof message.body === 'object') {
+          const { message: logMessage, level } = message.body;
+          
+          if (logMessage) {
+            // Map log levels to popup types
+            let popupType = 'info'; // default type
+            if (level === 'warning') {
+              popupType = 'warning';
+            } else if (level === 'error') {
+              popupType = 'error';
+            } else if (level === 'info') {
+              popupType = 'info';
+            }
+            
+            this.showMessageRef.current(logMessage, popupType);
+          }
+        }
         break;
 
       case "heartbeat":

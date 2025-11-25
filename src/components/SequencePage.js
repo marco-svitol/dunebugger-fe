@@ -6,11 +6,17 @@ const SequencePage = ({
   sequence, 
   playingTime, 
   wsClient, 
-  connectionId 
+  connectionId,
+  sequenceState,
+  showMessage
 }) => {
   const [sequenceText, setSequenceText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
+  const [lastSavedText, setLastSavedText] = useState("");
+
+  // Determine if sequence is currently running
+  const isSequenceRunning = sequenceState?.cycle_running || (playingTime > 0 && playingTime !== undefined && playingTime !== null);
 
   // Convert sequence object to readable text format
   const sequenceToText = (seq) => {
@@ -18,14 +24,14 @@ const SequencePage = ({
       return `# No sequence data loaded yet
 # Waiting for sequence data from WebSocket...
 # 
-# Format: time | command | action | parameter
+# Format: time command action parameter
 # 
 # Examples:
-# 0.0   | switch | relay1     | on
-# 5.0   | audio  | playmusic  | background.mp3
-# 10.0  | switch | relay1     | off
-# 15.0  | audio  | playsfx    | explosion.wav
-# 20.0  | audio  | fadeout    | 
+# 0.0   switch relay1     on
+# 5.0   audio  playmusic  background.mp3
+# 10.0  switch relay1     off
+# 15.0  audio  playsfx    explosion.wav
+# 20.0  audio  fadeout    
 # 
 # Commands available:
 # - switch: Control relays/switches (actions: relay1, relay2, etc.)
@@ -43,7 +49,7 @@ const SequencePage = ({
     const eventCount = seq.sequence.length;
 
     let text = `# Loaded Sequence Data (${eventCount} events, ${totalTime}s total)\n`;
-    text += "# Format: time | command | action | parameter\n";
+    text += "# Format: time command action parameter\n";
     text += "# Lines starting with # are comments\n\n";
 
     // Sort events by time
@@ -60,7 +66,7 @@ const SequencePage = ({
       const action = event.action.padEnd(maxActionWidth);
       const parameter = event.parameter || "";
       
-      text += `${time} | ${command} | ${action} | ${parameter}\n`;
+      text += `${time} ${command} ${action} ${parameter}\n`;
     });
 
     return text;
@@ -77,7 +83,7 @@ const SequencePage = ({
       // Skip empty lines and comments
       if (!trimmed || trimmed.startsWith('#')) return;
 
-      const parts = trimmed.split('|').map(part => part.trim());
+      const parts = trimmed.split(/\s+/);
       
       if (parts.length < 3) {
         errors.push(`Line ${lineNumber + 1}: Invalid format - need at least time, command, and action`);
@@ -101,7 +107,7 @@ const SequencePage = ({
         time: parts[0],
         command: parts[1],
         action: parts[2],
-        parameter: parts[3] || ""
+        parameter: parts.length > 3 ? parts.slice(3).join(' ') : ""
       };
 
       // Additional validation based on command type
@@ -123,56 +129,71 @@ const SequencePage = ({
     return { sequence: events };
   };
 
-  // Update text when sequence changes
+  // Update text when sequence changes (only if no custom content has been saved)
   useEffect(() => {
-    if (!isEditing) {
+    if (!isEditing && !lastSavedText) {
       setSequenceText(sequenceToText(sequence));
     }
-  }, [sequence, isEditing]);
+  }, [sequence, isEditing, lastSavedText]);
 
-  // Initialize text on first load
+  // Initialize text on first load (only if no saved content exists)
   useEffect(() => {
-    if (sequence && sequence.sequence && sequence.sequence.length > 0 && !sequenceText) {
+    if (sequence && sequence.sequence && sequence.sequence.length > 0 && !sequenceText && !lastSavedText) {
       console.log("SequencePage: Loading sequence data from WebSocket:", sequence);
       setSequenceText(sequenceToText(sequence));
     }
-  }, [sequence, sequenceText]);
+  }, [sequence, sequenceText, lastSavedText]);
+
+  // Handle sequence running state changes for save status
+  useEffect(() => {
+    if (isSequenceRunning && isEditing) {
+      // If sequence starts while editing, just show warning but keep editing
+      setSaveStatus("Save disabled - sequence is running. You can save when it stops.");
+    } else if (!isSequenceRunning && isEditing && saveStatus.includes("Save disabled")) {
+      // If sequence stops while editing, clear the warning
+      setSaveStatus("Sequence stopped - you can now save your changes.");
+      setTimeout(() => setSaveStatus(""), 3000);
+    }
+  }, [isSequenceRunning, isEditing, saveStatus]);
 
   const handleTextChange = (e) => {
     setSequenceText(e.target.value);
   };
 
   const handleSave = () => {
-    try {
-      setSaveStatus("Validating...");
-      const newSequence = textToSequence(sequenceText);
+    setSaveStatus("Uploading...");
+    
+    if (wsClient) {
+      // Escape the text content with \n for newlines
+      const escapedText = sequenceText.replace(/\n/g, '\\n');
       
-      setSaveStatus("Uploading...");
+      // Send the text content using the "us" command (no validation, send as-is)
+      wsClient.sendRequest("dunebugger_set", `us main.seq ${escapedText}`, connectionId);
       
-      if (wsClient) {
-        // Send the new sequence to the server
-        // You may need to implement this command on the server side
-        wsClient.sendRequest("upload_sequence", JSON.stringify(newSequence), connectionId);
-        setSaveStatus("Sequence uploaded successfully!");
-      } else {
-        setSaveStatus("No WebSocket connection - sequence validated but not uploaded");
+      // Show popup message
+      if (showMessage) {
+        showMessage("Sequence upload command sent to DuneBugger device", "info");
       }
       
-      console.log("New sequence:", newSequence);
-      setIsEditing(false);
-      
-      // Clear status after 3 seconds
-      setTimeout(() => setSaveStatus(""), 3000);
-    } catch (error) {
-      console.error("Error parsing sequence:", error);
-      setSaveStatus(`Error: ${error.message}`);
-      // Keep error message longer
-      setTimeout(() => setSaveStatus(""), 5000);
+      setSaveStatus("Sequence uploaded successfully!");
+    } else {
+      setSaveStatus("No WebSocket connection - sequence not uploaded");
     }
+    
+    console.log("Sent text content:", sequenceText);
+    
+    // Save the current text as the last saved version
+    setLastSavedText(sequenceText);
+    setIsEditing(false);
+    
+    // Clear status after 3 seconds
+    setTimeout(() => setSaveStatus(""), 3000);
   };
 
   const handleCancel = () => {
-    setSequenceText(sequenceToText(sequence));
+    // Revert to last saved text, or original sequence if no saves have been made
+    const textToRevert = lastSavedText || sequenceToText(sequence);
+    setSequenceText(textToRevert);
     setIsEditing(false);
     setSaveStatus("");
   };
@@ -200,26 +221,45 @@ const SequencePage = ({
           <div className="header-left">
             <h3>Sequence Text Editor</h3>
             {sequence && sequence.sequence && sequence.sequence.length > 0 ? (
-              <span className="data-status loaded">✓ Data Loaded</span>
+              isSequenceRunning ? (
+                <span className="data-status running">▶️ Sequence Running</span>
+              ) : (
+                <span className="data-status loaded">✓ Data Loaded</span>
+              )
             ) : (
               <span className="data-status waiting">⏳ Waiting for WebSocket data...</span>
             )}
           </div>
           <div className="editor-controls">
             {!isEditing ? (
-              <button 
-                className="edit-button"
-                onClick={() => setIsEditing(true)}
-                disabled={!sequence || !sequence.sequence || sequence.sequence.length === 0}
-              >
-                Edit
-              </button>
+              <>
+                <button 
+                  className="edit-button"
+                  onClick={() => setIsEditing(true)}
+                  disabled={!sequence || !sequence.sequence || sequence.sequence.length === 0 || isSequenceRunning}
+                >
+                  Edit
+                </button>
+                <button 
+                  className="revert-button"
+                  onClick={() => {
+                    setSequenceText(sequenceToText(sequence));
+                    setLastSavedText("");
+                    setSaveStatus("Synced with timeline data");
+                    setTimeout(() => setSaveStatus(""), 3000);
+                  }}
+                  disabled={!sequence || !sequence.sequence || sequence.sequence.length === 0}
+                  title="Reset text editor content with sequence timeline data"
+                >
+                  Reset
+                </button>
+              </>
             ) : (
               <>
                 <button 
                   className="save-button"
                   onClick={handleSave}
-                  disabled={!sequenceText.trim()}
+                  disabled={!sequenceText.trim() || isSequenceRunning}
                 >
                   Save
                 </button>
@@ -254,7 +294,7 @@ const SequencePage = ({
           <div className="text-stats">
             {sequence && sequence.sequence && sequence.sequence.length > 0 ? (
               <>
-                WebSocket Events: {sequence.sequence.length} | 
+                {lastSavedText ? "Custom Content | " : "WebSocket Events: " + sequence.sequence.length + " | "}
                 Text Lines: {sequenceText.split('\n').length} | 
                 Editable Events: {sequenceText.split('\n').filter(line => line.trim() && !line.trim().startsWith('#')).length}
               </>
@@ -269,8 +309,9 @@ const SequencePage = ({
           {isEditing && (
             <div className="editor-help">
               <small>
-                💡 Tip: Use # for comments. Format: time | command | action | parameter<br/>
+                💡 Tip: Use # for comments. Format: time command action parameter<br/>
                 ⌨️ Ctrl+S to save, Esc to cancel
+                {isSequenceRunning && <><br/>⚠️ Save disabled - sequence is currently running</>}
               </small>
             </div>
           )}

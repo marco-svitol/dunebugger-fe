@@ -87,7 +87,8 @@ export default function SmartDunebugger() {
         setPlayingTime,
         heartBeatTimeoutRef,
         GROUP_NAME,
-        HEARTBEAT_TIMEOUT
+        HEARTBEAT_TIMEOUT,
+        showMessageRef
       );
       setWSClient(webSocketClient);
     }
@@ -140,6 +141,7 @@ export default function SmartDunebugger() {
             sequenceState={sequenceState}
             wsClient={wsClient}
             connectionId={connectionId}
+            showMessage={showMessage}
           />
         );
       case "gpios":

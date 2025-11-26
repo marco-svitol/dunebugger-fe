@@ -1,0 +1,363 @@
+.system-page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.system-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 15px;
+}
+
+.system-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.system-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.refresh-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #007acc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background-color: #005a9e;
+}
+
+.refresh-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.refresh-icon {
+  font-size: 16px;
+}
+
+.system-meta {
+  display: flex;
+  gap: 30px;
+  color: #666;
+  font-size: 14px;
+}
+
+.system-meta p {
+  margin: 0;
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+}
+
+.system-content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.system-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.system-section h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.system-section h4 {
+  margin: 0 0 15px 0;
+  color: #444;
+}
+
+.system-section h5 {
+  margin: 0 0 10px 0;
+  color: #555;
+}
+
+/* Components Grid */
+.components-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.component-card {
+  background: white;
+  border-radius: 6px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+}
+
+.component-header {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.component-details p {
+  margin: 5px 0;
+  color: #666;
+}
+
+/* Hardware Grid */
+.hardware-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+}
+
+.hardware-card {
+  background: white;
+  border-radius: 6px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+}
+
+.hardware-card p {
+  margin: 8px 0;
+  color: #666;
+}
+
+/* OS Card */
+.os-card {
+  background: white;
+  border-radius: 6px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+}
+
+.os-card p {
+  margin: 8px 0;
+  color: #666;
+}
+
+/* Network Information */
+.network-info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.network-card {
+  background: white;
+  border-radius: 6px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+}
+
+.network-card p {
+  margin: 8px 0;
+  color: #666;
+}
+
+.network-interfaces {
+  background: white;
+  border-radius: 6px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+}
+
+.interfaces-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.interfaces-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.interfaces-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.interfaces-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.interfaces-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.interface-card {
+  background: #f8f9fa;
+  border-radius: 4px;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #e9ecef;
+}
+
+.interface-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.interface-card p {
+  margin: 5px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Location Card */
+.location-card {
+  background: white;
+  border-radius: 6px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+}
+
+.location-card p {
+  margin: 8px 0;
+  color: #666;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.status-badge.running {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.up {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.down {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.stopped {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-badge.unknown {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* No data styling */
+.no-data {
+  color: #999;
+  font-style: italic;
+}
+
+/* System Logs */
+.logs-container {
+  position: relative;
+}
+
+.logs-textarea {
+  width: 100%;
+  height: 300px;
+  background-color: #1e1e1e;
+  color: #ffffff;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  padding: 15px;
+  border: 1px solid #333;
+  border-radius: 6px;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.logs-textarea:focus {
+  outline: none;
+  border-color: #007acc;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .system-page {
+    padding: 10px;
+  }
+  
+  .system-header-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .refresh-button {
+    align-self: flex-end;
+  }
+  
+  .system-meta {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .components-grid,
+  .hardware-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .interface-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .network-info {
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .system-section {
+    padding: 15px;
+  }
+  
+  .component-card,
+  .hardware-card,
+  .os-card,
+  .network-card,
+  .location-card,
+  .interface-card {
+    padding: 12px;
+  }
+  
+  .network-interfaces {
+    max-height: 400px;
+    overflow-y: auto;
+  }
+}

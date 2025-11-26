@@ -10,6 +10,7 @@ class WebSocketManager {
     setSequenceState,
     setSequence,
     setPlayingTime,
+    setSystemInfo,
     heartBeatTimeoutRef,
     GROUP_NAME,
     HEARTBEAT_TIMEOUT,
@@ -23,6 +24,7 @@ class WebSocketManager {
     this.setSequenceState = setSequenceState;
     this.setSequence = setSequence;
     this.setPlayingTime = setPlayingTime;
+    this.setSystemInfo = setSystemInfo;
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
     this.GROUP_NAME = GROUP_NAME;
     this.HEARTBEAT_TIMEOUT = HEARTBEAT_TIMEOUT;
@@ -112,7 +114,7 @@ class WebSocketManager {
         this.setIsOnline(false); // Set online status to false if no heartbeat is received
         clearInterval(this.heartBeatTimeoutRef.current);
       } else {
-        console.log(`Countdown: ${countdown}`);
+        //console.log(`Countdown: ${countdown}`);
         countdown -= 1;
       }
     }, 1000);
@@ -177,6 +179,10 @@ class WebSocketManager {
 
       case "playing_time":
         this.setPlayingTime(message.body);
+        break;
+
+      case "system_info":
+        this.setSystemInfo(message.body);
         break;
 
       default:

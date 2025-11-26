@@ -55,6 +55,12 @@ const Menu = ({ isOpen, onClose, onNavigate, currentPage, isMobile }) => {
           >
             Analytics
           </button>
+          <button 
+            className={`menu-item ${currentPage === "system" ? "active" : ""}`} 
+            onClick={() => onNavigate("system")}
+          >
+            System
+          </button>
         </div>
       </div>
     </div>

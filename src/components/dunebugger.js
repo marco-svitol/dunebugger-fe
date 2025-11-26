@@ -9,6 +9,7 @@ import SequencePage from "./SequencePage";
 import GPIOsPage from "./GPIOsPage";
 import SchedulerPage from "./SchedulerPage";
 import AnalyticsPage from "./AnalyticsPage";
+import SystemPage from "./SystemPage";
 import ActionBar from "./ActionBar"; // Import the ActionBar component
 import MessagesContainer from "./MessagesContainer"; // Import the MessagesContainer component
 
@@ -28,6 +29,7 @@ export default function SmartDunebugger() {
   const [sequence, setSequence] = useState([]);
   const [playingTime, setPlayingTime] = useState(null); // Initialize as null to indicate no time is playing
   const [logs, setLogs] = useState([]);
+  const [systemInfo, setSystemInfo] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
   const [wssUrl, setWssUrl] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,6 +48,7 @@ export default function SmartDunebugger() {
       case "gpios": return "GPIOs";
       case "scheduler": return "Scheduler";
       case "analytics": return "Analytics";
+      case "system": return "System";
       default: return "Main";
     }
   };
@@ -85,6 +88,7 @@ export default function SmartDunebugger() {
         setSequenceState,
         setSequence,
         setPlayingTime,
+        setSystemInfo,
         heartBeatTimeoutRef,
         GROUP_NAME,
         HEARTBEAT_TIMEOUT,
@@ -148,7 +152,6 @@ export default function SmartDunebugger() {
         return (
           <GPIOsPage
             gpioStates={gpioStates}
-            logs={logs}
             wsClient={wsClient}
             connectionId={connectionId}
           />
@@ -157,6 +160,8 @@ export default function SmartDunebugger() {
         return <SchedulerPage />;
       case "analytics":
         return <AnalyticsPage />;
+      case "system":
+        return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} />;
       default:
         return <MainPage wsClient={wsClient} connectionId={connectionId} />;
     }

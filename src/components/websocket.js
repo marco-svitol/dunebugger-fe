@@ -10,9 +10,11 @@ class WebSocketManager {
     setSequenceState,
     setSequence,
     setPlayingTime,
+    setSystemInfo,
     heartBeatTimeoutRef,
     GROUP_NAME,
-    HEARTBEAT_TIMEOUT
+    HEARTBEAT_TIMEOUT,
+    showMessageRef
   ) {
     this.wssUrl = wssUrl;
     this.setConnectionId = setConnectionId;
@@ -22,9 +24,11 @@ class WebSocketManager {
     this.setSequenceState = setSequenceState;
     this.setSequence = setSequence;
     this.setPlayingTime = setPlayingTime;
+    this.setSystemInfo = setSystemInfo;
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
     this.GROUP_NAME = GROUP_NAME;
     this.HEARTBEAT_TIMEOUT = HEARTBEAT_TIMEOUT;
+    this.showMessageRef = showMessageRef;
     this.client = new WebPubSubClient(this.wssUrl, { autoRejoinGroups: true });
     this.startWebSocket();
   }
@@ -110,7 +114,7 @@ class WebSocketManager {
         this.setIsOnline(false); // Set online status to false if no heartbeat is received
         clearInterval(this.heartBeatTimeoutRef.current);
       } else {
-        console.log(`Countdown: ${countdown}`);
+        //console.log(`Countdown: ${countdown}`);
         countdown -= 1;
       }
     }, 1000);
@@ -130,6 +134,25 @@ class WebSocketManager {
     switch (message.subject) {
       case "log":
         this.setLogs((prev) => [...prev, message.body]);
+        
+        // Show popup message if showMessage function is available and message has proper structure
+        if (this.showMessageRef && this.showMessageRef.current && message.body && typeof message.body === 'object') {
+          const { message: logMessage, level } = message.body;
+          
+          if (logMessage) {
+            // Map log levels to popup types
+            let popupType = 'info'; // default type
+            if (level === 'warning') {
+              popupType = 'warning';
+            } else if (level === 'error') {
+              popupType = 'error';
+            } else if (level === 'info') {
+              popupType = 'info';
+            }
+            
+            this.showMessageRef.current(logMessage, popupType);
+          }
+        }
         break;
 
       case "heartbeat":
@@ -156,6 +179,10 @@ class WebSocketManager {
 
       case "playing_time":
         this.setPlayingTime(message.body);
+        break;
+
+      case "system_info":
+        this.setSystemInfo(message.body);
         break;
 
       default:

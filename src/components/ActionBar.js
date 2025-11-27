@@ -146,7 +146,6 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               Refresh
             </button>
             <StartStopButtons />
-            <button disabled={!isOnline}>Upload Sequence</button>
           </div>
         );
       case "gpios":

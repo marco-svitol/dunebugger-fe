@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./MainPage.css";
 
-const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState, showMessage }) => {
+const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState, showMessage, groupName }) => {
   const [cycleStatus, setCycleStatus] = useState("Cycle not running");
   const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
   const [progress, setProgress] = useState(0);
   const [totalCycleLength, setTotalCycleLength] = useState(0);
-  
-  // Get GROUP_NAME from the parent component via props or use a constant if needed
-  const GROUP_NAME = "velasquez"; // This should ideally come from props
   
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
@@ -67,7 +64,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
 
   return (
     <div className="main-page">
-      <h2>Connected to {GROUP_NAME}</h2>
+      <h2>Connected to {groupName}</h2>
       <div className="dashboard-content">
         <div className="control-buttons">
           <button 

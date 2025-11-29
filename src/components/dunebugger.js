@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
 import Profile from "./Profile";
+import DeviceSelector from "./DeviceSelector";
 import WebSocketManager from "./websocket";
 import Menu from "./Menu"; // Import the new Menu component
 import MainPage from "./MainPage";
@@ -32,6 +33,8 @@ export default function SmartDunebugger() {
   const [connectionId, setConnectionId] = useState(null);
   const [wssUrl, setWssUrl] = useState(null);
   const [groupName, setGroupName] = useState(""); // Default fallback, will be updated from Auth0
+  const [availableDevices, setAvailableDevices] = useState([]);
+  const [selectedDevice, setSelectedDevice] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -78,7 +81,17 @@ export default function SmartDunebugger() {
   }, [isAuthenticated]);
 
   useEffect(() => {
+    let currentClient = null;
+
     if (wssUrl && groupName) {
+      // Cleanup previous connection if exists
+      if (wsClient) {
+        wsClient.cleanup();
+        setWSClient(null);
+        setIsOnline(false);
+        setConnectionId(null);
+      }
+
       const webSocketClient = new WebSocketManager(
         wssUrl,
         setConnectionId,
@@ -94,8 +107,17 @@ export default function SmartDunebugger() {
         HEARTBEAT_TIMEOUT,
         showMessageRef
       );
+      
+      currentClient = webSocketClient;
       setWSClient(webSocketClient);
     }
+    
+    // Cleanup function for when component unmounts or dependencies change
+    return () => {
+      if (currentClient) {
+        currentClient.cleanup();
+      }
+    };
   }, [wssUrl, groupName]);
 
   useEffect(() => {
@@ -123,6 +145,11 @@ export default function SmartDunebugger() {
     if (isMobile) {
       setIsMenuOpen(false); // Close menu on mobile after navigation
     }
+  };
+
+  const handleDeviceChange = (device) => {
+    setSelectedDevice(device);
+    setGroupName(device); // This will trigger WebSocket reconnection via useEffect
   };
 
   // Render the current page based on the navigation state
@@ -185,19 +212,27 @@ export default function SmartDunebugger() {
                 </button>
                 <h1>Dunebugger - {getPageTitle()}</h1>
                 <span className={`hub-status-circle ${connectionId ? "connected" : "disconnected"}`}></span>
-                <span className={`hub-status ${connectionId ? "connected" : "disconnected"}`}>
-                  message hub: {connectionId ? "connected" : "disconnected"}
+                <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
+                <span className="hub-status-text">
+                  {isOnline ? "online" : "offline"}
                 </span>
               </div>
 
               {/* Right Section */}
               <div className="header-right">
                 <div className="status-container">
-                  <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
-                  <span className="group-status">
-                    {groupName} {isOnline ? "online" : "offline"}
-                  </span>
+                  <DeviceSelector 
+                    availableDevices={availableDevices}
+                    selectedDevice={selectedDevice}
+                    onDeviceChange={handleDeviceChange}
+                  />
                 </div>
+                <Profile 
+                  setWssUrl={setWssUrl} 
+                  setGroupName={setGroupName}
+                  setAvailableDevices={setAvailableDevices}
+                  setSelectedDevice={setSelectedDevice}
+                />
                 {!isAuthenticated ? (
                   <button className="auth-button" onClick={loginWithRedirect}>
                     Sign In
@@ -207,7 +242,6 @@ export default function SmartDunebugger() {
                     Sign Out
                   </button>
                 )}
-                <Profile setWssUrl={setWssUrl} setGroupName={setGroupName} />
               </div>
             </header>
 

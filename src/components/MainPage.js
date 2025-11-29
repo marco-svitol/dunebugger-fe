@@ -5,7 +5,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
   const [cycleStatus, setCycleStatus] = useState("Cycle not running");
   const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
   const [progress, setProgress] = useState(0);
-  const [totalCycleLength, setTotalCycleLength] = useState(0);
+  const [setTotalCycleLength] = useState(0);
   
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
@@ -64,7 +64,6 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
 
   return (
     <div className="main-page">
-      <h2>Connected to {groupName}</h2>
       <div className="dashboard-content">
         <div className="control-buttons">
           <button 

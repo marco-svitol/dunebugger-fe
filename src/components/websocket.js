@@ -195,6 +195,14 @@ class WebSocketManager {
       clearInterval(this.heartBeatTimeoutRef.current);
       this.heartBeatTimeoutRef.current = null;
     }
+    
+    if (this.client) {
+      try {
+        this.client.stop();
+      } catch (error) {
+        console.error("Error stopping WebSocket client:", error);
+      }
+    }
   }
 
 }

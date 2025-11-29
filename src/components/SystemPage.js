@@ -12,10 +12,10 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId }) => {
     }
   };
 
-  // Auto-refresh when component mounts
+  // Auto-refresh when component mounts and when connectionId changes (device switch)
   React.useEffect(() => {
     handleRefresh();
-  }, []);
+  }, [connectionId]);
   const renderDunebuggerComponents = () => {
     if (!systemInfo?.system_info.dunebugger_components) return null;
 

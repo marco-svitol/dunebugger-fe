@@ -13,7 +13,6 @@ import SystemPage from "./SystemPage";
 import ActionBar from "./ActionBar"; // Import the ActionBar component
 import MessagesContainer from "./MessagesContainer"; // Import the MessagesContainer component
 
-const GROUP_NAME = "velasquez";
 const HEARTBEAT_TIMEOUT = 65000; // 65 seconds
 
 export default function SmartDunebugger() {
@@ -32,6 +31,7 @@ export default function SmartDunebugger() {
   const [systemInfo, setSystemInfo] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
   const [wssUrl, setWssUrl] = useState(null);
+  const [groupName, setGroupName] = useState(""); // Default fallback, will be updated from Auth0
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -78,7 +78,7 @@ export default function SmartDunebugger() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (wssUrl) {
+    if (wssUrl && groupName) {
       const webSocketClient = new WebSocketManager(
         wssUrl,
         setConnectionId,
@@ -90,13 +90,13 @@ export default function SmartDunebugger() {
         setPlayingTime,
         setSystemInfo,
         heartBeatTimeoutRef,
-        GROUP_NAME,
+        groupName,
         HEARTBEAT_TIMEOUT,
         showMessageRef
       );
       setWSClient(webSocketClient);
     }
-  }, [wssUrl]);
+  }, [wssUrl, groupName]);
 
   useEffect(() => {
     if (logsEndRef.current) {
@@ -136,6 +136,7 @@ export default function SmartDunebugger() {
           playingTime={playingTime}
           sequenceState={sequenceState}
           showMessage={showMessage}
+          groupName={groupName}
         />;
       case "sequence":
         return (
@@ -163,7 +164,7 @@ export default function SmartDunebugger() {
       case "system":
         return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} />;
       default:
-        return <MainPage wsClient={wsClient} connectionId={connectionId} />;
+        return <MainPage wsClient={wsClient} connectionId={connectionId} groupName={groupName} />;
     }
   };
 
@@ -194,7 +195,7 @@ export default function SmartDunebugger() {
                 <div className="status-container">
                   <span className={`status-circle ${isOnline ? "online" : "offline"}`}></span>
                   <span className="group-status">
-                    {GROUP_NAME} {isOnline ? "online" : "offline"}
+                    {groupName} {isOnline ? "online" : "offline"}
                   </span>
                 </div>
                 {!isAuthenticated ? (
@@ -206,7 +207,7 @@ export default function SmartDunebugger() {
                     Sign Out
                   </button>
                 )}
-                <Profile setWssUrl={setWssUrl} />
+                <Profile setWssUrl={setWssUrl} setGroupName={setGroupName} />
               </div>
             </header>
 

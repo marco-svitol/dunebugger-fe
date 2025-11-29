@@ -1,0 +1,105 @@
+.device-selector {
+  position: relative;
+  display: inline-block;
+}
+
+.device-selector-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: transparent;
+  border: 1px solid #666;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+  justify-content: space-between;
+}
+
+.device-selector-button:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.device-selector-button:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.selected-device {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  color: #666;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.device-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.device-option {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background-color: transparent;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #333;
+}
+
+.device-option:hover {
+  background-color: #f8f9fa;
+}
+
+.device-option.selected {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-weight: bold;
+}
+
+
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .device-selector-button {
+    min-width: 100px;
+    font-size: 13px;
+    padding: 5px 10px;
+  }
+  
+  .selected-device {
+    max-width: 80px;
+  }
+  
+
+}

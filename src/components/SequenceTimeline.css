@@ -133,7 +133,7 @@
 }
 
 .custom-tooltip {
-  position: absolute;
+  position: fixed;
   background: rgba(0, 0, 0, 0.75);
   color: #fff;
   padding: 8px;
@@ -142,6 +142,8 @@
   pointer-events: none;
   z-index: 1000;
   white-space: nowrap;
+  max-width: 700px;
+  word-wrap: break-word;
 }
 
 /* Add this to your existing CSS file */

@@ -5,6 +5,40 @@ import { FaMusic, FaWaveSquare } from "react-icons/fa";
 function SequenceTimeline({ sequence, playingTime }) {
   const [tooltip, setTooltip] = useState({ visible: false, text: "", x: 0, y: 0 });
 
+  // Smart tooltip positioning to keep it within viewport
+  const getSmartTooltipPosition = (mouseX, mouseY, tooltipText) => {
+    const offset = 10;
+    const tooltipWidth = tooltipText.length * 5; // Rough estimate based on font size
+    const tooltipHeight = 40; // Approximate height including padding
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let x = mouseX + offset;
+    let y = mouseY + offset;
+
+    // Adjust horizontal position if tooltip would go off right edge
+    if (x + tooltipWidth > viewportWidth) {
+      x = mouseX - tooltipWidth - offset;
+    }
+
+    // If still off the left edge, clamp to left side with small margin
+    if (x < 0) {
+      x = 5;
+    }
+
+    // Adjust vertical position if tooltip would go off bottom edge
+    if (y + tooltipHeight > viewportHeight) {
+      y = mouseY - tooltipHeight - offset;
+    }
+
+    // If still off the top edge, clamp to top with small margin
+    if (y < 0) {
+      y = 5;
+    }
+
+    return { x, y };
+  };
+
   if (!sequence || !sequence.sequence || sequence.sequence.length === 0) {
     return (
       <div className="timeline-container">
@@ -134,23 +168,25 @@ const trackColors = [
             left: `${position}%`,
             color: iconColor, // Apply the color dynamically
           }}
-          onMouseEnter={(e) =>
+          onMouseEnter={(e) => {
+            const { x, y } = getSmartTooltipPosition(e.clientX, e.clientY, tooltipText);
             setTooltip({
               visible: true,
               text: tooltipText,
-              x: e.clientX,
-              y: e.clientY,
-            })
-          }
+              x: x,
+              y: y,
+            });
+          }}
           onMouseLeave={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
-          onTouchStart={(e) =>
+          onTouchStart={(e) => {
+            const { x, y } = getSmartTooltipPosition(e.touches[0].clientX, e.touches[0].clientY, tooltipText);
             setTooltip({
               visible: true,
               text: tooltipText,
-              x: e.touches[0].clientX,
-              y: e.touches[0].clientY,
-            })
-          }
+              x: x,
+              y: y,
+            });
+          }}
           onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
         >
           <Icon />
@@ -250,23 +286,25 @@ const trackColors = [
                   width: `${((segment.end - segment.start) / totalTime) * zoomFactor}%`,
                   backgroundColor: segment.color,
                 }}
-                onMouseEnter={(e) =>
+                onMouseEnter={(e) => {
+                  const { x, y } = getSmartTooltipPosition(e.clientX, e.clientY, segment.tooltip);
                   setTooltip({
                     visible: true,
                     text: segment.tooltip,
-                    x: e.clientX,
-                    y: e.clientY,
-                  })
-                }
+                    x: x,
+                    y: y,
+                  });
+                }}
                 onMouseLeave={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
-                onTouchStart={(e) =>
+                onTouchStart={(e) => {
+                  const { x, y } = getSmartTooltipPosition(e.touches[0].clientX, e.touches[0].clientY, segment.tooltip);
                   setTooltip({
                     visible: true,
                     text: segment.tooltip,
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY,
-                  })
-                }
+                    x: x,
+                    y: y,
+                  });
+                }}
                 onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
               >
                 {segment.exceedsTimeline && (
@@ -320,23 +358,27 @@ const trackColors = [
                   width: `${((segment.end - segment.start) / totalTime) * zoomFactor}%`,
                   backgroundColor: trackColor,
                 }}
-                onMouseEnter={(e) =>
+                onMouseEnter={(e) => {
+                  const tooltipText = `${action}: ${segment.start}s - ${segment.end}s`;
+                  const { x, y } = getSmartTooltipPosition(e.clientX, e.clientY, tooltipText);
                   setTooltip({
                     visible: true,
-                    text: `${action}: ${segment.start}s - ${segment.end}s`,
-                    x: e.clientX,
-                    y: e.clientY,
-                  })
-                }
+                    text: tooltipText,
+                    x: x,
+                    y: y,
+                  });
+                }}
                 onMouseLeave={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
-                onTouchStart={(e) =>
+                onTouchStart={(e) => {
+                  const tooltipText = `${action}: ${segment.start}s - ${segment.end}s`;
+                  const { x, y } = getSmartTooltipPosition(e.touches[0].clientX, e.touches[0].clientY, tooltipText);
                   setTooltip({
                     visible: true,
-                    text: `${action}: ${segment.start}s - ${segment.end}s`,
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY,
-                  })
-                }
+                    text: tooltipText,
+                    x: x,
+                    y: y,
+                  });
+                }}
                 onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
               />
             ))}
@@ -401,7 +443,7 @@ const trackColors = [
       {tooltip.visible && (
         <div
           className="custom-tooltip"
-          style={{ top: tooltip.y + 10, left: tooltip.x + 10 }}
+          style={{ top: tooltip.y, left: tooltip.x }}
         >
           {tooltip.text}
         </div>

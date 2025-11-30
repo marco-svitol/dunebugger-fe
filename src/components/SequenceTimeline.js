@@ -19,10 +19,21 @@ function SequenceTimeline({ sequence, playingTime }) {
   // Group events by "switch" actions
   const switchEvents = sequence.sequence.filter((ev) => ev.command === "switch");
   const audioEvents = sequence.sequence.filter((ev) => ev.command === "audio");
+  const dmxEvents = sequence.sequence.filter((ev) => ev.command === "dmx");
 
   const tracks = switchEvents.reduce((acc, ev) => {
     acc[ev.action] = acc[ev.action] || [];
     acc[ev.action].push(ev);
+    return acc;
+  }, {});
+
+  // Group DMX events by channel number
+  const dmxTracks = dmxEvents.reduce((acc, ev) => {
+    const channelMatch = ev.parameter.match(/^(\d+)/);
+    const channel = channelMatch ? parseInt(channelMatch[1]) : 0;
+    const key = `DMX ${channel}`;
+    acc[key] = acc[key] || [];
+    acc[key].push(ev);
     return acc;
   }, {});
 
@@ -57,6 +68,37 @@ const trackColors = [
 
   // Function to get a color for a track
   const getTrackColor = (index) => trackColors[index % trackColors.length];
+
+  // Helper function to parse DMX parameters
+  const parseDmxParameter = (parameter) => {
+    const parts = parameter.split(' ');
+    const channel = parseInt(parts[0]);
+    const colorOrDimmer = parts[1];
+    const duration = parts[2] ? parseFloat(parts[2]) : 2; // Default 2 seconds
+    return { channel, colorOrDimmer, duration };
+  };
+
+  // Helper function to convert color names to hex
+  const getColorHex = (colorName) => {
+    const colorMap = {
+      'red': '#ff4444',
+      'green': '#44ff44',
+      'blue': '#4444ff',
+      'yellow': '#ffff44',
+      'purple': '#ff44ff',
+      'cyan': '#44ffff',
+      'white': '#ffffff',
+      'orange': '#ffa544',
+      'pink': '#ff69b4',
+      'lime': '#32cd32'
+    };
+    return colorMap[colorName?.toLowerCase()] || '#808080'; // Default grey
+  };
+
+  // Helper function to convert dimmer value to percentage
+  const dimmerToPercentage = (dimmer) => {
+    return Math.round(parseFloat(dimmer) * 100);
+  };
 
   const renderAudioIcons = (audioEvents) => {
     return audioEvents.map((ev, idx) => {
@@ -117,7 +159,7 @@ const trackColors = [
     });
   };
 
-  const renderTrackLabels = (tracks) => {
+  const renderTrackLabels = (tracks, dmxTracks) => {
     return (
       <div className="track-labels">
         <div key="audio" className="track-label">Audio</div>
@@ -126,8 +168,102 @@ const trackColors = [
             {action}
           </div>
         ))}
+        {Object.keys(dmxTracks).sort((a, b) => {
+          const channelA = parseInt(a.split(' ')[1]);
+          const channelB = parseInt(b.split(' ')[1]);
+          return channelA - channelB;
+        }).map((channel, idx) => (
+          <div key={`dmx-${idx}`} className="track-label">
+            {channel}
+          </div>
+        ))}
       </div>
     );
+  };
+
+  const renderDmxTracks = (dmxTracks) => {
+    const sortedChannels = Object.keys(dmxTracks).sort((a, b) => {
+      const channelA = parseInt(a.split(' ')[1]);
+      const channelB = parseInt(b.split(' ')[1]);
+      return channelA - channelB;
+    });
+
+    return sortedChannels.map((channel, trackIndex) => {
+      const events = dmxTracks[channel];
+      const segments = [];
+
+      events.forEach((ev) => {
+        const startTime = parseFloat(ev.time);
+        const { colorOrDimmer, duration } = parseDmxParameter(ev.parameter);
+        
+        let segmentDuration;
+        let segmentColor = '#808080'; // Default grey
+        let tooltipText = `${channel}: ${ev.action}`;
+
+        // Determine segment duration and color based on command
+        if (ev.action === 'set') {
+          segmentDuration = 1; // Fixed 1 second
+          segmentColor = getColorHex(colorOrDimmer);
+          tooltipText += ` ${colorOrDimmer} at ${ev.time}s`;
+        } else if (ev.action === 'fade') {
+          segmentDuration = duration;
+          segmentColor = getColorHex(colorOrDimmer);
+          tooltipText += ` to ${colorOrDimmer} over ${duration}s at ${ev.time}s`;
+        } else if (ev.action === 'dimmer') {
+          segmentDuration = 1; // Fixed 1 second
+          const percentage = dimmerToPercentage(colorOrDimmer);
+          tooltipText += ` to ${percentage}% at ${ev.time}s`;
+        } else if (ev.action === 'fade_dimmer') {
+          segmentDuration = duration;
+          const percentage = dimmerToPercentage(colorOrDimmer);
+          tooltipText += ` to ${percentage}% over ${duration}s at ${ev.time}s`;
+        }
+
+        const endTime = Math.min(startTime + segmentDuration, totalTime);
+        segments.push({ 
+          start: startTime, 
+          end: endTime, 
+          color: segmentColor,
+          tooltip: tooltipText
+        });
+      });
+
+      return (
+        <div key={trackIndex} className="track">
+          <div className="track-timeline">
+            {segments.map((segment, idx) => (
+              <div
+                key={idx}
+                className="track-segment"
+                style={{
+                  left: `${(segment.start / totalTime) * zoomFactor}%`,
+                  width: `${((segment.end - segment.start) / totalTime) * zoomFactor}%`,
+                  backgroundColor: segment.color,
+                }}
+                onMouseEnter={(e) =>
+                  setTooltip({
+                    visible: true,
+                    text: segment.tooltip,
+                    x: e.clientX,
+                    y: e.clientY,
+                  })
+                }
+                onMouseLeave={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
+                onTouchStart={(e) =>
+                  setTooltip({
+                    visible: true,
+                    text: segment.tooltip,
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY,
+                  })
+                }
+                onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    });
   };
 
   const renderTracks = (tracks) => {
@@ -204,7 +340,7 @@ const trackColors = [
 
         {/* Track Labels */}
         <div className="labels-column">
-          {renderTrackLabels(tracks)}
+          {renderTrackLabels(tracks, dmxTracks)}
         </div>
 
         {/* Tracks */}
@@ -216,6 +352,9 @@ const trackColors = [
 
           {/* Switch Tracks */}
           {renderTracks(tracks)}
+
+          {/* DMX Tracks */}
+          {renderDmxTracks(dmxTracks)}
 
           {/* Playing Time Marker */}
           {playingTimePosition && (

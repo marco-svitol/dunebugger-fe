@@ -219,12 +219,22 @@ const trackColors = [
           tooltipText += ` to ${percentage}% over ${duration}s at ${ev.time}s`;
         }
 
-        const endTime = Math.min(startTime + segmentDuration, totalTime);
+        const actualEndTime = startTime + segmentDuration;
+        const endTime = Math.min(actualEndTime, totalTime);
+        const exceedsTimeline = actualEndTime > totalTime && (ev.action === 'fade' || ev.action === 'fade_dimmer');
+        
+        // Add warning to tooltip if segment exceeds timeline
+        if (exceedsTimeline) {
+          tooltipText += ` (⚠️ WARNING: Ends at ${actualEndTime}s, exceeds timeline duration of ${totalTime}s)`;
+        }
+        
         segments.push({ 
           start: startTime, 
           end: endTime, 
           color: segmentColor,
-          tooltip: tooltipText
+          tooltip: tooltipText,
+          exceedsTimeline: exceedsTimeline,
+          actualEndTime: actualEndTime
         });
       });
 
@@ -258,7 +268,13 @@ const trackColors = [
                   })
                 }
                 onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
-              />
+              >
+                {segment.exceedsTimeline && (
+                  <div className="segment-warning-text">
+                    ⚠️ Warning
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>

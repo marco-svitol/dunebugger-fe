@@ -94,6 +94,20 @@
   border-radius: 4px;
 }
 
+.segment-warning-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #d32f2f;
+  font-size: 13px;
+  font-weight: bold;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+
 .audio-icon {
   position: absolute;
   top: 50%;
@@ -119,7 +133,7 @@
 }
 
 .custom-tooltip {
-  position: absolute;
+  position: fixed;
   background: rgba(0, 0, 0, 0.75);
   color: #fff;
   padding: 8px;
@@ -128,6 +142,8 @@
   pointer-events: none;
   z-index: 1000;
   white-space: nowrap;
+  max-width: 700px;
+  word-wrap: break-word;
 }
 
 /* Add this to your existing CSS file */

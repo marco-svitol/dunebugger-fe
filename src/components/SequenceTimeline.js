@@ -5,6 +5,40 @@ import { FaMusic, FaWaveSquare } from "react-icons/fa";
 function SequenceTimeline({ sequence, playingTime }) {
   const [tooltip, setTooltip] = useState({ visible: false, text: "", x: 0, y: 0 });
 
+  // Smart tooltip positioning to keep it within viewport
+  const getSmartTooltipPosition = (mouseX, mouseY, tooltipText) => {
+    const offset = 10;
+    const tooltipWidth = tooltipText.length * 5; // Rough estimate based on font size
+    const tooltipHeight = 40; // Approximate height including padding
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    let x = mouseX + offset;
+    let y = mouseY + offset;
+
+    // Adjust horizontal position if tooltip would go off right edge
+    if (x + tooltipWidth > viewportWidth) {
+      x = mouseX - tooltipWidth - offset;
+    }
+
+    // If still off the left edge, clamp to left side with small margin
+    if (x < 0) {
+      x = 5;
+    }
+
+    // Adjust vertical position if tooltip would go off bottom edge
+    if (y + tooltipHeight > viewportHeight) {
+      y = mouseY - tooltipHeight - offset;
+    }
+
+    // If still off the top edge, clamp to top with small margin
+    if (y < 0) {
+      y = 5;
+    }
+
+    return { x, y };
+  };
+
   if (!sequence || !sequence.sequence || sequence.sequence.length === 0) {
     return (
       <div className="timeline-container">
@@ -19,10 +53,21 @@ function SequenceTimeline({ sequence, playingTime }) {
   // Group events by "switch" actions
   const switchEvents = sequence.sequence.filter((ev) => ev.command === "switch");
   const audioEvents = sequence.sequence.filter((ev) => ev.command === "audio");
+  const dmxEvents = sequence.sequence.filter((ev) => ev.command === "dmx");
 
   const tracks = switchEvents.reduce((acc, ev) => {
     acc[ev.action] = acc[ev.action] || [];
     acc[ev.action].push(ev);
+    return acc;
+  }, {});
+
+  // Group DMX events by channel number
+  const dmxTracks = dmxEvents.reduce((acc, ev) => {
+    const channelMatch = ev.parameter.match(/^(\d+)/);
+    const channel = channelMatch ? parseInt(channelMatch[1]) : 0;
+    const key = `DMX ${channel}`;
+    acc[key] = acc[key] || [];
+    acc[key].push(ev);
     return acc;
   }, {});
 
@@ -58,6 +103,37 @@ const trackColors = [
   // Function to get a color for a track
   const getTrackColor = (index) => trackColors[index % trackColors.length];
 
+  // Helper function to parse DMX parameters
+  const parseDmxParameter = (parameter) => {
+    const parts = parameter.split(' ');
+    const channel = parseInt(parts[0]);
+    const colorOrDimmer = parts[1];
+    const duration = parts[2] ? parseFloat(parts[2]) : 2; // Default 2 seconds
+    return { channel, colorOrDimmer, duration };
+  };
+
+  // Helper function to convert color names to hex
+  const getColorHex = (colorName) => {
+    const colorMap = {
+      'red': '#ff4444',
+      'green': '#44ff44',
+      'blue': '#4444ff',
+      'yellow': '#ffff44',
+      'purple': '#ff44ff',
+      'cyan': '#44ffff',
+      'white': '#ffffff',
+      'orange': '#ffa544',
+      'pink': '#ff69b4',
+      'lime': '#32cd32'
+    };
+    return colorMap[colorName?.toLowerCase()] || '#808080'; // Default grey
+  };
+
+  // Helper function to convert dimmer value to percentage
+  const dimmerToPercentage = (dimmer) => {
+    return Math.round(parseFloat(dimmer) * 100);
+  };
+
   const renderAudioIcons = (audioEvents) => {
     return audioEvents.map((ev, idx) => {
       // Adjust position for events at the end of the timeline
@@ -92,23 +168,25 @@ const trackColors = [
             left: `${position}%`,
             color: iconColor, // Apply the color dynamically
           }}
-          onMouseEnter={(e) =>
+          onMouseEnter={(e) => {
+            const { x, y } = getSmartTooltipPosition(e.clientX, e.clientY, tooltipText);
             setTooltip({
               visible: true,
               text: tooltipText,
-              x: e.clientX,
-              y: e.clientY,
-            })
-          }
+              x: x,
+              y: y,
+            });
+          }}
           onMouseLeave={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
-          onTouchStart={(e) =>
+          onTouchStart={(e) => {
+            const { x, y } = getSmartTooltipPosition(e.touches[0].clientX, e.touches[0].clientY, tooltipText);
             setTooltip({
               visible: true,
               text: tooltipText,
-              x: e.touches[0].clientX,
-              y: e.touches[0].clientY,
-            })
-          }
+              x: x,
+              y: y,
+            });
+          }}
           onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
         >
           <Icon />
@@ -117,7 +195,7 @@ const trackColors = [
     });
   };
 
-  const renderTrackLabels = (tracks) => {
+  const renderTrackLabels = (tracks, dmxTracks) => {
     return (
       <div className="track-labels">
         <div key="audio" className="track-label">Audio</div>
@@ -126,8 +204,120 @@ const trackColors = [
             {action}
           </div>
         ))}
+        {Object.keys(dmxTracks).sort((a, b) => {
+          const channelA = parseInt(a.split(' ')[1]);
+          const channelB = parseInt(b.split(' ')[1]);
+          return channelA - channelB;
+        }).map((channel, idx) => (
+          <div key={`dmx-${idx}`} className="track-label">
+            {channel}
+          </div>
+        ))}
       </div>
     );
+  };
+
+  const renderDmxTracks = (dmxTracks) => {
+    const sortedChannels = Object.keys(dmxTracks).sort((a, b) => {
+      const channelA = parseInt(a.split(' ')[1]);
+      const channelB = parseInt(b.split(' ')[1]);
+      return channelA - channelB;
+    });
+
+    return sortedChannels.map((channel, trackIndex) => {
+      const events = dmxTracks[channel];
+      const segments = [];
+
+      events.forEach((ev) => {
+        const startTime = parseFloat(ev.time);
+        const { colorOrDimmer, duration } = parseDmxParameter(ev.parameter);
+        
+        let segmentDuration;
+        let segmentColor = '#808080'; // Default grey
+        let tooltipText = `${channel}: ${ev.action}`;
+
+        // Determine segment duration and color based on command
+        if (ev.action === 'set') {
+          segmentDuration = 1; // Fixed 1 second
+          segmentColor = getColorHex(colorOrDimmer);
+          tooltipText += ` ${colorOrDimmer} at ${ev.time}s`;
+        } else if (ev.action === 'fade') {
+          segmentDuration = duration;
+          segmentColor = getColorHex(colorOrDimmer);
+          tooltipText += ` to ${colorOrDimmer} over ${duration}s at ${ev.time}s`;
+        } else if (ev.action === 'dimmer') {
+          segmentDuration = 1; // Fixed 1 second
+          const percentage = dimmerToPercentage(colorOrDimmer);
+          tooltipText += ` to ${percentage}% at ${ev.time}s`;
+        } else if (ev.action === 'fade_dimmer') {
+          segmentDuration = duration;
+          const percentage = dimmerToPercentage(colorOrDimmer);
+          tooltipText += ` to ${percentage}% over ${duration}s at ${ev.time}s`;
+        }
+
+        const actualEndTime = startTime + segmentDuration;
+        const endTime = Math.min(actualEndTime, totalTime);
+        const exceedsTimeline = actualEndTime > totalTime && (ev.action === 'fade' || ev.action === 'fade_dimmer');
+        
+        // Add warning to tooltip if segment exceeds timeline
+        if (exceedsTimeline) {
+          tooltipText += ` (⚠️ WARNING: Ends at ${actualEndTime}s, exceeds timeline duration of ${totalTime}s)`;
+        }
+        
+        segments.push({ 
+          start: startTime, 
+          end: endTime, 
+          color: segmentColor,
+          tooltip: tooltipText,
+          exceedsTimeline: exceedsTimeline,
+          actualEndTime: actualEndTime
+        });
+      });
+
+      return (
+        <div key={trackIndex} className="track">
+          <div className="track-timeline">
+            {segments.map((segment, idx) => (
+              <div
+                key={idx}
+                className="track-segment"
+                style={{
+                  left: `${(segment.start / totalTime) * zoomFactor}%`,
+                  width: `${((segment.end - segment.start) / totalTime) * zoomFactor}%`,
+                  backgroundColor: segment.color,
+                }}
+                onMouseEnter={(e) => {
+                  const { x, y } = getSmartTooltipPosition(e.clientX, e.clientY, segment.tooltip);
+                  setTooltip({
+                    visible: true,
+                    text: segment.tooltip,
+                    x: x,
+                    y: y,
+                  });
+                }}
+                onMouseLeave={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
+                onTouchStart={(e) => {
+                  const { x, y } = getSmartTooltipPosition(e.touches[0].clientX, e.touches[0].clientY, segment.tooltip);
+                  setTooltip({
+                    visible: true,
+                    text: segment.tooltip,
+                    x: x,
+                    y: y,
+                  });
+                }}
+                onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
+              >
+                {segment.exceedsTimeline && (
+                  <div className="segment-warning-text">
+                    ⚠️ Warning
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    });
   };
 
   const renderTracks = (tracks) => {
@@ -168,23 +358,27 @@ const trackColors = [
                   width: `${((segment.end - segment.start) / totalTime) * zoomFactor}%`,
                   backgroundColor: trackColor,
                 }}
-                onMouseEnter={(e) =>
+                onMouseEnter={(e) => {
+                  const tooltipText = `${action}: ${segment.start}s - ${segment.end}s`;
+                  const { x, y } = getSmartTooltipPosition(e.clientX, e.clientY, tooltipText);
                   setTooltip({
                     visible: true,
-                    text: `${action}: ${segment.start}s - ${segment.end}s`,
-                    x: e.clientX,
-                    y: e.clientY,
-                  })
-                }
+                    text: tooltipText,
+                    x: x,
+                    y: y,
+                  });
+                }}
                 onMouseLeave={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
-                onTouchStart={(e) =>
+                onTouchStart={(e) => {
+                  const tooltipText = `${action}: ${segment.start}s - ${segment.end}s`;
+                  const { x, y } = getSmartTooltipPosition(e.touches[0].clientX, e.touches[0].clientY, tooltipText);
                   setTooltip({
                     visible: true,
-                    text: `${action}: ${segment.start}s - ${segment.end}s`,
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY,
-                  })
-                }
+                    text: tooltipText,
+                    x: x,
+                    y: y,
+                  });
+                }}
                 onTouchEnd={() => setTooltip({ visible: false, text: "", x: 0, y: 0 })}
               />
             ))}
@@ -204,7 +398,7 @@ const trackColors = [
 
         {/* Track Labels */}
         <div className="labels-column">
-          {renderTrackLabels(tracks)}
+          {renderTrackLabels(tracks, dmxTracks)}
         </div>
 
         {/* Tracks */}
@@ -216,6 +410,9 @@ const trackColors = [
 
           {/* Switch Tracks */}
           {renderTracks(tracks)}
+
+          {/* DMX Tracks */}
+          {renderDmxTracks(dmxTracks)}
 
           {/* Playing Time Marker */}
           {playingTimePosition && (
@@ -246,7 +443,7 @@ const trackColors = [
       {tooltip.visible && (
         <div
           className="custom-tooltip"
-          style={{ top: tooltip.y + 10, left: tooltip.x + 10 }}
+          style={{ top: tooltip.y, left: tooltip.x }}
         >
           {tooltip.text}
         </div>

@@ -17,7 +17,7 @@
 /* Messages Container */
 .messages {
     position: fixed;
-    top: 20px;
+    top: 140px; /* Position below header (60px) + action bar (60px) + margin (20px) */
     right: 20px;
     z-index: 1000;
     max-width: 400px;

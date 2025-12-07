@@ -8,12 +8,21 @@ const SequencePage = ({
   wsClient, 
   connectionId,
   sequenceState,
-  showMessage
+  showMessage,
+  groupName
 }) => {
   const [sequenceText, setSequenceText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [lastSavedText, setLastSavedText] = useState("");
+
+  // Reset component state when device (groupName) changes
+  useEffect(() => {
+    setSequenceText("");
+    setIsEditing(false);
+    setSaveStatus("");
+    setLastSavedText("");
+  }, [groupName]);
 
   // Determine if sequence is currently running
   const isSequenceRunning = sequenceState?.cycle_running || (playingTime > 0 && playingTime !== undefined && playingTime !== null);

@@ -19,10 +19,17 @@ const getInitialVisibleColumns = () => {
   return initialColumns;
 };
 
-function GpioTable({ gpioStates, wsClient, connectionId }) {
+function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
   const [sortedData, setSortedData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [visibleColumns, setVisibleColumns] = useState(getInitialVisibleColumns());
+
+  // Reset sorting and data when device (groupName) changes
+  useEffect(() => {
+    setSortedData([]);
+    setSortConfig({ key: null, direction: "asc" });
+    // Note: We keep visibleColumns as they are user preferences
+  }, [groupName]);
 
   // Update sortedData whenever gpioStates changes
   useEffect(() => {

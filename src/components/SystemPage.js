@@ -1,7 +1,9 @@
 import React from "react";
 import "./SystemPage.css";
 
-const SystemPage = ({ systemInfo, logs, wsClient, connectionId }) => {
+const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName }) => {
+  // Note: System page doesn't have local state to reset,
+  // it relies on systemInfo and logs props which are reset in parent component
   const handleRefresh = async () => {
     if (wsClient && connectionId) {
       try {

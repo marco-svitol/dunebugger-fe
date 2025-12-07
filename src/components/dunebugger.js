@@ -149,6 +149,21 @@ export default function SmartDunebugger() {
 
   const handleDeviceChange = (device) => {
     setSelectedDevice(device);
+    
+    // Reset all state variables to initial values when changing device
+    setIsOnline(false);
+    setGpioStates({});
+    setSequenceState({
+      random_actions: false,
+      cycle_running: false,
+      start_button_enabled: false,
+    });
+    setSequence([]);
+    setPlayingTime(null);
+    setLogs([]);
+    setSystemInfo(null);
+    setConnectionId(null);
+    
     setGroupName(device); // This will trigger WebSocket reconnection via useEffect
   };
 
@@ -174,6 +189,7 @@ export default function SmartDunebugger() {
             wsClient={wsClient}
             connectionId={connectionId}
             showMessage={showMessage}
+            groupName={groupName}
           />
         );
       case "gpios":
@@ -182,14 +198,15 @@ export default function SmartDunebugger() {
             gpioStates={gpioStates}
             wsClient={wsClient}
             connectionId={connectionId}
+            groupName={groupName}
           />
         );
       case "scheduler":
-        return <SchedulerPage />;
+        return <SchedulerPage groupName={groupName} />;
       case "analytics":
-        return <AnalyticsPage />;
+        return <AnalyticsPage groupName={groupName} />;
       case "system":
-        return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} />;
+        return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} groupName={groupName} />;
       default:
         return <MainPage wsClient={wsClient} connectionId={connectionId} groupName={groupName} />;
     }
@@ -255,6 +272,7 @@ export default function SmartDunebugger() {
               showMessage={showMessage}
               playingTime={playingTime}
               sequence={sequence}
+              groupName={groupName}
             />
 
             {/* Navigation Menu */}

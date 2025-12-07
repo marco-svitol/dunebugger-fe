@@ -6,6 +6,14 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
   const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
   const [progress, setProgress] = useState(0);
   const [totalCycleLength, setTotalCycleLength] = useState(0);
+
+  // Reset component state when device (groupName) changes
+  useEffect(() => {
+    setCycleStatus("Cycle not running");
+    setLastPlayingTimeUpdate(Date.now());
+    setProgress(0);
+    setTotalCycleLength(0);
+  }, [groupName]);
   
   // Handler for Start button (sends "c" command)
   const handleStart = () => {

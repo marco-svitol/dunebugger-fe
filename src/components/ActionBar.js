@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./ActionBar.css";
 
-const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnline, showMessage, playingTime, sequence }) => {
+const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnline, showMessage, playingTime, sequence, groupName }) => {
   const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
   const [cycleStatus, setCycleStatus] = useState("Cycle not running");
+
+  // Reset component state when device (groupName) changes
+  useEffect(() => {
+    setLastPlayingTimeUpdate(Date.now());
+    setCycleStatus("Cycle not running");
+  }, [groupName]);
 
   // Calculate total sequence length
   const getTotalCycleLength = useCallback(() => {

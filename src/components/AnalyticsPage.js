@@ -1,6 +1,8 @@
 import React from "react";
 
-const AnalyticsPage = () => {
+const AnalyticsPage = ({ groupName }) => {
+  // Note: Analytics page currently has no state to reset,
+  // but groupName prop is added for future use
   return (
     <div className="analytics-page">
       <h2>Analytics Dashboard</h2>

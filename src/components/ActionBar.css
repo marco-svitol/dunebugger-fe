@@ -227,17 +227,7 @@ input:disabled + .slider {
   }
 }
 
-/* Style for Add Schedule button */
-.add-schedule-button {
-  background-color: #0069ff; /* RGB 0, 105, 255 */
-  border-color: #0069ff; /* RGB 0, 105, 255 */
-  color: #ffffff; /* RGB 255, 255, 255 */
-}
 
-.add-schedule-button:hover {
-  background-color: #0052cc;
-  border-color: #0052cc;
-}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

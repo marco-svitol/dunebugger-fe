@@ -207,21 +207,15 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               className="refresh-button" 
               onClick={() => {
                 if (wsClient) {
-                  wsClient.sendRequest("refresh", "null");
+                  wsClient.sendRequest("scheduler.refresh", "null");
                   if (showMessage) {
-                    showMessage("Refresh command sent", "info");
+                    showMessage("Scheduler refresh command sent", "info");
                   }
                 }
               }}
               disabled={!isOnline}
             >
               Refresh
-            </button>
-            <button 
-              disabled={!isOnline}
-              className="add-schedule-button"
-            >
-              Add Schedule
             </button>
           </div>
         );

@@ -9,6 +9,8 @@ class WebSocketManager {
     setGpioStates,
     setSequenceState,
     setSequence,
+    setSchedule,
+    setNextActions,
     setPlayingTime,
     setSystemInfo,
     heartBeatTimeoutRef,
@@ -23,6 +25,8 @@ class WebSocketManager {
     this.setGpioStates = setGpioStates;
     this.setSequenceState = setSequenceState;
     this.setSequence = setSequence;
+    this.setSchedule = setSchedule;
+    this.setNextActions = setNextActions;
     this.setPlayingTime = setPlayingTime;
     this.setSystemInfo = setSystemInfo;
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
@@ -131,6 +135,7 @@ class WebSocketManager {
     }
 
     // Handle different message subjects
+    console.log("Received WebSocket message with subject:", message.subject);
     switch (message.subject) {
       case "log":
         this.setLogs((prev) => [...prev, message.body]);
@@ -175,6 +180,21 @@ class WebSocketManager {
 
       case "sequence":
         this.setSequence(message.body);
+        break;
+
+      case "current_schedule":
+        console.log("Received current_schedule message:", message.body);
+        this.setSchedule(message.body);
+        break;
+
+      case "scheduler":
+        console.log("Received scheduler message:", message.body);
+        this.setSchedule(message.body);
+        break;
+
+      case "next_actions":
+        console.log("Received next_actions message:", message.body);
+        this.setNextActions(message.body);
         break;
 
       case "playing_time":

@@ -4,6 +4,7 @@ import "./SchedulerPage.css";
 const SchedulerPage = ({ 
   schedule,
   nextActions,
+  lastExecutedAction,
   wsClient, 
   connectionId,
   showMessage,
@@ -154,10 +155,21 @@ const SchedulerPage = ({
     }
   };
 
-  // Load next actions when component mounts or device changes
+  // Load last executed action from device
+  const loadLastExecutedAction = () => {
+    if (wsClient && isOnline) {
+      wsClient.sendRequest("scheduler.get_last_executed_action", "null", connectionId);
+      if (showMessage) {
+        showMessage("Last executed action request sent", "info");
+      }
+    }
+  };
+
+  // Load next actions and last executed action when component mounts or device changes
   useEffect(() => {
     if (wsClient && isOnline) {
       loadNextActions();
+      loadLastExecutedAction();
     }
   }, [wsClient, isOnline, groupName]);
 
@@ -213,6 +225,52 @@ const SchedulerPage = ({
           ) : (
             <div className="no-actions">
               <span className="waiting-message">⏳ Loading next actions...</span>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Last Executed Action Section */}
+      <div className="last-executed-section">
+        <div className="last-executed-header">
+          <h3>Last Executed Action</h3>
+          <button 
+            className="refresh-last-executed-button"
+            onClick={loadLastExecutedAction}
+            disabled={!isOnline}
+            title="Refresh last executed action"
+          >
+            🔄 Refresh
+          </button>
+        </div>
+        <div className="last-executed-content">
+          {lastExecutedAction ? (
+            lastExecutedAction.executed ? (
+              <div className="executed-action-card">
+                <div className="action-datetime">
+                  <div className="action-date">{lastExecutedAction.date}</div>
+                  <div className="action-time">{lastExecutedAction.time}</div>
+                </div>
+                <div className="action-details">
+                  <div className="action-name">{lastExecutedAction.action}</div>
+                  <div className="action-description">{lastExecutedAction.description}</div>
+                </div>
+                <div className="action-commands">
+                  {lastExecutedAction.commands && lastExecutedAction.commands.length > 0 && (
+                    <div className="commands-list">
+                      {lastExecutedAction.commands.join(', ')}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="no-execution">
+                <span className="no-execution-message">💭 {lastExecutedAction.message}</span>
+              </div>
+            )
+          ) : (
+            <div className="loading-execution">
+              <span className="waiting-message">⏳ Loading last executed action...</span>
             </div>
           )}
         </div>

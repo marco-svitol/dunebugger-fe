@@ -11,6 +11,7 @@ class WebSocketManager {
     setSequence,
     setSchedule,
     setNextActions,
+    setLastExecutedAction,
     setPlayingTime,
     setSystemInfo,
     heartBeatTimeoutRef,
@@ -27,6 +28,7 @@ class WebSocketManager {
     this.setSequence = setSequence;
     this.setSchedule = setSchedule;
     this.setNextActions = setNextActions;
+    this.setLastExecutedAction = setLastExecutedAction;
     this.setPlayingTime = setPlayingTime;
     this.setSystemInfo = setSystemInfo;
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
@@ -195,6 +197,11 @@ class WebSocketManager {
       case "next_actions":
         console.log("Received next_actions message:", message.body);
         this.setNextActions(message.body);
+        break;
+
+      case "last_executed_action":
+        console.log("Received last_executed_action message:", message.body);
+        this.setLastExecutedAction(message.body);
         break;
 
       case "playing_time":

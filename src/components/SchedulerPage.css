@@ -393,3 +393,159 @@
     gap: 4px;
   }
 }
+
+/* Last Executed Action Section Styles */
+.last-executed-section {
+  margin-bottom: 30px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  overflow: hidden;
+}
+
+.last-executed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.last-executed-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.refresh-last-executed-button {
+  padding: 6px 12px;
+  border: 1px solid #28a745;
+  border-radius: 4px;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: all 0.2s;
+}
+
+.refresh-last-executed-button:hover:not(:disabled) {
+  background-color: #218838;
+  border-color: #218838;
+}
+
+.refresh-last-executed-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.last-executed-content {
+  padding: 20px;
+}
+
+.executed-action-card {
+  border: 1px solid #d4edda;
+  border-radius: 6px;
+  padding: 15px;
+  background-color: #f8fff9;
+  border-left: 4px solid #28a745;
+  max-width: 500px;
+}
+
+.executed-action-card .action-datetime {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #c3e6cb;
+}
+
+.executed-action-card .action-date {
+  font-size: 0.9em;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.executed-action-card .action-time {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #28a745;
+  font-family: monospace;
+}
+
+.executed-action-card .action-details {
+  margin-bottom: 10px;
+}
+
+.executed-action-card .action-name {
+  font-size: 1em;
+  font-weight: bold;
+  color: #155724;
+  margin-bottom: 4px;
+  text-transform: capitalize;
+}
+
+.executed-action-card .action-description {
+  font-size: 0.85em;
+  color: #6c757d;
+  line-height: 1.3;
+}
+
+.executed-action-card .action-commands {
+  margin-top: 8px;
+}
+
+.executed-action-card .commands-list {
+  font-size: 0.8em;
+  font-family: monospace;
+  color: #495057;
+  background-color: #e9f7ef;
+  padding: 6px 8px;
+  border-radius: 3px;
+  border-left: 3px solid #28a745;
+}
+
+.no-execution {
+  text-align: center;
+  padding: 30px 20px;
+  background-color: #fff3cd;
+  border-radius: 6px;
+  border-left: 4px solid #ffc107;
+}
+
+.no-execution-message {
+  font-size: 0.95em;
+  color: #856404;
+  font-style: italic;
+}
+
+.loading-execution {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.loading-execution .waiting-message {
+  font-size: 0.95em;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Responsive adjustments for last executed action */
+@media (max-width: 768px) {
+  .last-executed-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .refresh-last-executed-button {
+    align-self: flex-end;
+  }
+  
+  .executed-action-card .action-datetime {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

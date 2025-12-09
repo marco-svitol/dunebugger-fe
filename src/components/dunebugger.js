@@ -29,6 +29,7 @@ export default function SmartDunebugger() {
   const [sequence, setSequence] = useState([]);
   const [schedule, setSchedule] = useState(null);
   const [nextActions, setNextActions] = useState([]);
+  const [lastExecutedAction, setLastExecutedAction] = useState(null);
 
   // Debug schedule state changes
   useEffect(() => {
@@ -39,6 +40,11 @@ export default function SmartDunebugger() {
   useEffect(() => {
     console.log("Dunebugger: nextActions state changed:", nextActions);
   }, [nextActions]);
+
+  // Debug last executed action state changes
+  useEffect(() => {
+    console.log("Dunebugger: lastExecutedAction state changed:", lastExecutedAction);
+  }, [lastExecutedAction]);
   const [playingTime, setPlayingTime] = useState(null); // Initialize as null to indicate no time is playing
   const [logs, setLogs] = useState([]);
   const [systemInfo, setSystemInfo] = useState(null);
@@ -114,6 +120,7 @@ export default function SmartDunebugger() {
         setSequence,
         setSchedule,
         setNextActions,
+        setLastExecutedAction,
         setPlayingTime,
         setSystemInfo,
         heartBeatTimeoutRef,
@@ -180,6 +187,7 @@ export default function SmartDunebugger() {
     setSequence([]);
     setSchedule(null);
     setNextActions([]);
+    setLastExecutedAction(null);
     setPlayingTime(null);
     setLogs([]);
     setSystemInfo(null);
@@ -227,6 +235,7 @@ export default function SmartDunebugger() {
           <SchedulerPage 
             schedule={schedule}
             nextActions={nextActions}
+            lastExecutedAction={lastExecutedAction}
             wsClient={wsClient}
             connectionId={connectionId}
             showMessage={showMessage}

@@ -246,7 +246,7 @@ export default function SmartDunebugger() {
       case "analytics":
         return <AnalyticsPage groupName={groupName} />;
       case "system":
-        return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} groupName={groupName} />;
+        return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} groupName={groupName} showMessage={showMessage} />;
       default:
         return <MainPage wsClient={wsClient} connectionId={connectionId} groupName={groupName} />;
     }

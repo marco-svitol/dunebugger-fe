@@ -1,13 +1,16 @@
 import React from "react";
 import "./SystemPage.css";
 
-const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName }) => {
+const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showMessage }) => {
   // Note: System page doesn't have local state to reset,
   // it relies on systemInfo and logs props which are reset in parent component
-  const handleRefresh = async () => {
+  const handleRefresh = async (showPopup = true) => {
     if (wsClient && connectionId) {
       try {
         await wsClient.sendRequest("system_info", "refresh");
+        if (showMessage && showPopup) {
+          showMessage("System info refresh request sent", "info");
+        }
       } catch (error) {
         console.error("Failed to send system info refresh request:", error);
       }
@@ -16,7 +19,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName }) => 
 
   // Auto-refresh when component mounts and when connectionId changes (device switch)
   React.useEffect(() => {
-    handleRefresh();
+    handleRefresh(false);
   }, [connectionId]);
   const renderDunebuggerComponents = () => {
     if (!systemInfo?.system_info.dunebugger_components) return null;

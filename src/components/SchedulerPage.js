@@ -146,20 +146,20 @@ const SchedulerPage = ({
   };
 
   // Load next actions from device
-  const loadNextActions = () => {
+  const loadNextActions = (showPopup = true) => {
     if (wsClient && isOnline) {
       wsClient.sendRequest("scheduler.get_next_actions", "null", connectionId);
-      if (showMessage) {
+      if (showMessage && showPopup) {
         showMessage("Next actions request sent", "info");
       }
     }
   };
 
   // Load last executed action from device
-  const loadLastExecutedAction = () => {
+  const loadLastExecutedAction = (showPopup = true) => {
     if (wsClient && isOnline) {
       wsClient.sendRequest("scheduler.get_last_executed_action", "null", connectionId);
-      if (showMessage) {
+      if (showMessage && showPopup) {
         showMessage("Last executed action request sent", "info");
       }
     }
@@ -168,8 +168,8 @@ const SchedulerPage = ({
   // Load next actions and last executed action when component mounts or device changes
   useEffect(() => {
     if (wsClient && isOnline) {
-      loadNextActions();
-      loadLastExecutedAction();
+      loadNextActions(false);
+      loadLastExecutedAction(false);
     }
   }, [wsClient, isOnline, groupName]);
 

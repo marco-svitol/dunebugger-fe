@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   height: 60px; /* Increased height from 50px to 60px */
-  background-color: #f7f7f7;
+  background-color: #666; /* Noticeably lighter than header bar #333 */
   border-bottom: 1px solid #ddd;
   z-index: 900;
   display: flex;
@@ -12,14 +12,12 @@
   align-items: center; /* Center items vertically */
   padding: 0 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  /* Add a thin separator line at the top */
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease;
 }
 
 /* Add online/offline states for action bar */
 .action-bar.online {
-  background-color: rgb(173, 216, 230); /* Light blue when online */
+  background-color: rgb(190, 225, 240); /* Moderately lighter blue than header */
 }
 
 /* Specific styling for Upload Sequence, Off State and Standby state buttons when online */
@@ -30,7 +28,7 @@
 }
 
 .action-bar.offline {
-  background-color: rgb(158, 157, 121); /* Same as header when offline */
+  background-color: #888; /* Grey color when offline */
   color: white;
 }
 

@@ -137,40 +137,12 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
       case "sequence":
         return (
           <div className="sequence-controls">
-            <button 
-              className="refresh-button" 
-              onClick={() => {
-                if (wsClient) {
-                  wsClient.sendRequest("refresh", "null");
-                  if (showMessage) {
-                    showMessage("Refresh command sent", "info");
-                  }
-                }
-              }}
-              disabled={!isOnline}
-            >
-              Refresh
-            </button>
             <StartStopButtons />
           </div>
         );
       case "gpios":
         return (
           <div className="gpios-controls">
-            <button 
-              className="refresh-button" 
-              onClick={() => {
-                if (wsClient) {
-                  wsClient.sendRequest("refresh", "null");
-                  if (showMessage) {
-                    showMessage("Refresh command sent", "info");
-                  }
-                }
-              }}
-              disabled={!isOnline}
-            >
-              Refresh
-            </button>
             <StartStopButtons />
             <button 
               onClick={() => {
@@ -203,20 +175,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
       case "scheduler":
         return (
           <div className="scheduler-controls">
-            <button 
-              className="refresh-button" 
-              onClick={() => {
-                if (wsClient) {
-                  wsClient.sendRequest("scheduler.refresh", "null");
-                  if (showMessage) {
-                    showMessage("Scheduler refresh command sent", "info");
-                  }
-                }
-              }}
-              disabled={!isOnline}
-            >
-              Refresh
-            </button>
+            {/* Refresh functionality moved to individual components */}
           </div>
         );
       case "analytics":

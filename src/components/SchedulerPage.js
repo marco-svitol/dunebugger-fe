@@ -349,7 +349,7 @@ const SchedulerPage = ({
           onKeyDown={handleKeyDown}
           readOnly={!isEditing}
           placeholder="Loading schedule from device..."
-          rows={20}
+          rows={40}
         />
         
         <div className="editor-footer">

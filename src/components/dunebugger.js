@@ -153,9 +153,16 @@ export default function SmartDunebugger() {
         // Send appropriate refresh command based on current page
         if (currentPage === "scheduler") {
           await wsClient.sendRequest("scheduler.refresh", "null");
-        } else {
-          await wsClient.sendRequest("refresh", "null"); // Request GPIO state
+        } else if (currentPage === "sequence") {
+          await wsClient.sendRequest("sequence.refresh", "null");
+        } else if (currentPage === "system") {
+          await wsClient.sendRequest("system.refresh", "null");
+        } else if (currentPage === "gpios") {
+          await wsClient.sendRequest("gpio.refresh", "null");
+        } else if (currentPage === "main") {
+          await wsClient.sendRequest("main.refresh", "null");
         }
+        // Note: analytics page doesn't need refresh as it doesn't use real-time data
       };
 
       fetchStates();
@@ -228,6 +235,7 @@ export default function SmartDunebugger() {
             wsClient={wsClient}
             connectionId={connectionId}
             groupName={groupName}
+            showMessage={showMessage}
           />
         );
       case "scheduler":

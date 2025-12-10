@@ -135,7 +135,8 @@ button:disabled {
   display: flex; /* Make the header a horizontal flex container */
   align-items: center; /* Vertically center the content */
   justify-content: space-between; /* Space out the left and right sections */
-  padding: 10px 20px; /* Add padding for spacing */
+  height: 60px; /* Set explicit height */
+  padding: 0 20px; /* Remove vertical padding, keep horizontal */
   background-color: #333; /* Dark background for the header */
   color: white; /* Text color */
   font-size: 16px; /* Font size */
@@ -165,7 +166,20 @@ button:disabled {
 }
 
 .header-bar.offline {
-  background-color: rgb(158, 157, 121); /* Background color when disconnected */
+  background-color: #555; /* Darker grey when offline - harmonizes with online state */
+  color: white; /* Ensure white text for good contrast */
+}
+
+.header-bar.offline h1 {
+  color: white; /* Override the grey color for h1 when offline */
+}
+
+.header-bar.offline .hub-status-text {
+  color: white; /* White text for status when offline */
+}
+
+.header-bar.online .hub-status-text {
+  color: #333; /* Dark text for status when online */
 }
 
 .header-bar h1 {

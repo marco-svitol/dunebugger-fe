@@ -81,62 +81,7 @@ const SequencePage = ({
     return text;
   };
 
-  // Parse text back to sequence object
-  const textToSequence = (text) => {
-    const lines = text.split('\n');
-    const events = [];
-    const errors = [];
 
-    lines.forEach((line, lineNumber) => {
-      const trimmed = line.trim();
-      // Skip empty lines and comments
-      if (!trimmed || trimmed.startsWith('#')) return;
-
-      const parts = trimmed.split(/\s+/);
-      
-      if (parts.length < 3) {
-        errors.push(`Line ${lineNumber + 1}: Invalid format - need at least time, command, and action`);
-        return;
-      }
-
-      const timeValue = parseFloat(parts[0]);
-      if (isNaN(timeValue) || timeValue < 0) {
-        errors.push(`Line ${lineNumber + 1}: Invalid time value "${parts[0]}" - must be a positive number`);
-        return;
-      }
-
-      const command = parts[1].toLowerCase();
-      const validCommands = ['switch', 'audio'];
-      if (!validCommands.includes(command)) {
-        errors.push(`Line ${lineNumber + 1}: Invalid command "${parts[1]}" - must be one of: ${validCommands.join(', ')}`);
-        return;
-      }
-
-      const event = {
-        time: parts[0],
-        command: parts[1],
-        action: parts[2],
-        parameter: parts.length > 3 ? parts.slice(3).join(' ') : ""
-      };
-
-      // Additional validation based on command type
-      if (command === 'switch') {
-        const param = event.parameter.toLowerCase();
-        if (param !== 'on' && param !== 'off') {
-          errors.push(`Line ${lineNumber + 1}: Switch command requires parameter to be "on" or "off", got "${event.parameter}"`);
-          return;
-        }
-      }
-
-      events.push(event);
-    });
-
-    if (errors.length > 0) {
-      throw new Error(`Parsing errors found:\n${errors.join('\n')}`);
-    }
-
-    return { sequence: events };
-  };
 
   // Update text when sequence changes (only if no custom content has been saved)
   useEffect(() => {
@@ -177,7 +122,7 @@ const SequencePage = ({
       const escapedText = sequenceText.replace(/\n/g, '\\n');
       
       // Send the text content using the "us" command (no validation, send as-is)
-      wsClient.sendRequest("dunebugger_set", `us main.seq ${escapedText}`, connectionId);
+      wsClient.sendRequest("core.dunebugger_set", `us main.seq ${escapedText}`, connectionId);
       
       // Show popup message
       if (showMessage) {
@@ -217,9 +162,40 @@ const SequencePage = ({
     }
   };
 
+  const handleRefresh = async (showPopup = true) => {
+    if (wsClient && connectionId) {
+      try {
+        await wsClient.sendRequest("core.refresh_sequence", "null");
+        if (showMessage && showPopup) {
+          showMessage("Sequence data refresh request sent", "info");
+        }
+      } catch (error) {
+        console.error("Failed to send sequence refresh request:", error);
+      }
+    }
+  };
+
+  // Auto-refresh when component mounts and when connectionId changes (device switch)
+  React.useEffect(() => {
+    handleRefresh(false);
+  }, [connectionId]);
+
   return (
     <div className="sequence-page">
-      <h2>Sequence Timeline</h2>
+      <div className="sequence-header">
+        <div className="sequence-header-top">
+          <h2>Sequence Timeline</h2>
+          <button 
+            className="refresh-button" 
+            onClick={handleRefresh}
+            disabled={!wsClient || !connectionId}
+            title="Refresh sequence data"
+          >
+            <span className="refresh-icon">🔄</span>
+            Refresh
+          </button>
+        </div>
+      </div>
       
       <div className="timeline-section">
         <SequenceTimeline sequence={sequence || []} playingTime={playingTime || 0} />
@@ -233,7 +209,7 @@ const SequencePage = ({
               isSequenceRunning ? (
                 <span className="data-status running">▶️ Sequence Running</span>
               ) : (
-                <span className="data-status loaded">✓ Data Loaded</span>
+                <span className="data-status loaded">✓ Sequence Loaded</span>
               )
             ) : (
               <span className="data-status waiting">⏳ Waiting for WebSocket data...</span>
@@ -252,13 +228,18 @@ const SequencePage = ({
                 <button 
                   className="revert-button"
                   onClick={() => {
-                    setSequenceText(sequenceToText(sequence));
+                    if (wsClient && connectionId) {
+                      wsClient.sendRequest("core.get_sequence", "main");
+                      setSaveStatus("Sequence reload request sent");
+                      setTimeout(() => setSaveStatus(""), 3000);
+                      if (showMessage) {
+                        showMessage("Sequence reload request sent", "info");
+                      }
+                    }
                     setLastSavedText("");
-                    setSaveStatus("Synced with timeline data");
-                    setTimeout(() => setSaveStatus(""), 3000);
                   }}
-                  disabled={!sequence || !sequence.sequence || sequence.sequence.length === 0}
-                  title="Reset text editor content with sequence timeline data"
+                  disabled={!wsClient || !connectionId}
+                  title="Reload sequence from device"
                 >
                   Reset
                 </button>

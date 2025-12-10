@@ -27,6 +27,24 @@ export default function SmartDunebugger() {
     start_button_enabled: false,
   });
   const [sequence, setSequence] = useState([]);
+  const [schedule, setSchedule] = useState(null);
+  const [nextActions, setNextActions] = useState([]);
+  const [lastExecutedAction, setLastExecutedAction] = useState(null);
+
+  // Debug schedule state changes
+  useEffect(() => {
+    console.log("Dunebugger: schedule state changed:", schedule);
+  }, [schedule]);
+
+  // Debug next actions state changes
+  useEffect(() => {
+    console.log("Dunebugger: nextActions state changed:", nextActions);
+  }, [nextActions]);
+
+  // Debug last executed action state changes
+  useEffect(() => {
+    console.log("Dunebugger: lastExecutedAction state changed:", lastExecutedAction);
+  }, [lastExecutedAction]);
   const [playingTime, setPlayingTime] = useState(null); // Initialize as null to indicate no time is playing
   const [logs, setLogs] = useState([]);
   const [systemInfo, setSystemInfo] = useState(null);
@@ -100,6 +118,9 @@ export default function SmartDunebugger() {
         setGpioStates,
         setSequenceState,
         setSequence,
+        setSchedule,
+        setNextActions,
+        setLastExecutedAction,
         setPlayingTime,
         setSystemInfo,
         heartBeatTimeoutRef,
@@ -129,12 +150,24 @@ export default function SmartDunebugger() {
   useEffect(() => {
     if (isOnline && wsClient) {
       const fetchStates = async () => {
-        await wsClient.sendRequest("refresh", "null"); // Request GPIO state
+        // Send appropriate refresh command based on current page
+        if (currentPage === "scheduler") {
+          await wsClient.sendRequest("scheduler.refresh", "null");
+        } else if (currentPage === "sequence") {
+          await wsClient.sendRequest("core.refresh_sequence", "null");
+        } else if (currentPage === "system") {
+          await wsClient.sendRequest("controller.system_info", "null");
+        } else if (currentPage === "gpios") {
+          await wsClient.sendRequest("core.refresh_gpios", "null");
+        } else if (currentPage === "main") {
+          await wsClient.sendRequest("core.refresh_sequence", "null");
+        }
+        // Note: analytics page doesn't need refresh as it doesn't use real-time data
       };
 
       fetchStates();
     }
-  }, [isOnline, wsClient]);
+  }, [isOnline, wsClient, currentPage]);
 
   const toggleMenu = () => {
     setIsMenuOpen((prev) => !prev);
@@ -159,6 +192,9 @@ export default function SmartDunebugger() {
       start_button_enabled: false,
     });
     setSequence([]);
+    setSchedule(null);
+    setNextActions([]);
+    setLastExecutedAction(null);
     setPlayingTime(null);
     setLogs([]);
     setSystemInfo(null);
@@ -199,14 +235,26 @@ export default function SmartDunebugger() {
             wsClient={wsClient}
             connectionId={connectionId}
             groupName={groupName}
+            showMessage={showMessage}
           />
         );
       case "scheduler":
-        return <SchedulerPage groupName={groupName} />;
+        return (
+          <SchedulerPage 
+            schedule={schedule}
+            nextActions={nextActions}
+            lastExecutedAction={lastExecutedAction}
+            wsClient={wsClient}
+            connectionId={connectionId}
+            showMessage={showMessage}
+            groupName={groupName}
+            isOnline={isOnline}
+          />
+        );
       case "analytics":
         return <AnalyticsPage groupName={groupName} />;
       case "system":
-        return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} groupName={groupName} />;
+        return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} groupName={groupName} showMessage={showMessage} />;
       default:
         return <MainPage wsClient={wsClient} connectionId={connectionId} groupName={groupName} />;
     }

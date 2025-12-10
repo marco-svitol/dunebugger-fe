@@ -23,7 +23,7 @@ function SequenceSwitches({ sequenceState, wsClient, connectionId }) {
     // Send the command to the group
     if (wsClient) {
       wsClient.sendRequest(
-        "dunebugger_set",
+        "core.dunebugger_set",
         command,
         connectionId
       );

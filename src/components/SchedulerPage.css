@@ -27,3 +27,578 @@
   margin-top: 0;
   color: #333;
 }
+
+/* Scheduler Text Editor Styles */
+.scheduler-text-section {
+  margin-top: 30px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  overflow: hidden;
+}
+
+.text-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-left h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.data-status {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.data-status.loading {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.data-status.loaded {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.data-status.waiting {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.editor-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.editor-controls button {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+}
+
+.editor-controls button:hover:not(:disabled) {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.editor-controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.edit-button, .load-button {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.edit-button:hover:not(:disabled), .load-button:hover:not(:disabled) {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.save-button {
+  background-color: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.save-button:hover:not(:disabled) {
+  background-color: #218838;
+  border-color: #218838;
+}
+
+.cancel-button, .reset-button {
+  background-color: #6c757d;
+  color: white;
+  border-color: #6c757d;
+}
+
+.cancel-button:hover:not(:disabled), .reset-button:hover:not(:disabled) {
+  background-color: #5a6268;
+  border-color: #5a6268;
+}
+
+.save-status {
+  padding: 10px 20px;
+  margin: 0;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.save-status.success {
+  background-color: #d4edda;
+  color: #155724;
+  border-bottom: 1px solid #c3e6cb;
+}
+
+.save-status.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-bottom: 1px solid #f5c6cb;
+}
+
+/* Container for textarea and overlay */
+.textarea-container {
+  position: relative;
+  width: 100%;
+}
+
+.schedule-text-editor {
+  width: 100%;
+  height: 600px;
+  min-height: 300px;
+  padding: 20px;
+  border: none;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+  background-color: white;
+  color: #333;
+}
+
+/* Overlay for bold formatting in readonly mode */
+.text-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: transparent;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.text-overlay.visible {
+  display: block;
+}
+
+.text-overlay.hidden {
+  display: none;
+}
+
+/* Bold styling for [...] titles in overlay */
+.text-overlay .bold-title {
+  font-weight: bold;
+  color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.schedule-text-editor.editing {
+  background-color: #fffef7;
+  border-left: 3px solid #28a745;
+  color: #333;
+}
+
+.schedule-text-editor.readonly {
+  background-color: #f8f9fa;
+  color: transparent; /* Hide textarea text in readonly mode to show overlay */
+}
+
+.schedule-text-editor:focus {
+  background-color: white;
+  color: #333;
+}
+
+/* Ensure overlay matches textarea background in readonly mode */
+.textarea-container .schedule-text-editor.readonly + .text-overlay,
+.textarea-container .text-overlay.visible {
+  background-color: #f8f9fa;
+}
+
+.editor-footer {
+  padding: 10px 20px;
+  background-color: #f8f9fa;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.text-stats {
+  font-size: 0.85em;
+  color: #6c757d;
+  font-family: monospace;
+}
+
+.editor-help {
+  font-size: 0.8em;
+  color: #6c757d;
+  text-align: right;
+  max-width: 400px;
+}
+
+.editor-help small {
+  display: block;
+  line-height: 1.3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .text-editor-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .editor-controls {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  
+  .editor-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .editor-help {
+    text-align: left;
+    max-width: none;
+  }
+}
+
+/* Next Actions Section Styles */
+.next-actions-section {
+  margin-bottom: 30px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  overflow: hidden;
+}
+
+.next-actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.next-actions-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.refresh-next-actions-button {
+  padding: 6px 12px;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: all 0.2s;
+}
+
+.refresh-next-actions-button:hover:not(:disabled) {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.refresh-next-actions-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.next-actions-content {
+  padding: 20px;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.action-card {
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  transition: box-shadow 0.2s;
+}
+
+.action-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-datetime {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.action-date {
+  font-size: 0.9em;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.action-time {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #007bff;
+  font-family: monospace;
+}
+
+.action-details {
+  margin-bottom: 10px;
+}
+
+.action-name {
+  font-size: 1em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+  text-transform: capitalize;
+}
+
+.action-description {
+  font-size: 0.85em;
+  color: #6c757d;
+  line-height: 1.3;
+}
+
+.action-commands {
+  margin-top: 8px;
+}
+
+.commands-list {
+  font-size: 0.8em;
+  font-family: monospace;
+  color: #495057;
+  background-color: #e9ecef;
+  padding: 6px 8px;
+  border-radius: 3px;
+  border-left: 3px solid #007bff;
+}
+
+.no-actions {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.waiting-message {
+  font-size: 0.95em;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Responsive adjustments for next actions */
+@media (max-width: 768px) {
+  .next-actions-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .refresh-next-actions-button {
+    align-self: flex-end;
+  }
+  
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-datetime {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* Last Executed Action Section Styles */
+.last-executed-section {
+  margin-bottom: 30px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  overflow: hidden;
+}
+
+.last-executed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.last-executed-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.refresh-last-executed-button {
+  padding: 6px 12px;
+  border: 1px solid #28a745;
+  border-radius: 4px;
+  background-color: #28a745;
+  color: white;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: all 0.2s;
+}
+
+.refresh-last-executed-button:hover:not(:disabled) {
+  background-color: #218838;
+  border-color: #218838;
+}
+
+.refresh-last-executed-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.last-executed-content {
+  padding: 20px;
+}
+
+.executed-action-card {
+  border: 1px solid #d4edda;
+  border-radius: 6px;
+  padding: 15px;
+  background-color: #f8fff9;
+  border-left: 4px solid #28a745;
+  max-width: 500px;
+}
+
+.executed-action-card .action-datetime {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #c3e6cb;
+}
+
+.executed-action-card .action-date {
+  font-size: 0.9em;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.executed-action-card .action-time {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #28a745;
+  font-family: monospace;
+}
+
+.executed-action-card .action-details {
+  margin-bottom: 10px;
+}
+
+.executed-action-card .action-name {
+  font-size: 1em;
+  font-weight: bold;
+  color: #155724;
+  margin-bottom: 4px;
+  text-transform: capitalize;
+}
+
+.executed-action-card .action-description {
+  font-size: 0.85em;
+  color: #6c757d;
+  line-height: 1.3;
+}
+
+.executed-action-card .action-commands {
+  margin-top: 8px;
+}
+
+.executed-action-card .commands-list {
+  font-size: 0.8em;
+  font-family: monospace;
+  color: #495057;
+  background-color: #e9f7ef;
+  padding: 6px 8px;
+  border-radius: 3px;
+  border-left: 3px solid #28a745;
+}
+
+.no-execution {
+  text-align: center;
+  padding: 30px 20px;
+  background-color: #fff3cd;
+  border-radius: 6px;
+  border-left: 4px solid #ffc107;
+}
+
+.no-execution-message {
+  font-size: 0.95em;
+  color: #856404;
+  font-style: italic;
+}
+
+.loading-execution {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.loading-execution .waiting-message {
+  font-size: 0.95em;
+  color: #6c757d;
+  font-style: italic;
+}
+
+/* Responsive adjustments for last executed action */
+@media (max-width: 768px) {
+  .last-executed-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .refresh-last-executed-button {
+    align-self: flex-end;
+  }
+  
+  .executed-action-card .action-datetime {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

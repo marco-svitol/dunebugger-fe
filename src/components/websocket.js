@@ -9,6 +9,9 @@ class WebSocketManager {
     setGpioStates,
     setSequenceState,
     setSequence,
+    setSchedule,
+    setNextActions,
+    setLastExecutedAction,
     setPlayingTime,
     setSystemInfo,
     heartBeatTimeoutRef,
@@ -23,6 +26,9 @@ class WebSocketManager {
     this.setGpioStates = setGpioStates;
     this.setSequenceState = setSequenceState;
     this.setSequence = setSequence;
+    this.setSchedule = setSchedule;
+    this.setNextActions = setNextActions;
+    this.setLastExecutedAction = setLastExecutedAction;
     this.setPlayingTime = setPlayingTime;
     this.setSystemInfo = setSystemInfo;
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
@@ -37,7 +43,7 @@ class WebSocketManager {
     this.client.on("connected", (event) => {
       console.log("Connected to WebSocket.");
       this.handleConnectionEstablished(event);
-      this.sendRequest("heartbeat", "I am here", event.connectionId);
+      this.sendRequest("controller.heartbeat", "I am here", event.connectionId);
       this.listenHeartBeat();
     });
 
@@ -131,6 +137,7 @@ class WebSocketManager {
     }
 
     // Handle different message subjects
+    console.log("Received WebSocket message with subject:", message.subject);
     switch (message.subject) {
       case "log":
         this.setLogs((prev) => [...prev, message.body]);
@@ -161,7 +168,7 @@ class WebSocketManager {
         clearTimeout(this.heartBeatTimeoutRef.current);
         this.listenHeartBeat(); // Restart the countdown
         if (message.body === "Is anyone there?") {
-          this.sendRequest("heartbeat", "I am here");
+          this.sendRequest("controller.heartbeat", "I am here");
         }
         break;
 
@@ -175,6 +182,25 @@ class WebSocketManager {
 
       case "sequence":
         this.setSequence(message.body);
+        break;
+
+      case "current_schedule":
+        console.log("Received current_schedule message:", message.body);
+        // Force React to detect changes by including a timestamp
+        this.setSchedule({
+          data: message.body,
+          timestamp: Date.now()
+        });
+        break;
+
+      case "next_actions":
+        console.log("Received next_actions message:", message.body);
+        this.setNextActions(message.body);
+        break;
+
+      case "last_executed_action":
+        console.log("Received last_executed_action message:", message.body);
+        this.setLastExecutedAction(message.body);
         break;
 
       case "playing_time":

@@ -311,6 +311,10 @@
     padding: 10px;
   }
   
+  .system-header h2 {
+    font-size: 1.1rem; /* Same smaller font size as other pages */
+  }
+  
   .system-header-top {
     flex-direction: column;
     align-items: flex-start;

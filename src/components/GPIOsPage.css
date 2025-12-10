@@ -54,3 +54,14 @@
 .gpio-table-section {
   margin-top: 20px;
 }
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .gpios-header h2 {
+    font-size: 1.1rem; /* Smaller font size for mobile */
+  }
+  
+  .gpios-page {
+    padding: 15px; /* Reduce page padding on mobile */
+  }
+}

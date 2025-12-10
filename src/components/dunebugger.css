@@ -19,11 +19,11 @@ h2.disconnected {
 }
 
 .status-circle {
-  display: inline-block;
+  display: block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  margin-right: 5px;
+  flex-shrink: 0;
 }
 
 .status-circle.online {
@@ -86,7 +86,7 @@ button:disabled {
 
 .content {
   margin: 0; /* Remove any existing margin */
-  padding-top: 110px; /* Updated: Add padding equal to header + action bar height */
+  padding-top: 124px; /* Updated: 64px header + 60px action bar */
   display: flex;
   flex: 1;
   overflow: hidden;
@@ -115,11 +115,11 @@ button:disabled {
 }
 
 .status-circle {
-  display: inline-block;
+  display: block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  margin-right: 5px;
+  flex-shrink: 0;
 }
 
 .status-circle.online {
@@ -135,8 +135,8 @@ button:disabled {
   display: flex; /* Make the header a horizontal flex container */
   align-items: center; /* Vertically center the content */
   justify-content: space-between; /* Space out the left and right sections */
-  height: 60px; /* Set explicit height */
-  padding: 0 20px; /* Remove vertical padding, keep horizontal */
+  height: 64px; /* Increased height to accommodate all elements */
+  padding: 8px 20px; /* Add some vertical padding for better spacing */
   background-color: #333; /* Dark background for the header */
   color: white; /* Text color */
   font-size: 16px; /* Font size */
@@ -145,13 +145,17 @@ button:disabled {
   left: 0; /* Align to the left */
   right: 0; /* Align to the right */
   z-index: 1000; /* Ensure it stays on top of other elements */
+  box-sizing: border-box; /* Include padding in height calculation */
 }
 
 /* Left Section of the Header */
 .header-left {
-  display: flex; /* Align items horizontally */
-  align-items: center; /* Vertically center the content */
+  display: flex !important; /* Force horizontal alignment */
+  flex-direction: row !important; /* Force horizontal direction */
+  align-items: center !important; /* Vertically center the content */
   gap: 10px; /* Add spacing between elements */
+  height: 100%; /* Take full header height */
+  flex-wrap: nowrap; /* Prevent wrapping */
 }
 
 /* Right Section of the Header */
@@ -184,27 +188,32 @@ button:disabled {
 
 .header-bar h1 {
   margin: 0; /* Remove default margin */
-  font-size: 20px; /* Font size for the title */
+  font-size: 18px; /* Font size for the title */
   color: #666;
+  white-space: nowrap; /* Prevent text wrapping */
+  flex-shrink: 0;
 }
 
 .hamburger-button {
   background: none;
   border: none;
   color: white;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
-  margin-right: 10px;
-  padding: 0;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
 }
 
 .hamburger-logo {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
+  display: block;
 }
 
 .status-container {
@@ -228,12 +237,11 @@ button:disabled {
 }
 
 .hub-status-circle {
-  display: inline-block;
+  display: block;
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  margin-left: 20px;
-  margin-right: 5px;
+  flex-shrink: 0;
 }
 
 .hub-status-circle.connected {
@@ -371,16 +379,42 @@ button:disabled {
     display: none; /* Hide the Smart Dunebugger title on mobile */
   }
   
-  /* Adjust spacing when title is hidden */
+  /* Adjust spacing and alignment when title is hidden */
   .header-left {
-    gap: 5px; /* Reduce spacing between elements */
+    gap: 8px; /* Slightly increase gap for better spacing */
+    flex: 1; /* Allow left section to expand */
+    justify-content: flex-start; /* Align items to the start */
+    display: flex !important; /* Force flex on mobile */
+    flex-direction: row !important; /* Force horizontal direction */
+    align-items: center !important; /* Force center alignment */
   }
   
-  /* Make header more compact on mobile */
+  /* Make header more compact on mobile with better spacing */
   .header-bar {
-    padding: 10px;
+    padding: 6px 12px; /* Reduce padding but keep it balanced */
+    height: 56px; /* Mobile header height */
   }
-
+  
+  /* Improve hamburger button mobile styling */
+  .hamburger-button {
+    padding: 2px;
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  
+  /* Better spacing for header right section on mobile */
+  .header-right {
+    gap: 8px; /* Reduce gap between right section items */
+    flex-shrink: 0; /* Prevent shrinking */
+  }
+  
+  /* Improve status container spacing */
+  .status-container {
+    gap: 6px; /* Reduce gap in status container */
+  }
+  
+  /* Hide less critical status elements on mobile */
   .hub-status {
     display: none; /* Hide the hub status on mobile */
   }
@@ -389,8 +423,33 @@ button:disabled {
     display: none; /* Hide the group status on mobile */
   }
   
+  /* Hide status text on very small screens but keep circles */
+  .hub-status-text {
+    display: none;
+  }
+  
+  /* Make status circles more compact */
+  .hub-status-circle,
+  .status-circle {
+    width: 8px;
+    height: 8px;
+    flex-shrink: 0; /* Prevent circles from shrinking */
+  }
+  
+  /* Adjust auth button for mobile */
+  .auth-button {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    min-width: 70px;
+  }
+  
   /* Update content padding for mobile */
   .content {
-    padding-top: 100px; /* Slightly less padding on mobile */
+    padding-top: 116px; /* 56px mobile header + 60px action bar */
+  }
+  
+  /* Analytics page mobile styling */
+  .analytics-page h2 {
+    font-size: 1.1rem; /* Same smaller font size as other pages */
   }
 }

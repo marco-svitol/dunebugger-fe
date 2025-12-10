@@ -1,6 +1,6 @@
 .action-bar {
   position: fixed;
-  top: 60px; /* Position right below the header */
+  top: 64px; /* Position right below the header */
   left: 0;
   right: 0;
   height: 60px; /* Increased height from 50px to 60px */
@@ -73,15 +73,17 @@
 
 /* Button styles */
 .action-bar button {
-  padding: 8px 15px; /* Slightly larger padding for better touchability */
+  padding: 8px 12px; /* Reduced horizontal padding for more compact buttons */
   border-radius: 4px;
   border: 1px solid #ccc;
   background-color: #f0f0f0;
   color: #333;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem; /* Slightly smaller font for better fit */
   transition: background-color 0.2s, border-color 0.2s;
   height: 36px; /* Fixed height for consistency */
+  min-width: 70px; /* Uniform minimum width for all buttons */
+  max-width: 90px; /* Maximum width to prevent oversized buttons */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -107,7 +109,8 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  height: 100%; /* Take full height */
+  justify-content: center;
+  height: 100%; /* Match parent height for proper centering */
 }
 
 .action-bar .start-button {
@@ -115,6 +118,8 @@
   color: white;
   border: none;
   font-weight: bold;
+  align-self: center; /* Force vertical centering */
+  margin: 0; /* Remove any default margins */
 }
 
 .action-bar .start-button:hover {
@@ -126,6 +131,8 @@
   color: white;
   border: none;
   font-weight: bold;
+  align-self: center; /* Force vertical centering */
+  margin: 0; /* Remove any default margins */
 }
 
 .action-bar .stop-button:hover {
@@ -230,6 +237,7 @@ input:disabled + .slider {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .action-bar {
+    top: 56px; /* Position below mobile header */
     padding: 0 10px;
     height: auto;
     min-height: 60px; /* Increased from 40px to match the new desktop height */
@@ -240,17 +248,30 @@ input:disabled + .slider {
     padding: 10px 0; /* Increased padding for better spacing */
   }
   
-  .sequence-controls,
-  .gpios-controls,
-  .start-stop-buttons {
+  .sequence-controls {
     flex-wrap: wrap;
     justify-content: center; /* Center items on mobile */
   }
   
+  .gpios-controls {
+    flex-wrap: nowrap; /* Keep all 4 buttons on same line */
+    justify-content: flex-start; /* Align to start */
+    align-items: center; /* Force consistent vertical alignment */
+    gap: 6px; /* Reduce gap for tighter spacing */
+  }
+  
+  .start-stop-buttons {
+    flex-wrap: nowrap; /* Keep buttons on same line */
+    justify-content: flex-start; /* Align to start */
+    gap: 8px; /* Slightly reduce gap on mobile */
+  }
+  
   .action-bar button {
-    padding: 6px 10px;
-    font-size: 0.85rem;
+    padding: 6px 8px; /* More compact padding on mobile */
+    font-size: 0.75rem; /* Smaller font on mobile */
     height: 32px; /* Slightly smaller height on mobile */
+    min-width: 55px; /* Smaller minimum width for mobile */
+    max-width: 70px; /* Smaller maximum width for mobile */
   }
   
   .sequence-switches {

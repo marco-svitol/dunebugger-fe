@@ -155,7 +155,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               }}
               disabled={!isOnline}
             >
-              Off state
+              Off
             </button>
             <button 
               onClick={() => {
@@ -168,7 +168,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               }}
               disabled={!isOnline}
             >
-              Standby state
+              Standby
             </button>
           </div>
         );

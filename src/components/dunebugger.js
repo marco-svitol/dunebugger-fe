@@ -154,13 +154,13 @@ export default function SmartDunebugger() {
         if (currentPage === "scheduler") {
           await wsClient.sendRequest("scheduler.refresh", "null");
         } else if (currentPage === "sequence") {
-          await wsClient.sendRequest("sequence.refresh", "null");
+          await wsClient.sendRequest("core.refresh_sequence", "null");
         } else if (currentPage === "system") {
-          await wsClient.sendRequest("system.refresh", "null");
+          await wsClient.sendRequest("controller.system_info", "null");
         } else if (currentPage === "gpios") {
-          await wsClient.sendRequest("gpio.refresh", "null");
+          await wsClient.sendRequest("core.refresh_gpios", "null");
         } else if (currentPage === "main") {
-          await wsClient.sendRequest("main.refresh", "null");
+          await wsClient.sendRequest("core.refresh_sequence", "null");
         }
         // Note: analytics page doesn't need refresh as it doesn't use real-time data
       };

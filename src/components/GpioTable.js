@@ -67,7 +67,7 @@ function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
     // Send the command to the group
     if (wsClient) {
       wsClient.sendRequest(
-        "dunebugger_set",
+        "core.dunebugger_set",
         command,
         connectionId,
       );

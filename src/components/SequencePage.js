@@ -122,7 +122,7 @@ const SequencePage = ({
       const escapedText = sequenceText.replace(/\n/g, '\\n');
       
       // Send the text content using the "us" command (no validation, send as-is)
-      wsClient.sendRequest("dunebugger_set", `us main.seq ${escapedText}`, connectionId);
+      wsClient.sendRequest("core.dunebugger_set", `us main.seq ${escapedText}`, connectionId);
       
       // Show popup message
       if (showMessage) {

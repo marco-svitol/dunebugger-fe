@@ -158,6 +158,12 @@
   border-bottom: 1px solid #f5c6cb;
 }
 
+/* Container for textarea and overlay */
+.textarea-container {
+  position: relative;
+  width: 100%;
+}
+
 .schedule-text-editor {
   width: 100%;
   height: 600px;
@@ -173,18 +179,63 @@
   color: #333;
 }
 
+/* Overlay for bold formatting in readonly mode */
+.text-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: transparent;
+  color: #333;
+  box-sizing: border-box;
+}
+
+.text-overlay.visible {
+  display: block;
+}
+
+.text-overlay.hidden {
+  display: none;
+}
+
+/* Bold styling for [...] titles in overlay */
+.text-overlay .bold-title {
+  font-weight: bold;
+  color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
 .schedule-text-editor.editing {
   background-color: #fffef7;
   border-left: 3px solid #28a745;
+  color: #333;
 }
 
 .schedule-text-editor.readonly {
   background-color: #f8f9fa;
-  color: #6c757d;
+  color: transparent; /* Hide textarea text in readonly mode to show overlay */
 }
 
 .schedule-text-editor:focus {
   background-color: white;
+  color: #333;
+}
+
+/* Ensure overlay matches textarea background in readonly mode */
+.textarea-container .schedule-text-editor.readonly + .text-overlay,
+.textarea-container .text-overlay.visible {
+  background-color: #f8f9fa;
 }
 
 .editor-footer {

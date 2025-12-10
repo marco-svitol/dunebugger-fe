@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./SchedulerPage.css";
 
 const SchedulerPage = ({ 
@@ -15,6 +15,28 @@ const SchedulerPage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [lastSavedText, setLastSavedText] = useState("");
+  const overlayRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  // Format text for overlay display
+  const formatTextForOverlay = (text) => {
+    return text.replace(/\[([^\]]+)\]/g, '<span class="bold-title">[$1]</span>');
+  };
+
+  // Update overlay when text changes
+  const updateOverlay = () => {
+    if (overlayRef.current && !isEditing) {
+      overlayRef.current.innerHTML = formatTextForOverlay(scheduleText);
+    }
+  };
+
+  // Sync overlay scroll with textarea
+  const handleTextareaScroll = () => {
+    if (overlayRef.current && textareaRef.current && !isEditing) {
+      overlayRef.current.scrollTop = textareaRef.current.scrollTop;
+      overlayRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    }
+  };
 
   // Reset component state when device (groupName) changes
   useEffect(() => {
@@ -31,10 +53,20 @@ const SchedulerPage = ({
     if (schedule) {
       let scheduleString = schedule;
       
-      // Handle different data types
-      if (typeof schedule === 'object') {
+      // Handle new object structure with timestamp or legacy string format
+      if (typeof schedule === 'object' && schedule.data !== undefined) {
+        // New format: { data: actualSchedule, timestamp: number }
+        scheduleString = schedule.data;
+        if (typeof scheduleString === 'object') {
+          scheduleString = JSON.stringify(scheduleString, null, 2);
+        } else if (typeof scheduleString !== 'string') {
+          scheduleString = String(scheduleString);
+        }
+      } else if (typeof schedule === 'object') {
+        // Legacy object format
         scheduleString = JSON.stringify(schedule, null, 2);
       } else if (typeof schedule !== 'string') {
+        // Legacy non-string format
         scheduleString = String(schedule);
       }
       
@@ -182,6 +214,11 @@ const SchedulerPage = ({
     }
   }, [scheduleText, lastSavedText, schedule]);
 
+  // Update overlay when text or editing state changes
+  useEffect(() => {
+    updateOverlay();
+  }, [scheduleText, isEditing]);
+
   return (
     <div className="scheduler-page">
       <h2>Scheduler</h2>
@@ -300,7 +337,7 @@ const SchedulerPage = ({
                   className="reset-button"
                   onClick={() => {
                     if (wsClient && isOnline) {
-                      wsClient.sendRequest("scheduler.refresh", "null", connectionId);
+                      wsClient.sendRequest("scheduler.get_schedule", "null", connectionId);
                       setSaveStatus("Refresh command sent");
                       if (showMessage) {
                         showMessage("Schedule refresh command sent", "info");
@@ -342,15 +379,23 @@ const SchedulerPage = ({
           </div>
         )}
         
-        <textarea
-          className={`schedule-text-editor ${isEditing ? 'editing' : 'readonly'}`}
-          value={scheduleText}
-          onChange={handleTextChange}
-          onKeyDown={handleKeyDown}
-          readOnly={!isEditing}
-          placeholder="Loading schedule from device..."
-          rows={40}
-        />
+        <div className="textarea-container">
+          <div 
+            ref={overlayRef}
+            className={`text-overlay ${isEditing ? 'hidden' : 'visible'}`}
+          />
+          <textarea
+            ref={textareaRef}
+            className={`schedule-text-editor ${isEditing ? 'editing' : 'readonly'}`}
+            value={scheduleText}
+            onChange={handleTextChange}
+            onKeyDown={handleKeyDown}
+            onScroll={handleTextareaScroll}
+            readOnly={!isEditing}
+            placeholder="Loading schedule from device..."
+            rows={40}
+          />
+        </div>
         
         <div className="editor-footer">
           <div className="text-stats">

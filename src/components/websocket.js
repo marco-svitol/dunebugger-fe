@@ -43,7 +43,7 @@ class WebSocketManager {
     this.client.on("connected", (event) => {
       console.log("Connected to WebSocket.");
       this.handleConnectionEstablished(event);
-      this.sendRequest("heartbeat", "I am here", event.connectionId);
+      this.sendRequest("controller.heartbeat", "I am here", event.connectionId);
       this.listenHeartBeat();
     });
 
@@ -168,7 +168,7 @@ class WebSocketManager {
         clearTimeout(this.heartBeatTimeoutRef.current);
         this.listenHeartBeat(); // Restart the countdown
         if (message.body === "Is anyone there?") {
-          this.sendRequest("heartbeat", "I am here");
+          this.sendRequest("controller.heartbeat", "I am here");
         }
         break;
 
@@ -186,12 +186,11 @@ class WebSocketManager {
 
       case "current_schedule":
         console.log("Received current_schedule message:", message.body);
-        this.setSchedule(message.body);
-        break;
-
-      case "scheduler":
-        console.log("Received scheduler message:", message.body);
-        this.setSchedule(message.body);
+        // Force React to detect changes by including a timestamp
+        this.setSchedule({
+          data: message.body,
+          timestamp: Date.now()
+        });
         break;
 
       case "next_actions":

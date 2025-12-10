@@ -184,7 +184,7 @@ const SequencePage = ({
     <div className="sequence-page">
       <div className="sequence-header">
         <div className="sequence-header-top">
-          <h2>Sequence Timeline</h2>
+          <h2>Sequence</h2>
           <button 
             className="refresh-button" 
             onClick={handleRefresh}

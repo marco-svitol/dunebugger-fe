@@ -5,7 +5,7 @@ const AnalyticsPage = ({ groupName }) => {
   // but groupName prop is added for future use
   return (
     <div className="analytics-page">
-      <h2>Analytics Dashboard</h2>
+      <h2>Analytics</h2>
       
       <div className="analytics-content">
         <p>This section will contain analytics and data visualization for your device.</p>

@@ -28,7 +28,7 @@ const GPIOsPage = ({ gpioStates, wsClient, connectionId, groupName, showMessage 
     <div className="gpios-page">
       <div className="gpios-header">
         <div className="gpios-header-top">
-          <h2>GPIOs Status and Control</h2>
+          <h2>Switch Control</h2>
           <button 
             className="refresh-button" 
             onClick={handleRefresh}

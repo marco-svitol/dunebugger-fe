@@ -269,6 +269,10 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .scheduler-page h2 {
+    font-size: 1.1rem; /* Same smaller font size as other pages */
+  }
+  
   .text-editor-header {
     flex-direction: column;
     align-items: flex-start;

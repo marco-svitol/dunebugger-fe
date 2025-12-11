@@ -41,7 +41,7 @@ const Menu = ({ isOpen, onClose, onNavigate, currentPage, isMobile }) => {
             className={`menu-item ${currentPage === "gpios" ? "active" : ""}`} 
             onClick={() => onNavigate("gpios")}
           >
-            GPIOs
+            Switches
           </button>
           <button 
             className={`menu-item ${currentPage === "scheduler" ? "active" : ""}`} 

@@ -7,7 +7,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
   const handleRefresh = async (showPopup = true) => {
     if (wsClient && connectionId) {
       try {
-        await wsClient.sendRequest("core.system_info", "refresh");
+        await wsClient.sendRequest("controller.system_info", "refresh");
         if (showMessage && showPopup) {
           showMessage("System info refresh request sent", "info");
         }

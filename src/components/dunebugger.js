@@ -66,7 +66,7 @@ export default function SmartDunebugger() {
     switch (currentPage) {
       case "main": return "Main";
       case "sequence": return "Sequence";
-      case "gpios": return "GPIOs";
+      case "gpios": return "Switches";
       case "scheduler": return "Scheduler";
       case "analytics": return "Analytics";
       case "system": return "System";
@@ -273,7 +273,7 @@ export default function SmartDunebugger() {
               {/* Left Section */}
               <div className="header-left">
                 <button className="hamburger-button" onClick={toggleMenu}>
-                  <img src="/Dunebugger_Logo_transparent_2.png" alt="Menu" className="hamburger-logo" />
+                  <img src="/Dunebugger_Logo_transparent_1.png" alt="Menu" className="hamburger-logo" />
                 </button>
                 <h1>Dunebugger - {getPageTitle()}</h1>
                 <span className={`hub-status-circle ${connectionId ? "connected" : "disconnected"}`}></span>

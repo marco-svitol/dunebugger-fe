@@ -200,18 +200,18 @@ button:disabled {
   color: white;
   font-size: 20px;
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
 }
 
 .hamburger-logo {
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   display: block;
 }
@@ -397,9 +397,9 @@ button:disabled {
   
   /* Improve hamburger button mobile styling */
   .hamburger-button {
-    padding: 2px;
-    width: 36px;
-    height: 36px;
+    padding: 6px;
+    width: 52px;
+    height: 52px;
     font-size: 18px;
   }
   

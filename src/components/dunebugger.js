@@ -18,6 +18,25 @@ import UserDropdown from "./UserDropdown"; // Import the UserDropdown component
 
 const HEARTBEAT_TIMEOUT = 65000; // 65 seconds
 
+// Functions to handle device selection persistence
+const getStoredDeviceSelection = () => {
+  try {
+    const stored = localStorage.getItem('dunebugger-selectedDevice');
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.warn('Failed to load stored device selection:', error);
+    return null;
+  }
+};
+
+const saveDeviceSelection = (device) => {
+  try {
+    localStorage.setItem('dunebugger-selectedDevice', JSON.stringify(device));
+  } catch (error) {
+    console.warn('Failed to save device selection:', error);
+  }
+};
+
 export default function SmartDunebugger() {
   const { isAuthenticated, user } = useAuth0();
   const [wsClient, setWSClient] = useState(null);
@@ -64,7 +83,7 @@ export default function SmartDunebugger() {
   const [wssUrl, setWssUrl] = useState(null);
   const [groupName, setGroupName] = useState(""); // Default fallback, will be updated from Auth0
   const [availableDevices, setAvailableDevices] = useState([]);
-  const [selectedDevice, setSelectedDevice] = useState("");
+  const [selectedDevice, setSelectedDevice] = useState(() => getStoredDeviceSelection() || "");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -103,12 +122,37 @@ export default function SmartDunebugger() {
     }
   }, [isAuthenticated, hasShownLoginMessage, user, connectedMessageText]);
 
+  // Restore device selection when devices become available
+  useEffect(() => {
+    const storedDevice = getStoredDeviceSelection();
+    if (storedDevice && availableDevices.length > 0) {
+      // Check if the stored device is still available
+      if (availableDevices.includes(storedDevice)) {
+        if (selectedDevice !== storedDevice) {
+          setSelectedDevice(storedDevice);
+          setGroupName(storedDevice);
+        }
+      } else {
+        // Stored device no longer available, clear it
+        localStorage.removeItem('dunebugger-selectedDevice');
+        setSelectedDevice("");
+      }
+    }
+  }, [availableDevices, selectedDevice]);
+
   // Reset login message flag when user logs out
   useEffect(() => {
     if (!isAuthenticated) {
       setHasShownLoginMessage(false);
     }
   }, [isAuthenticated]);
+
+  // Sync selectedDevice with groupName when selectedDevice is restored from localStorage
+  useEffect(() => {
+    if (selectedDevice && selectedDevice !== groupName) {
+      setGroupName(selectedDevice);
+    }
+  }, [selectedDevice, groupName]);
 
   useEffect(() => {
     let currentClient = null;
@@ -193,7 +237,13 @@ export default function SmartDunebugger() {
   };
 
   const handleDeviceChange = (device) => {
+    // Only proceed if a different device is actually selected
+    if (device === selectedDevice || device === groupName) {
+      return; // No change needed, avoid unnecessary reconnection
+    }
+
     setSelectedDevice(device);
+    saveDeviceSelection(device); // Persist device selection
     
     // Reset all state variables to initial values when changing device
     setIsOnline(false);

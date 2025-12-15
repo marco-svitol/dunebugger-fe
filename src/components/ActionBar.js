@@ -1,9 +1,23 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./ActionBar.css";
 
+import { useTranslatedText } from "../hooks/useTranslation";
+
 const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnline, showMessage, playingTime, sequence, groupName }) => {
   const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
   const [cycleStatus, setCycleStatus] = useState("Cycle not running");
+
+  // Translation hooks
+  const { translatedText: startText } = useTranslatedText("Start");
+  const { translatedText: stopText } = useTranslatedText("Stop");
+  const { translatedText: offText } = useTranslatedText("Off");
+  const { translatedText: standbyText } = useTranslatedText("Standby");
+  const { translatedText: physicalStartButtonText } = useTranslatedText("Physical Start Button Enabled");
+  const { translatedText: randomActionsText } = useTranslatedText("Random Actions Enabled");
+  const { translatedText: startMessageText } = useTranslatedText("Start command sent to DuneBugger device");
+  const { translatedText: stopMessageText } = useTranslatedText("Stop command sent to DuneBugger device");
+  const { translatedText: setOffMessageText } = useTranslatedText("Set to Off state command sent");
+  const { translatedText: setStandbyMessageText } = useTranslatedText("Set to Standby state command sent");
 
   // Reset component state when device (groupName) changes
   useEffect(() => {
@@ -44,7 +58,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
     if (wsClient && isOnline) {
       wsClient.sendRequest("core.dunebugger_set", "c", connectionId);
       if (showMessage) {
-        showMessage("Start command sent to DuneBugger device", "info");
+        showMessage(startMessageText, "info");
       }
     }
   };
@@ -54,7 +68,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
     if (wsClient && isOnline) {
       wsClient.sendRequest("core.dunebugger_set", "cs", connectionId);
       if (showMessage) {
-        showMessage("Stop command sent to DuneBugger device", "info");
+        showMessage(stopMessageText, "info");
       }
     }
   };
@@ -67,14 +81,14 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
         onClick={handleStart} 
         disabled={!isOnline || isCycleRunning}
       >
-        Start
+        {startText}
       </button>
       <button 
         className="stop-button" 
         onClick={handleStop} 
         disabled={!isOnline || !isCycleRunning}
       >
-        Stop
+        {stopText}
       </button>
     </div>
   );
@@ -83,7 +97,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   const ModifiedSwitches = () => (
     <div className="sequence-switches">
       <div className="switch-container">
-        <label>Physical Start Button Enabled</label>
+        <label>{physicalStartButtonText}</label>
         <label className="switch">
           <input
             type="checkbox"
@@ -103,7 +117,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
         </label>
       </div>
       <div className="switch-container">
-        <label>Random Actions Enabled</label>
+        <label>{randomActionsText}</label>
         <label className="switch">
           <input
             type="checkbox"
@@ -149,26 +163,26 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
                 if (wsClient) {
                   wsClient.sendRequest("core.dunebugger_set", "so");
                   if (showMessage) {
-                    showMessage("Set to Off state command sent", "info");
+                    showMessage(setOffMessageText, "info");
                   }
                 }
               }}
               disabled={!isOnline}
             >
-              Off
+              {offText}
             </button>
             <button 
               onClick={() => {
                 if (wsClient) {
                   wsClient.sendRequest("core.dunebugger_set", "sb");
                   if (showMessage) {
-                    showMessage("Set to Standby state command sent", "info");
+                    showMessage(setStandbyMessageText, "info");
                   }
                 }
               }}
               disabled={!isOnline}
             >
-              Standby
+              {standbyText}
             </button>
           </div>
         );

@@ -606,3 +606,27 @@
     gap: 4px;
   }
 }
+
+/* Flash effect for panel updates */
+.panel-flash {
+  animation: panelFlash 3s ease-out;
+}
+
+@keyframes panelFlash {
+  0% {
+    background-color: rgba(0, 123, 255, 0.25);
+    transform: scale(1);
+  }
+  25% {
+    background-color: rgba(0, 123, 255, 0.18);
+    transform: scale(1.005);
+  }
+  75% {
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: scale(1.002);
+  }
+  100% {
+    background-color: transparent;
+    transform: scale(1);
+  }
+}

@@ -1,0 +1,341 @@
+.translation-config-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.translation-config-modal {
+  background: white;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px 0;
+  margin-bottom: 20px;
+}
+
+.config-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.3em;
+}
+
+.close-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  font-size: 20px;
+  cursor: pointer;
+  color: #495057 !important;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  font-weight: bold;
+}
+
+.close-btn:hover {
+  background-color: #e9ecef;
+  color: #212529 !important;
+  border-color: #adb5bd;
+  transform: scale(1.1);
+}
+
+.close-btn:active {
+  background-color: #dee2e6;
+  color: #000 !important;
+  transform: scale(0.95);
+}
+
+.config-content {
+  padding: 0 24px 24px;
+}
+
+.current-status {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  border-left: 4px solid #007bff;
+}
+
+.current-status h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.current-status p {
+  margin: 6px 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.cache-management {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  margin: 24px 0;
+  border-left: 4px solid #28a745;
+}
+
+.cache-management h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+.cache-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cache-btn {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  background-color: #fff;
+  color: #495057;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cache-btn:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.cache-btn.danger {
+  background-color: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.cache-btn.danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+.file-input-label {
+  display: inline-block;
+  margin: 0;
+}
+
+.provider-selection h4,
+.api-key-input h4,
+.config-info h4 {
+  color: #333;
+  margin-bottom: 12px;
+  font-size: 1.1em;
+}
+
+.provider-selection p {
+  color: #666;
+  margin-bottom: 16px;
+  font-size: 0.9em;
+}
+
+.provider-option {
+  margin-bottom: 12px;
+}
+
+.provider-label {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.provider-label:hover {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.provider-label input[type="radio"] {
+  margin-right: 12px;
+}
+
+.provider-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.provider-info strong {
+  color: #333;
+  font-size: 1em;
+}
+
+.free-tier {
+  color: #28a745;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.signup-link {
+  color: #007bff;
+  text-decoration: none;
+  font-size: 0.85em;
+  font-weight: 500;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.signup-link:hover {
+  text-decoration: underline;
+}
+
+.api-key-input {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e9ecef;
+}
+
+.api-key-field {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 0.9em;
+  margin-bottom: 16px;
+  font-family: monospace;
+}
+
+.api-key-field:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.config-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.test-btn,
+.save-btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease;
+}
+
+.test-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.test-btn:hover {
+  background-color: #5a6268;
+}
+
+.save-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #0056b3;
+}
+
+.config-status {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+.config-status.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.config-status.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.config-info {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e9ecef;
+}
+
+.config-info ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.config-info li {
+  margin-bottom: 8px;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.config-info li strong {
+  color: #333;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .translation-config-overlay {
+    padding: 10px;
+  }
+  
+  .translation-config-modal {
+    max-height: 95vh;
+  }
+  
+  .config-header,
+  .config-content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .config-buttons {
+    flex-direction: column;
+  }
+  
+  .cache-buttons {
+    flex-direction: column;
+  }
+  
+  .cache-btn {
+    text-align: center;
+  }
+  
+  .provider-info {
+    font-size: 0.9em;
+  }
+}

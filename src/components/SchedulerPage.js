@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./SchedulerPage.css";
+import { useTranslation } from "../contexts/TranslationContext";
 
 const SchedulerPage = ({ 
   schedule,
@@ -15,8 +16,51 @@ const SchedulerPage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [lastSavedText, setLastSavedText] = useState("");
+  const [isNextActionsFlashing, setIsNextActionsFlashing] = useState(false);
+  const [isLastExecutedFlashing, setIsLastExecutedFlashing] = useState(false);
   const overlayRef = useRef(null);
   const textareaRef = useRef(null);
+  const nextActionsTimeoutRef = useRef(null);
+  const lastExecutedTimeoutRef = useRef(null);
+
+  // Translation hook and text
+  const { getTranslation } = useTranslation();
+  
+  // Page texts
+  const texts = {
+    pageTitle: getTranslation("Scheduler"),
+    nextActionsTitle: getTranslation("Next Scheduled Actions"),
+    refreshButton: getTranslation("🔄 Refresh"),
+    refreshNextActionsTitle: getTranslation("Refresh next actions"),
+    refreshLastExecutedTitle: getTranslation("Refresh last executed action"),
+    loadingNextActions: getTranslation("⏳ Loading next actions..."),
+    lastExecutedTitle: getTranslation("Last Executed Action"),
+    loadingLastExecuted: getTranslation("⏳ Loading last executed action..."),
+    weeklyEditorTitle: getTranslation("Weekly Schedule Editor"),
+    scheduleLoaded: getTranslation("✓ Schedule Loaded"),
+    waitingForData: getTranslation("⏳ Waiting for data..."),
+    editButton: getTranslation("Edit"),
+    resetButton: getTranslation("Reset"),
+    resetButtonTitle: getTranslation("Refresh schedule from device"),
+    saveButton: getTranslation("Save"),
+    cancelButton: getTranslation("Cancel"),
+    linesLabel: getTranslation("Lines"),
+    charactersLabel: getTranslation("Characters"),
+    scheduleEventsLabel: getTranslation("Schedule Events"),
+    formatHelpTitle: getTranslation("💡 Format: [day] or [DD-MM-YYYY] followed by HH:MM action"),
+    keyboardHelp: getTranslation("⌨️ Ctrl+S to save, Esc to cancel"),
+    noConnectionWarning: getTranslation("⚠️ Save disabled - no connection"),
+    uploadingSchedule: getTranslation("Uploading schedule..."),
+    scheduleUploaded: getTranslation("Schedule uploaded successfully!"),
+    scheduleUploadSent: getTranslation("Schedule upload command sent to DuneBugger device"),
+    noConnection: getTranslation("No WebSocket connection - schedule not uploaded"),
+    nextActionsRequestSent: getTranslation("Next actions request sent"),
+    lastExecutedRequestSent: getTranslation("Last executed action request sent"),
+    refreshCommandSent: getTranslation("Refresh command sent"),
+    scheduleRefreshSent: getTranslation("Schedule refresh command sent"),
+    noConnectionRefresh: getTranslation("No connection - cannot refresh"),
+    loadingPlaceholder: getTranslation("Loading schedule from device...")
+  };
 
   // Format text for overlay display
   const formatTextForOverlay = (text) => {
@@ -128,23 +172,20 @@ const SchedulerPage = ({
   };
 
   const handleSave = () => {
-    setSaveStatus("Uploading schedule...");
+    setSaveStatus(texts.uploadingSchedule);
     
     if (wsClient && isOnline) {
-      // Escape the text content with \n for newlines
-      const escapedText = scheduleText.replace(/\n/g, '\\n');
-      
       // Send the schedule content using scheduler.set command
       wsClient.sendRequest("scheduler.update_schedule", scheduleText, connectionId);
       
       // Show popup message
       if (showMessage) {
-        showMessage("Schedule upload command sent to DuneBugger device", "info");
+        showMessage(texts.scheduleUploadSent, "info");
       }
       
-      setSaveStatus("Schedule uploaded successfully!");
+      setSaveStatus(texts.scheduleUploaded);
     } else {
-      setSaveStatus("No WebSocket connection - schedule not uploaded");
+      setSaveStatus(texts.noConnection);
     }
     
     console.log("Sent schedule content:", scheduleText);
@@ -182,7 +223,7 @@ const SchedulerPage = ({
     if (wsClient && isOnline) {
       wsClient.sendRequest("scheduler.get_next_actions", "null", connectionId);
       if (showMessage && showPopup) {
-        showMessage("Next actions request sent", "info");
+        showMessage(texts.nextActionsRequestSent, "info");
       }
     }
   };
@@ -192,7 +233,7 @@ const SchedulerPage = ({
     if (wsClient && isOnline) {
       wsClient.sendRequest("scheduler.get_last_executed_action", "null", connectionId);
       if (showMessage && showPopup) {
-        showMessage("Last executed action request sent", "info");
+        showMessage(texts.lastExecutedRequestSent, "info");
       }
     }
   };
@@ -214,6 +255,56 @@ const SchedulerPage = ({
     }
   }, [scheduleText, lastSavedText, schedule]);
 
+  // Flash effect for next actions changes
+  useEffect(() => {
+    if (nextActions && nextActions.length > 0) {
+      // Clear existing timeout
+      if (nextActionsTimeoutRef.current) {
+        clearTimeout(nextActionsTimeoutRef.current);
+      }
+      
+      // Trigger flash effect
+      setIsNextActionsFlashing(true);
+      
+      // Remove flash after animation completes
+      nextActionsTimeoutRef.current = setTimeout(() => {
+        setIsNextActionsFlashing(false);
+      }, 3000); // 3 seconds for smooth fade
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (nextActionsTimeoutRef.current) {
+        clearTimeout(nextActionsTimeoutRef.current);
+      }
+    };
+  }, [nextActions]);
+
+  // Flash effect for last executed action changes
+  useEffect(() => {
+    if (lastExecutedAction) {
+      // Clear existing timeout
+      if (lastExecutedTimeoutRef.current) {
+        clearTimeout(lastExecutedTimeoutRef.current);
+      }
+      
+      // Trigger flash effect
+      setIsLastExecutedFlashing(true);
+      
+      // Remove flash after animation completes
+      lastExecutedTimeoutRef.current = setTimeout(() => {
+        setIsLastExecutedFlashing(false);
+      }, 3000); // 3 seconds for smooth fade
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (lastExecutedTimeoutRef.current) {
+        clearTimeout(lastExecutedTimeoutRef.current);
+      }
+    };
+  }, [lastExecutedAction]);
+
   // Update overlay when text or editing state changes
   useEffect(() => {
     updateOverlay();
@@ -221,19 +312,19 @@ const SchedulerPage = ({
 
   return (
     <div className="scheduler-page">
-      <h2>Scheduler</h2>
+      <h2>{texts.pageTitle}</h2>
       
       {/* Next Actions Section */}
-      <div className="next-actions-section">
+      <div className={`next-actions-section ${isNextActionsFlashing ? 'panel-flash' : ''}`}>
         <div className="next-actions-header">
-          <h3>Next Scheduled Actions</h3>
+          <h3>{texts.nextActionsTitle}</h3>
           <button 
             className="refresh-next-actions-button"
             onClick={loadNextActions}
             disabled={!isOnline}
-            title="Refresh next actions"
+            title={texts.refreshNextActionsTitle}
           >
-            🔄 Refresh
+            {texts.refreshButton}
           </button>
         </div>
         <div className="next-actions-content">
@@ -261,23 +352,23 @@ const SchedulerPage = ({
             </div>
           ) : (
             <div className="no-actions">
-              <span className="waiting-message">⏳ Loading next actions...</span>
+              <span className="waiting-message">{texts.loadingNextActions}</span>
             </div>
           )}
         </div>
       </div>
       
       {/* Last Executed Action Section */}
-      <div className="last-executed-section">
+      <div className={`last-executed-section ${isLastExecutedFlashing ? 'panel-flash' : ''}`}>
         <div className="last-executed-header">
-          <h3>Last Executed Action</h3>
+          <h3>{texts.lastExecutedTitle}</h3>
           <button 
             className="refresh-last-executed-button"
             onClick={loadLastExecutedAction}
             disabled={!isOnline}
-            title="Refresh last executed action"
+            title={texts.refreshLastExecutedTitle}
           >
-            🔄 Refresh
+            {texts.refreshButton}
           </button>
         </div>
         <div className="last-executed-content">
@@ -307,7 +398,7 @@ const SchedulerPage = ({
             )
           ) : (
             <div className="loading-execution">
-              <span className="waiting-message">⏳ Loading last executed action...</span>
+              <span className="waiting-message">{texts.loadingLastExecuted}</span>
             </div>
           )}
         </div>
@@ -316,11 +407,11 @@ const SchedulerPage = ({
       <div className="scheduler-text-section">
         <div className="text-editor-header">
           <div className="header-left">
-            <h3>Weekly Schedule Editor</h3>
+            <h3>{texts.weeklyEditorTitle}</h3>
             {lastSavedText ? (
-              <span className="data-status loaded">✓ Schedule Loaded</span>
+              <span className="data-status loaded">{texts.scheduleLoaded}</span>
             ) : (
-              <span className="data-status waiting">⏳ Waiting for data...</span>
+              <span className="data-status waiting">{texts.waitingForData}</span>
             )}
           </div>
           <div className="editor-controls">
@@ -331,26 +422,26 @@ const SchedulerPage = ({
                   onClick={() => setIsEditing(true)}
                   disabled={!isOnline}
                 >
-                  Edit
+                  {texts.editButton}
                 </button>
                 <button 
                   className="reset-button"
                   onClick={() => {
                     if (wsClient && isOnline) {
                       wsClient.sendRequest("scheduler.get_schedule", "null", connectionId);
-                      setSaveStatus("Refresh command sent");
+                      setSaveStatus(texts.refreshCommandSent);
                       if (showMessage) {
-                        showMessage("Schedule refresh command sent", "info");
+                        showMessage(texts.scheduleRefreshSent, "info");
                       }
                     } else {
-                      setSaveStatus("No connection - cannot refresh");
+                      setSaveStatus(texts.noConnectionRefresh);
                     }
                     setTimeout(() => setSaveStatus(""), 3000);
                   }}
                   disabled={!isOnline}
-                  title="Refresh schedule from device"
+                  title={texts.resetButtonTitle}
                 >
-                  Reset
+                  {texts.resetButton}
                 </button>
               </>
             ) : (
@@ -360,13 +451,13 @@ const SchedulerPage = ({
                   onClick={handleSave}
                   disabled={!scheduleText.trim() || !isOnline}
                 >
-                  Save
+                  {texts.saveButton}
                 </button>
                 <button 
                   className="cancel-button"
                   onClick={handleCancel}
                 >
-                  Cancel
+                  {texts.cancelButton}
                 </button>
               </>
             )}
@@ -392,16 +483,16 @@ const SchedulerPage = ({
             onKeyDown={handleKeyDown}
             onScroll={handleTextareaScroll}
             readOnly={!isEditing}
-            placeholder="Loading schedule from device..."
+            placeholder={texts.loadingPlaceholder}
             rows={40}
           />
         </div>
         
         <div className="editor-footer">
           <div className="text-stats">
-            Lines: {scheduleText.split('\n').length} | 
-            Characters: {scheduleText.length} | 
-            Schedule Events: {scheduleText.split('\n').filter(line => 
+            {texts.linesLabel}: {scheduleText.split('\n').length} | 
+            {texts.charactersLabel}: {scheduleText.length} | 
+            {texts.scheduleEventsLabel}: {scheduleText.split('\n').filter(line => 
               line.trim() && 
               !line.trim().startsWith('#') && 
               !line.trim().startsWith('[') && 
@@ -412,9 +503,9 @@ const SchedulerPage = ({
           {isEditing && (
             <div className="editor-help">
               <small>
-                💡 Format: [day] or [DD-MM-YYYY] followed by HH:MM action<br/>
-                ⌨️ Ctrl+S to save, Esc to cancel
-                {!isOnline && <><br/>⚠️ Save disabled - no connection</>}
+                {texts.formatHelpTitle}<br/>
+                {texts.keyboardHelp}
+                {!isOnline && <><br/>{texts.noConnectionWarning}</>}
               </small>
             </div>
           )}

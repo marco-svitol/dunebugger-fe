@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
+import { useTranslatedText } from "../hooks/useTranslation";
 import Profile from "./Profile";
 import DeviceSelector from "./DeviceSelector";
 import WebSocketManager from "./websocket";
@@ -13,12 +14,42 @@ import AnalyticsPage from "./AnalyticsPage";
 import SystemPage from "./SystemPage";
 import ActionBar from "./ActionBar"; // Import the ActionBar component
 import MessagesContainer from "./MessagesContainer"; // Import the MessagesContainer component
+import UserDropdown from "./UserDropdown"; // Import the UserDropdown component
 
 const HEARTBEAT_TIMEOUT = 65000; // 65 seconds
 
+// Functions to handle device selection persistence
+const getStoredDeviceSelection = () => {
+  try {
+    const stored = localStorage.getItem('dunebugger-selectedDevice');
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.warn('Failed to load stored device selection:', error);
+    return null;
+  }
+};
+
+const saveDeviceSelection = (device) => {
+  try {
+    localStorage.setItem('dunebugger-selectedDevice', JSON.stringify(device));
+  } catch (error) {
+    console.warn('Failed to save device selection:', error);
+  }
+};
+
 export default function SmartDunebugger() {
-  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+  const { isAuthenticated, user } = useAuth0();
   const [wsClient, setWSClient] = useState(null);
+  
+  // Translation hooks
+  const { translatedText: connectedMessageText } = useTranslatedText("Connected to DuneBugger Portal");
+  const { translatedText: mainPageTitle } = useTranslatedText("Main");
+  const { translatedText: sequencePageTitle } = useTranslatedText("Sequence");
+  const { translatedText: switchesPageTitle } = useTranslatedText("Switches");
+  const { translatedText: schedulerPageTitle } = useTranslatedText("Scheduler");
+  const { translatedText: analyticsPageTitle } = useTranslatedText("Analytics");
+  const { translatedText: systemPageTitle } = useTranslatedText("System");
+  
   const [isOnline, setIsOnline] = useState(false); // Device connection state
   const [gpioStates, setGpioStates] = useState({});
   const [sequenceState, setSequenceState] = useState({
@@ -52,7 +83,7 @@ export default function SmartDunebugger() {
   const [wssUrl, setWssUrl] = useState(null);
   const [groupName, setGroupName] = useState(""); // Default fallback, will be updated from Auth0
   const [availableDevices, setAvailableDevices] = useState([]);
-  const [selectedDevice, setSelectedDevice] = useState("");
+  const [selectedDevice, setSelectedDevice] = useState(() => getStoredDeviceSelection() || "");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -64,13 +95,13 @@ export default function SmartDunebugger() {
   // Get page title for the header
   const getPageTitle = () => {
     switch (currentPage) {
-      case "main": return "Main";
-      case "sequence": return "Sequence";
-      case "gpios": return "Switches";
-      case "scheduler": return "Scheduler";
-      case "analytics": return "Analytics";
-      case "system": return "System";
-      default: return "Main";
+      case "main": return mainPageTitle;
+      case "sequence": return sequencePageTitle;
+      case "gpios": return switchesPageTitle;
+      case "scheduler": return schedulerPageTitle;
+      case "analytics": return analyticsPageTitle;
+      case "system": return systemPageTitle;
+      default: return mainPageTitle;
     }
   };
 
@@ -86,10 +117,28 @@ export default function SmartDunebugger() {
   // Show login success message when user authenticates
   useEffect(() => {
     if (isAuthenticated && !hasShownLoginMessage && user && showMessageRef.current) {
-      showMessageRef.current("Connected to DuneBugger Portal", "success");
+      showMessageRef.current(connectedMessageText, "success");
       setHasShownLoginMessage(true);
     }
-  }, [isAuthenticated, hasShownLoginMessage, user]);
+  }, [isAuthenticated, hasShownLoginMessage, user, connectedMessageText]);
+
+  // Restore device selection when devices become available
+  useEffect(() => {
+    const storedDevice = getStoredDeviceSelection();
+    if (storedDevice && availableDevices.length > 0) {
+      // Check if the stored device is still available
+      if (availableDevices.includes(storedDevice)) {
+        if (selectedDevice !== storedDevice) {
+          setSelectedDevice(storedDevice);
+          setGroupName(storedDevice);
+        }
+      } else {
+        // Stored device no longer available, clear it
+        localStorage.removeItem('dunebugger-selectedDevice');
+        setSelectedDevice("");
+      }
+    }
+  }, [availableDevices, selectedDevice]);
 
   // Reset login message flag when user logs out
   useEffect(() => {
@@ -97,6 +146,13 @@ export default function SmartDunebugger() {
       setHasShownLoginMessage(false);
     }
   }, [isAuthenticated]);
+
+  // Sync selectedDevice with groupName when selectedDevice is restored from localStorage
+  useEffect(() => {
+    if (selectedDevice && selectedDevice !== groupName) {
+      setGroupName(selectedDevice);
+    }
+  }, [selectedDevice, groupName]);
 
   useEffect(() => {
     let currentClient = null;
@@ -181,7 +237,13 @@ export default function SmartDunebugger() {
   };
 
   const handleDeviceChange = (device) => {
+    // Only proceed if a different device is actually selected
+    if (device === selectedDevice || device === groupName) {
+      return; // No change needed, avoid unnecessary reconnection
+    }
+
     setSelectedDevice(device);
+    saveDeviceSelection(device); // Persist device selection
     
     // Reset all state variables to initial values when changing device
     setIsOnline(false);
@@ -298,15 +360,10 @@ export default function SmartDunebugger() {
                   setAvailableDevices={setAvailableDevices}
                   setSelectedDevice={setSelectedDevice}
                 />
-                {!isAuthenticated ? (
-                  <button className="auth-button" onClick={loginWithRedirect}>
-                    Sign In
-                  </button>
-                ) : (
-                  <button className="auth-button" onClick={logout}>
-                    Sign Out
-                  </button>
-                )}
+                <UserDropdown 
+                  availableDevices={availableDevices}
+                  selectedDevice={selectedDevice}
+                />
               </div>
             </header>
 

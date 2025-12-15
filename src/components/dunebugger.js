@@ -14,15 +14,23 @@ import AnalyticsPage from "./AnalyticsPage";
 import SystemPage from "./SystemPage";
 import ActionBar from "./ActionBar"; // Import the ActionBar component
 import MessagesContainer from "./MessagesContainer"; // Import the MessagesContainer component
+import UserDropdown from "./UserDropdown"; // Import the UserDropdown component
 
 const HEARTBEAT_TIMEOUT = 65000; // 65 seconds
 
 export default function SmartDunebugger() {
-  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+  const { isAuthenticated, user } = useAuth0();
   const [wsClient, setWSClient] = useState(null);
   
-  // Translation hook for connected message
+  // Translation hooks
   const { translatedText: connectedMessageText } = useTranslatedText("Connected to DuneBugger Portal");
+  const { translatedText: mainPageTitle } = useTranslatedText("Main");
+  const { translatedText: sequencePageTitle } = useTranslatedText("Sequence");
+  const { translatedText: switchesPageTitle } = useTranslatedText("Switches");
+  const { translatedText: schedulerPageTitle } = useTranslatedText("Scheduler");
+  const { translatedText: analyticsPageTitle } = useTranslatedText("Analytics");
+  const { translatedText: systemPageTitle } = useTranslatedText("System");
+  
   const [isOnline, setIsOnline] = useState(false); // Device connection state
   const [gpioStates, setGpioStates] = useState({});
   const [sequenceState, setSequenceState] = useState({
@@ -68,13 +76,13 @@ export default function SmartDunebugger() {
   // Get page title for the header
   const getPageTitle = () => {
     switch (currentPage) {
-      case "main": return "Main";
-      case "sequence": return "Sequence";
-      case "gpios": return "Switches";
-      case "scheduler": return "Scheduler";
-      case "analytics": return "Analytics";
-      case "system": return "System";
-      default: return "Main";
+      case "main": return mainPageTitle;
+      case "sequence": return sequencePageTitle;
+      case "gpios": return switchesPageTitle;
+      case "scheduler": return schedulerPageTitle;
+      case "analytics": return analyticsPageTitle;
+      case "system": return systemPageTitle;
+      default: return mainPageTitle;
     }
   };
 
@@ -302,15 +310,10 @@ export default function SmartDunebugger() {
                   setAvailableDevices={setAvailableDevices}
                   setSelectedDevice={setSelectedDevice}
                 />
-                {!isAuthenticated ? (
-                  <button className="auth-button" onClick={loginWithRedirect}>
-                    Sign In
-                  </button>
-                ) : (
-                  <button className="auth-button" onClick={logout}>
-                    Sign Out
-                  </button>
-                )}
+                <UserDropdown 
+                  availableDevices={availableDevices}
+                  selectedDevice={selectedDevice}
+                />
               </div>
             </header>
 

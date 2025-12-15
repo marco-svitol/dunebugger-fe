@@ -17,7 +17,7 @@
 /* Messages Container */
 .messages {
     position: fixed;
-    top: 140px; /* Position below header (60px) + action bar (60px) + margin (20px) */
+    bottom: 20px; /* Position at bottom of page with margin */
     right: 20px;
     z-index: 1000;
     max-width: 400px;
@@ -85,6 +85,33 @@
 .message-close:hover {
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
+}
+
+/* Progress bar */
+.message-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.message-progress-fill {
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    animation: progressCountdown 3.75s linear forwards;
+}
+
+@keyframes progressCountdown {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
 }
 
 /* Mobile responsiveness */

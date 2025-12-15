@@ -5,8 +5,10 @@ import { useTranslatedText } from "../hooks/useTranslation";
 
 const GPIOsPage = ({ gpioStates, wsClient, connectionId, groupName, showMessage }) => {
   // Translation hooks
+  const { translatedText: switchControlText } = useTranslatedText("Switch Control");
   const { translatedText: refreshMessageText } = useTranslatedText("GPIO states refresh request sent");
   const { translatedText: refreshButtonText } = useTranslatedText("Refresh GPIO states");
+  const { translatedText: refreshText } = useTranslatedText("Refresh");
   // Note: GPIOs page doesn't have local state to reset,
   // it relies on gpioStates prop which is reset in parent component
   
@@ -32,7 +34,7 @@ const GPIOsPage = ({ gpioStates, wsClient, connectionId, groupName, showMessage 
     <div className="gpios-page">
       <div className="gpios-header">
         <div className="gpios-header-top">
-          <h2>Switch Control</h2>
+          <h2>{switchControlText}</h2>
           <button 
             className="refresh-button" 
             onClick={handleRefresh}
@@ -40,7 +42,7 @@ const GPIOsPage = ({ gpioStates, wsClient, connectionId, groupName, showMessage 
             title={refreshButtonText}
           >
             <span className="refresh-icon">🔄</span>
-            Refresh
+            {refreshText}
           </button>
         </div>
       </div>

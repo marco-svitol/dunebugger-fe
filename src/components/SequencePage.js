@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SequenceTimeline from "./SequenceTimeline";
 import "./SequencePage.css";
+import { useTranslatedText } from "../hooks/useTranslation";
 
 const SequencePage = ({ 
   sequence, 
@@ -15,6 +16,37 @@ const SequencePage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [lastSavedText, setLastSavedText] = useState("");
+
+  // Translation hooks
+  const { translatedText: sequenceTitle } = useTranslatedText("Sequence");
+  const { translatedText: refreshText } = useTranslatedText("Refresh");
+  const { translatedText: refreshMessageText } = useTranslatedText("Sequence data refresh request sent");
+  const { translatedText: refreshTitleText } = useTranslatedText("Refresh sequence data");
+  const { translatedText: editorTitleText } = useTranslatedText("Sequence Text Editor");
+  const { translatedText: editText } = useTranslatedText("Edit");
+  const { translatedText: saveText } = useTranslatedText("Save");
+  const { translatedText: cancelText } = useTranslatedText("Cancel");
+  const { translatedText: resetText } = useTranslatedText("Reset");
+  const { translatedText: uploadingText } = useTranslatedText("Uploading...");
+  const { translatedText: uploadSuccessText } = useTranslatedText("Sequence uploaded successfully!");
+  const { translatedText: uploadMessageText } = useTranslatedText("Sequence upload command sent to DuneBugger device");
+  const { translatedText: noConnectionText } = useTranslatedText("No WebSocket connection - sequence not uploaded");
+  const { translatedText: reloadMessageText } = useTranslatedText("Sequence reload request sent");
+  const { translatedText: reloadTitleText } = useTranslatedText("Reload sequence from device");
+  const { translatedText: waitingPlaceholderText } = useTranslatedText("Waiting for sequence data from WebSocket...");
+  const { translatedText: customContentText } = useTranslatedText("Custom Content");
+  const { translatedText: webSocketEventsText } = useTranslatedText("WebSocket Events");
+  const { translatedText: textLinesText } = useTranslatedText("Text Lines");
+  const { translatedText: editableEventsText } = useTranslatedText("Editable Events");
+  const { translatedText: linesText } = useTranslatedText("Lines");
+  const { translatedText: charactersText } = useTranslatedText("Characters");
+  const { translatedText: statusWaitingText } = useTranslatedText("Status: Waiting for data...");
+  const { translatedText: tipText } = useTranslatedText("💡 Tip: Use # for comments. Format: time command action parameter");
+  const { translatedText: shortcutText } = useTranslatedText("⌨️ Ctrl+S to save, Esc to cancel");
+  const { translatedText: runningWarningText } = useTranslatedText("⚠️ Save disabled - sequence is currently running");
+  const { translatedText: sequenceLoadedText } = useTranslatedText("✓ Sequence Loaded");
+  const { translatedText: waitingWebSocketText } = useTranslatedText("⏳ Waiting for data from the device...");
+  const { translatedText: sequenceRunningText } = useTranslatedText("▶️ Sequence Running");
 
   // Reset component state when device (groupName) changes
   useEffect(() => {
@@ -115,7 +147,7 @@ const SequencePage = ({
   };
 
   const handleSave = () => {
-    setSaveStatus("Uploading...");
+    setSaveStatus(uploadingText);
     
     if (wsClient) {
       // Escape the text content with \n for newlines
@@ -126,12 +158,12 @@ const SequencePage = ({
       
       // Show popup message
       if (showMessage) {
-        showMessage("Sequence upload command sent to DuneBugger device", "info");
+        showMessage(uploadMessageText, "info");
       }
       
-      setSaveStatus("Sequence uploaded successfully!");
+      setSaveStatus(uploadSuccessText);
     } else {
-      setSaveStatus("No WebSocket connection - sequence not uploaded");
+      setSaveStatus(noConnectionText);
     }
     
     console.log("Sent text content:", sequenceText);
@@ -167,7 +199,7 @@ const SequencePage = ({
       try {
         await wsClient.sendRequest("core.refresh_sequence", "null");
         if (showMessage && showPopup) {
-          showMessage("Sequence data refresh request sent", "info");
+          showMessage(refreshMessageText, "info");
         }
       } catch (error) {
         console.error("Failed to send sequence refresh request:", error);
@@ -184,15 +216,15 @@ const SequencePage = ({
     <div className="sequence-page">
       <div className="sequence-header">
         <div className="sequence-header-top">
-          <h2>Sequence</h2>
+          <h2>{sequenceTitle}</h2>
           <button 
             className="refresh-button" 
             onClick={handleRefresh}
             disabled={!wsClient || !connectionId}
-            title="Refresh sequence data"
+            title={refreshTitleText}
           >
             <span className="refresh-icon">🔄</span>
-            Refresh
+            {refreshText}
           </button>
         </div>
       </div>
@@ -204,15 +236,15 @@ const SequencePage = ({
       <div className="sequence-text-section">
         <div className="text-editor-header">
           <div className="header-left">
-            <h3>Sequence Text Editor</h3>
+            <h3>{editorTitleText}</h3>
             {sequence && sequence.sequence && sequence.sequence.length > 0 ? (
               isSequenceRunning ? (
-                <span className="data-status running">▶️ Sequence Running</span>
+                <span className="data-status running">{sequenceRunningText}</span>
               ) : (
-                <span className="data-status loaded">✓ Sequence Loaded</span>
+                <span className="data-status loaded">{sequenceLoadedText}</span>
               )
             ) : (
-              <span className="data-status waiting">⏳ Waiting for WebSocket data...</span>
+              <span className="data-status waiting">{waitingWebSocketText}</span>
             )}
           </div>
           <div className="editor-controls">
@@ -223,25 +255,25 @@ const SequencePage = ({
                   onClick={() => setIsEditing(true)}
                   disabled={!sequence || !sequence.sequence || sequence.sequence.length === 0 || isSequenceRunning}
                 >
-                  Edit
+                  {editText}
                 </button>
                 <button 
                   className="revert-button"
                   onClick={() => {
                     if (wsClient && connectionId) {
                       wsClient.sendRequest("core.get_sequence", "main");
-                      setSaveStatus("Sequence reload request sent");
+                      setSaveStatus(reloadMessageText);
                       setTimeout(() => setSaveStatus(""), 3000);
                       if (showMessage) {
-                        showMessage("Sequence reload request sent", "info");
+                        showMessage(reloadMessageText, "info");
                       }
                     }
                     setLastSavedText("");
                   }}
                   disabled={!wsClient || !connectionId}
-                  title="Reload sequence from device"
+                  title={reloadTitleText}
                 >
-                  Reset
+                  {resetText}
                 </button>
               </>
             ) : (
@@ -251,13 +283,13 @@ const SequencePage = ({
                   onClick={handleSave}
                   disabled={!sequenceText.trim() || isSequenceRunning}
                 >
-                  Save
+                  {saveText}
                 </button>
                 <button 
                   className="cancel-button"
                   onClick={handleCancel}
                 >
-                  Cancel
+                  {cancelText}
                 </button>
               </>
             )}
@@ -276,7 +308,7 @@ const SequencePage = ({
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
           readOnly={!isEditing}
-          placeholder="Waiting for sequence data from WebSocket..."
+          placeholder={waitingPlaceholderText}
           rows={15}
         />
         
@@ -284,24 +316,24 @@ const SequencePage = ({
           <div className="text-stats">
             {sequence && sequence.sequence && sequence.sequence.length > 0 ? (
               <>
-                {lastSavedText ? "Custom Content | " : "WebSocket Events: " + sequence.sequence.length + " | "}
-                Text Lines: {sequenceText.split('\n').length} | 
-                Editable Events: {sequenceText.split('\n').filter(line => line.trim() && !line.trim().startsWith('#')).length}
+                {lastSavedText ? `${customContentText} | ` : `${webSocketEventsText}: ${sequence.sequence.length} | `}
+                {textLinesText}: {sequenceText.split('\n').length} | 
+                {editableEventsText}: {sequenceText.split('\n').filter(line => line.trim() && !line.trim().startsWith('#')).length}
               </>
             ) : (
               <>
-                Lines: {sequenceText.split('\n').length} | 
-                Characters: {sequenceText.length} | 
-                Status: Waiting for data...
+                {linesText}: {sequenceText.split('\n').length} | 
+                {charactersText}: {sequenceText.length} | 
+                {statusWaitingText}
               </>
             )}
           </div>
           {isEditing && (
             <div className="editor-help">
               <small>
-                💡 Tip: Use # for comments. Format: time command action parameter<br/>
-                ⌨️ Ctrl+S to save, Esc to cancel
-                {isSequenceRunning && <><br/>⚠️ Save disabled - sequence is currently running</>}
+                {tipText}<br/>
+                {shortcutText}
+                {isSequenceRunning && <><br/>{runningWarningText}</>}
               </small>
             </div>
           )}

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import "./SequenceTimeline.css";
 import { FaMusic, FaWaveSquare } from "react-icons/fa";
+import { useTranslatedText } from "../hooks/useTranslation";
 
 function SequenceTimeline({ sequence, playingTime }) {
-  const [tooltip, setTooltip] = useState({ visible: false, text: "", x: 0, y: 0 });
-
+  const [tooltip, setTooltip] = useState({ visible: false, text: "", x: 0, y: 0 });  
+  // Translation hook
+  const { translatedText: noEventsText } = useTranslatedText("No events to display");
   // Smart tooltip positioning to keep it within viewport
   const getSmartTooltipPosition = (mouseX, mouseY, tooltipText) => {
     const offset = 10;
@@ -42,7 +44,7 @@ function SequenceTimeline({ sequence, playingTime }) {
   if (!sequence || !sequence.sequence || sequence.sequence.length === 0) {
     return (
       <div className="timeline-container">
-        <p>No events to display</p>
+        <p>{noEventsText}</p>
       </div>
     );
   }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "./ActionBar.css";
-import LanguageToggle from "./LanguageToggle";
+
 import { useTranslatedText } from "../hooks/useTranslation";
 
 const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnline, showMessage, playingTime, sequence, groupName }) => {
@@ -10,6 +10,10 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   // Translation hooks
   const { translatedText: startText } = useTranslatedText("Start");
   const { translatedText: stopText } = useTranslatedText("Stop");
+  const { translatedText: offText } = useTranslatedText("Off");
+  const { translatedText: standbyText } = useTranslatedText("Standby");
+  const { translatedText: physicalStartButtonText } = useTranslatedText("Physical Start Button Enabled");
+  const { translatedText: randomActionsText } = useTranslatedText("Random Actions Enabled");
   const { translatedText: startMessageText } = useTranslatedText("Start command sent to DuneBugger device");
   const { translatedText: stopMessageText } = useTranslatedText("Stop command sent to DuneBugger device");
   const { translatedText: setOffMessageText } = useTranslatedText("Set to Off state command sent");
@@ -93,7 +97,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   const ModifiedSwitches = () => (
     <div className="sequence-switches">
       <div className="switch-container">
-        <label>Physical Start Button Enabled</label>
+        <label>{physicalStartButtonText}</label>
         <label className="switch">
           <input
             type="checkbox"
@@ -113,7 +117,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
         </label>
       </div>
       <div className="switch-container">
-        <label>Random Actions Enabled</label>
+        <label>{randomActionsText}</label>
         <label className="switch">
           <input
             type="checkbox"
@@ -165,7 +169,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               }}
               disabled={!isOnline}
             >
-              Off
+              {offText}
             </button>
             <button 
               onClick={() => {
@@ -178,7 +182,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               }}
               disabled={!isOnline}
             >
-              Standby
+              {standbyText}
             </button>
           </div>
         );
@@ -203,9 +207,6 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
     <div className={`action-bar ${isOnline ? "online" : "offline"}`}>
       <div className="action-bar-content">
         {renderControls()}
-        <div className="action-bar-right">
-          <LanguageToggle />
-        </div>
       </div>
     </div>
   );

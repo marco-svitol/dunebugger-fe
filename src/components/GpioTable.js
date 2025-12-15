@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./GpioTable.css"; // Optional: Add a CSS file for table-specific styles if needed.
+import { useTranslation } from "../contexts/TranslationContext";
 
 // Define initial column visibility
 const initialColumns = {
@@ -23,6 +24,19 @@ function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
   const [sortedData, setSortedData] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [visibleColumns, setVisibleColumns] = useState(getInitialVisibleColumns());
+
+  // Translation hook and text
+  const { getTranslation } = useTranslation();
+  
+  // Table texts
+  const texts = {
+    pin: getTranslation("Pin"),
+    label: getTranslation("Label"),
+    mode: getTranslation("Mode"),
+    state: getTranslation("State"),
+    switch: getTranslation("Switch"),
+    noGpioData: getTranslation("No GPIO data available")
+  };
 
   // Reset sorting and data when device (groupName) changes
   useEffect(() => {
@@ -98,39 +112,39 @@ function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
               checked={visibleColumns[columnName]}
               onChange={() => handleColumnVisibilityChange(columnName)}
             />
-            {columnName.charAt(0).toUpperCase() + columnName.slice(1)}
+            {texts[columnName] || columnName.charAt(0).toUpperCase() + columnName.slice(1)}
           </label>
         ))}
       </div>
       {sortedData.length === 0 ? (
-        <p>No GPIO data available</p>
+        <p>{texts.noGpioData}</p>
       ) : (
         <table>
           <thead>
             <tr>
               {visibleColumns.pin && (
                 <th className={`sortable ${sortConfig.key === "pin" ? sortConfig.direction : ""}`} onClick={() => handleSort("pin")}>
-                  Pin
+                  {texts.pin}
                 </th>
               )}
               {visibleColumns.label && (
                 <th className={`sortable ${sortConfig.key === "label" ? sortConfig.direction : ""}`} onClick={() => handleSort("label")}>
-                  Label
+                  {texts.label}
                 </th>
               )}
               {visibleColumns.mode && (
                 <th className={`sortable ${sortConfig.key === "mode" ? sortConfig.direction : ""}`} onClick={() => handleSort("mode")}>
-                  Mode
+                  {texts.mode}
                 </th>
               )}
               {visibleColumns.state && (
                 <th className={`sortable ${sortConfig.key === "state" ? sortConfig.direction : ""}`} onClick={() => handleSort("state")}>
-                  State
+                  {texts.state}
                 </th>
               )}
               {visibleColumns.switch && (
                 <th className={`sortable ${sortConfig.key === "switch" ? sortConfig.direction : ""}`} onClick={() => handleSort("switch")}>
-                  Switch
+                  {texts.switch}
                 </th>
               )}
             </tr>

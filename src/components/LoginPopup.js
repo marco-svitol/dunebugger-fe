@@ -5,10 +5,10 @@ const LoginPopup = ({ message, type = 'success', onClose }) => {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // Auto-remove after 5 seconds (same as demo-app)
+    // Auto-remove after 3.75 seconds (75% of original time)
     const timer = setTimeout(() => {
       handleClose();
-    }, 5000);
+    }, 3750);
 
     return () => clearTimeout(timer);
   }, []);
@@ -30,6 +30,9 @@ const LoginPopup = ({ message, type = 'success', onClose }) => {
       <button className="message-close" onClick={handleClose}>
         ×
       </button>
+      <div className="message-progress-bar">
+        <div className="message-progress-fill"></div>
+      </div>
     </div>
   );
 };

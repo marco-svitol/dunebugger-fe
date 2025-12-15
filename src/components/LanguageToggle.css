@@ -1,6 +1,7 @@
 .language-toggle {
   display: flex;
   align-items: center;
+  gap: 4px;
 }
 
 .language-button {
@@ -72,6 +73,31 @@
   letter-spacing: 0.5px;
 }
 
+.config-button {
+  background: var(--secondary-color, #6c757d);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.config-button:hover {
+  background: var(--secondary-hover, #5a6268);
+  transform: translateY(-1px);
+}
+
+.config-button:active {
+  transform: translateY(0);
+}
+
 /* Mobile responsive */
 @media (max-width: 768px) {
   .language-button {
@@ -79,5 +105,12 @@
     font-size: 12px;
     min-width: 36px;
     height: 28px;
+  }
+  
+  .config-button {
+    padding: 6px;
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
   }
 }

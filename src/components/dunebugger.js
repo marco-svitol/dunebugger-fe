@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import "./dunebugger.css"; // Import the CSS file
+import { useTranslatedText } from "../hooks/useTranslation";
 import Profile from "./Profile";
 import DeviceSelector from "./DeviceSelector";
 import WebSocketManager from "./websocket";
@@ -19,6 +20,9 @@ const HEARTBEAT_TIMEOUT = 65000; // 65 seconds
 export default function SmartDunebugger() {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
   const [wsClient, setWSClient] = useState(null);
+  
+  // Translation hook for connected message
+  const { translatedText: connectedMessageText } = useTranslatedText("Connected to DuneBugger Portal");
   const [isOnline, setIsOnline] = useState(false); // Device connection state
   const [gpioStates, setGpioStates] = useState({});
   const [sequenceState, setSequenceState] = useState({
@@ -86,10 +90,10 @@ export default function SmartDunebugger() {
   // Show login success message when user authenticates
   useEffect(() => {
     if (isAuthenticated && !hasShownLoginMessage && user && showMessageRef.current) {
-      showMessageRef.current("Connected to DuneBugger Portal", "success");
+      showMessageRef.current(connectedMessageText, "success");
       setHasShownLoginMessage(true);
     }
-  }, [isAuthenticated, hasShownLoginMessage, user]);
+  }, [isAuthenticated, hasShownLoginMessage, user, connectedMessageText]);
 
   // Reset login message flag when user logs out
   useEffect(() => {

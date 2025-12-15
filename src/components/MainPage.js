@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./MainPage.css";
+import { useTranslatedText } from "../hooks/useTranslation";
 
 const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState, showMessage, groupName }) => {
   const [cycleStatus, setCycleStatus] = useState("Cycle not running");
@@ -15,12 +16,21 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
     setTotalCycleLength(0);
   }, [groupName]);
   
+  // Translation hooks
+  const { translatedText: startText } = useTranslatedText("Start");
+  const { translatedText: stopText } = useTranslatedText("Stop");
+  const { translatedText: cycleNotRunningText } = useTranslatedText("Cycle not running");
+  const { translatedText: startMessageText } = useTranslatedText("Start command sent to DuneBugger device");
+  const { translatedText: stopMessageText } = useTranslatedText("Stop command sent to DuneBugger device");
+  const { translatedText: mainInfoText } = useTranslatedText("This is the main control page for your device monitoring and control.");
+  const { translatedText: navigationInfoText } = useTranslatedText("Use the menu to navigate between different sections.");
+
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
     if (wsClient) {
       wsClient.sendRequest("core.dunebugger_set", "c", connectionId);
       if (showMessage) {
-        showMessage("Start command sent to DuneBugger device", "info");
+        showMessage(startMessageText, "info");
       }
     }
   };
@@ -30,7 +40,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
     if (wsClient) {
       wsClient.sendRequest("core.dunebugger_set", "cs", connectionId);
       if (showMessage) {
-        showMessage("Stop command sent to DuneBugger device", "info");
+        showMessage(stopMessageText, "info");
       }
     }
   };
@@ -60,15 +70,15 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
   useEffect(() => {
     const interval = setInterval(() => {
       if (Date.now() - lastPlayingTimeUpdate > 15000) { // 10 seconds timeout
-        setCycleStatus("Cycle not running");
+        setCycleStatus(cycleNotRunningText);
         setProgress(0);
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [lastPlayingTimeUpdate]);
+  }, [lastPlayingTimeUpdate, cycleNotRunningText]);
 
   // Determine if cycle is running based on cycle status text
-  const isCycleRunning = !cycleStatus.includes("Cycle not running");
+  const isCycleRunning = !cycleStatus.includes("Cycle not running") && !cycleStatus.includes(cycleNotRunningText);
 
   return (
     <div className="main-page">
@@ -79,14 +89,14 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
             onClick={handleStart}
             disabled={isCycleRunning}
           >
-            Start
+            {startText}
           </button>
           <button 
             className="stop-button" 
             onClick={handleStop}
             disabled={!isCycleRunning}
           >
-            Stop
+            {stopText}
           </button>
           <div className="cycle-status-container">
             {isCycleRunning ? (
@@ -100,13 +110,13 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
                 <div className="cycle-status">{cycleStatus}</div>
               </>
             ) : (
-              <div className="cycle-status">Cycle not running</div>
+              <div className="cycle-status">{cycleNotRunningText}</div>
             )}
           </div>
         </div>
         <div className="dashboard-info">
-          <p>This is the main control page for your device monitoring and control.</p>
-          <p>Use the menu to navigate between different sections.</p>
+          <p>{mainInfoText}</p>
+          <p>{navigationInfoText}</p>
         </div>
       </div>
     </div>

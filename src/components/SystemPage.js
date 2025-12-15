@@ -1,7 +1,11 @@
 import React from "react";
 import "./SystemPage.css";
+import { useTranslatedText } from "../hooks/useTranslation";
 
 const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showMessage }) => {
+  // Translation hooks
+  const { translatedText: refreshMessageText } = useTranslatedText("System info refresh request sent");
+  const { translatedText: refreshButtonText } = useTranslatedText("Refresh system information");
   // Note: System page doesn't have local state to reset,
   // it relies on systemInfo and logs props which are reset in parent component
   const handleRefresh = async (showPopup = true) => {
@@ -9,7 +13,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
       try {
         await wsClient.sendRequest("controller.system_info", "refresh");
         if (showMessage && showPopup) {
-          showMessage("System info refresh request sent", "info");
+          showMessage(refreshMessageText, "info");
         }
       } catch (error) {
         console.error("Failed to send system info refresh request:", error);
@@ -235,7 +239,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
             className="refresh-button" 
             onClick={handleRefresh}
             disabled={!wsClient || !connectionId}
-            title="Refresh system information"
+            title={refreshButtonText}
           >
             <span className="refresh-icon">🔄</span>
             Refresh

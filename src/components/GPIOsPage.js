@@ -1,8 +1,12 @@
 import React from "react";
 import GpioTable from "./GpioTable";
 import "./GPIOsPage.css";
+import { useTranslatedText } from "../hooks/useTranslation";
 
 const GPIOsPage = ({ gpioStates, wsClient, connectionId, groupName, showMessage }) => {
+  // Translation hooks
+  const { translatedText: refreshMessageText } = useTranslatedText("GPIO states refresh request sent");
+  const { translatedText: refreshButtonText } = useTranslatedText("Refresh GPIO states");
   // Note: GPIOs page doesn't have local state to reset,
   // it relies on gpioStates prop which is reset in parent component
   
@@ -11,7 +15,7 @@ const GPIOsPage = ({ gpioStates, wsClient, connectionId, groupName, showMessage 
       try {
         await wsClient.sendRequest("core.refresh_gpios", "null");
         if (showMessage && showPopup) {
-          showMessage("GPIO states refresh request sent", "info");
+          showMessage(refreshMessageText, "info");
         }
       } catch (error) {
         console.error("Failed to send GPIO refresh request:", error);
@@ -33,7 +37,7 @@ const GPIOsPage = ({ gpioStates, wsClient, connectionId, groupName, showMessage 
             className="refresh-button" 
             onClick={handleRefresh}
             disabled={!wsClient || !connectionId}
-            title="Refresh GPIO states"
+            title={refreshButtonText}
           >
             <span className="refresh-icon">🔄</span>
             Refresh

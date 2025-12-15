@@ -1,8 +1,17 @@
 import React from "react";
 import "./Menu.css";
 import { FaTimes } from "react-icons/fa";
+import { useTranslatedText } from "../hooks/useTranslation";
 
 const Menu = ({ isOpen, onClose, onNavigate, currentPage, isMobile }) => {
+  // Translation hooks
+  const { translatedText: mainText } = useTranslatedText("Main");
+  const { translatedText: sequenceText } = useTranslatedText("Sequence");
+  const { translatedText: switchesText } = useTranslatedText("Switches");
+  const { translatedText: schedulerText } = useTranslatedText("Scheduler");
+  const { translatedText: analyticsText } = useTranslatedText("Analytics");
+  const { translatedText: systemText } = useTranslatedText("System");
+
   const handleClickOutside = (e) => {
     // Close menu when clicking outside only in non-mobile view
     if (!isMobile && e.target.classList.contains("menu-overlay")) {
@@ -29,37 +38,37 @@ const Menu = ({ isOpen, onClose, onNavigate, currentPage, isMobile }) => {
             className={`menu-item ${currentPage === "main" ? "active" : ""}`} 
             onClick={() => onNavigate("main")}
           >
-            Main
+            {mainText}
           </button>
           <button 
             className={`menu-item ${currentPage === "sequence" ? "active" : ""}`} 
             onClick={() => onNavigate("sequence")}
           >
-            Sequence
+            {sequenceText}
           </button>
           <button 
             className={`menu-item ${currentPage === "gpios" ? "active" : ""}`} 
             onClick={() => onNavigate("gpios")}
           >
-            Switches
+            {switchesText}
           </button>
           <button 
             className={`menu-item ${currentPage === "scheduler" ? "active" : ""}`} 
             onClick={() => onNavigate("scheduler")}
           >
-            Scheduler
+            {schedulerText}
           </button>
           <button 
             className={`menu-item ${currentPage === "analytics" ? "active" : ""}`} 
             onClick={() => onNavigate("analytics")}
           >
-            Analytics
+            {analyticsText}
           </button>
           <button 
             className={`menu-item ${currentPage === "system" ? "active" : ""}`} 
             onClick={() => onNavigate("system")}
           >
-            System
+            {systemText}
           </button>
         </div>
       </div>

@@ -242,7 +242,8 @@ export const TranslationProvider = ({ children }) => {
       'No GPIO data available',
       '✓ Sequence Loaded',
       '⏳ Waiting for data from the device...',
-      '▶️ Sequence Running'
+      '▶️ Sequence Running',
+      'Switch to'
     ];
 
     if (isTranslationEnabled) {

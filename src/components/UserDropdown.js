@@ -8,7 +8,7 @@ import './UserDropdown.css';
 
 const UserDropdown = ({ availableDevices = [], selectedDevice = "" }) => {
   const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
-  const { isTranslationEnabled, toggleTranslation } = useTranslation();
+  const { isTranslationEnabled, toggleTranslation, getTranslation } = useTranslation();
   
   // Translation hooks for dropdown menu items
   const { translatedText: yourProfileText } = useTranslatedText("Your Profile");
@@ -139,7 +139,7 @@ const UserDropdown = ({ availableDevices = [], selectedDevice = "" }) => {
               onClick={handleLanguageToggle}
             >
               <span className="dropdown-icon">🌐</span>
-              {languageText}: {isTranslationEnabled ? italianoText : englishText}
+              {getTranslation("Switch to")} {isTranslationEnabled ? englishText : italianoText}
             </button>
 
             <div className="dropdown-divider"></div>

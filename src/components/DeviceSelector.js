@@ -18,6 +18,12 @@ const DeviceSelector = ({ availableDevices, selectedDevice, onDeviceChange }) =>
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Function to capitalize first letter of device name
+  const formatDeviceName = (deviceName) => {
+    if (!deviceName) return deviceName;
+    return deviceName.charAt(0).toUpperCase() + deviceName.slice(1);
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -50,7 +56,7 @@ const DeviceSelector = ({ availableDevices, selectedDevice, onDeviceChange }) =>
         aria-haspopup="true"
         aria-expanded={isOpen}
       >
-        <span className="selected-device">{selectedDevice}</span>
+        <span className="selected-device">{formatDeviceName(selectedDevice)}</span>
         <span className={`dropdown-arrow ${isOpen ? 'open' : ''}`}>▼</span>
       </button>
       
@@ -62,7 +68,7 @@ const DeviceSelector = ({ availableDevices, selectedDevice, onDeviceChange }) =>
               className={`device-option ${device === selectedDevice ? 'selected' : ''}`}
               onClick={() => handleDeviceSelect(device)}
             >
-              {device}
+              {formatDeviceName(device)}
             </button>
           ))}
         </div>

@@ -10,26 +10,43 @@ class TranslationService {
     this.sourceLanguage = 'en';
     this.targetLanguage = 'it';
     this.cacheKey = 'dunebugger_translations';
+    this.apiKeys = {};
     
     // Load cached translations from localStorage on initialization
     this.loadCacheFromStorage();
+    this.loadApiKeys();
     
-    // Multiple translation providers for reliability
+    // Multiple translation providers for reliability (prioritized)
     this.providers = [
       {
-        name: 'LibreTranslate',
-        url: 'https://libretranslate.de/translate',
-        method: 'POST'
+        name: 'LibreTranslate.com',
+        url: 'https://libretranslate.com/translate',
+        method: 'POST',
+        requiresAuth: false
       },
       {
-        name: 'LibreTranslate-Backup', 
+        name: 'LibreTranslate Argosopentech', 
         url: 'https://translate.argosopentech.com/translate',
-        method: 'POST'
+        method: 'POST',
+        requiresAuth: false
       },
       {
-        name: 'Lingva', // Unofficial Google Translate
+        name: 'LibreTranslate Terraprint',
+        url: 'https://translate.terraprint.co/translate',
+        method: 'POST',
+        requiresAuth: false
+      },
+      {
+        name: 'MyMemory',
+        url: 'https://api.mymemory.translated.net/get',
+        method: 'GET',
+        requiresAuth: false
+      },
+      {
+        name: 'Lingva',
         url: 'https://lingva.ml/api/v1',
-        method: 'GET'
+        method: 'GET',
+        requiresAuth: false
       }
     ];
     
@@ -52,6 +69,27 @@ class TranslationService {
       console.warn('Failed to load translation cache from localStorage:', error);
       this.cache = new Map();
     }
+  }
+
+  /**
+   * Load API keys from localStorage
+   */
+  loadApiKeys() {
+    try {
+      const stored = localStorage.getItem('translation-api-keys');
+      this.apiKeys = stored ? JSON.parse(stored) : {};
+    } catch (error) {
+      console.warn('Failed to load API keys:', error);
+      this.apiKeys = {};
+    }
+  }
+
+  /**
+   * Save API keys to localStorage
+   */
+  saveApiKeys(keys) {
+    this.apiKeys = { ...this.apiKeys, ...keys };
+    localStorage.setItem('translation-api-keys', JSON.stringify(this.apiKeys));
   }
 
   /**
@@ -99,19 +137,31 @@ class TranslationService {
    * Translate text using LibreTranslate API
    */
   async translateWithLibre(text, providerUrl) {
+    const requestBody = {
+      q: text,
+      source: this.sourceLanguage,
+      target: this.targetLanguage,
+      format: 'text'
+    };
+
+    // Add API key if available for libretranslate.com
+    if (providerUrl.includes('libretranslate.com') && this.apiKeys.libreTranslate) {
+      requestBody.api_key = this.apiKeys.libreTranslate;
+    }
+
     const response = await fetch(providerUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        q: text,
-        source: this.sourceLanguage,
-        target: this.targetLanguage
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error(`LibreTranslate rate limited: ${response.status}`);
+      }
       throw new Error(`LibreTranslate API error: ${response.status}`);
     }
 
@@ -121,6 +171,25 @@ class TranslationService {
       return data.translatedText;
     } else {
       throw new Error('Invalid response from LibreTranslate');
+    }
+  }
+
+  /**
+   * Translate text using MyMemory API
+   */
+  async translateWithMyMemory(text) {
+    const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${this.sourceLanguage}|${this.targetLanguage}`);
+    
+    if (!response.ok) {
+      throw new Error(`MyMemory API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.responseData && data.responseData.translatedText) {
+      return data.responseData.translatedText;
+    } else {
+      throw new Error('Invalid response from MyMemory');
     }
   }
 
@@ -175,14 +244,16 @@ class TranslationService {
         
         if (provider.name.includes('LibreTranslate')) {
           translatedText = await this.translateWithLibre(normalizedText, provider.url);
+        } else if (provider.name === 'MyMemory') {
+          translatedText = await this.translateWithMyMemory(normalizedText);
         } else if (provider.name === 'Lingva') {
           translatedText = await this.translateWithLingva(normalizedText);
-        } else if (provider.name === 'Google Translate' && provider.apiKey) {
-          translatedText = await this.translateWithGoogle(normalizedText, provider.apiKey);
-        } else if (provider.name === 'Microsoft Translator' && provider.apiKey) {
-          translatedText = await this.translateWithMicrosoft(normalizedText, provider.apiKey);
-        } else if (provider.name === 'DeepL' && provider.apiKey) {
-          translatedText = await this.translateWithDeepL(normalizedText, provider.apiKey);
+        } else if (provider.name === 'Google Translate' && this.apiKeys.googleTranslate) {
+          translatedText = await this.translateWithGoogle(normalizedText, this.apiKeys.googleTranslate);
+        } else if (provider.name === 'Microsoft Translator' && this.apiKeys.microsoftTranslator) {
+          translatedText = await this.translateWithMicrosoft(normalizedText, this.apiKeys.microsoftTranslator);
+        } else if (provider.name === 'DeepL' && this.apiKeys.deepL) {
+          translatedText = await this.translateWithDeepL(normalizedText, this.apiKeys.deepL);
         }
         
         if (translatedText && translatedText.trim()) {
@@ -221,8 +292,15 @@ class TranslationService {
   }
 
   /**
-   * Configure API key for premium services (Google, Microsoft, DeepL)
-   * @param {string} provider - 'google', 'microsoft', or 'deepl'
+   * Set API key for a specific provider
+   */
+  setApiKey(provider, key) {
+    this.saveApiKeys({ [provider]: key });
+  }
+
+  /**
+   * Configure API key for premium services (Google, Microsoft, DeepL, LibreTranslate)
+   * @param {string} provider - 'googleTranslate', 'microsoftTranslator', 'deepL', or 'libreTranslate'
    * @param {string} apiKey - API key for the service
    */
   configureApiKey(provider, apiKey) {
@@ -232,39 +310,47 @@ class TranslationService {
     }
 
     const premiumProviders = {
-      google: {
+      googleTranslate: {
         name: 'Google Translate',
         url: 'https://translation.googleapis.com/language/translate/v2',
         method: 'POST'
       },
-      microsoft: {
+      microsoftTranslator: {
         name: 'Microsoft Translator', 
         url: 'https://api.cognitive.microsofttranslator.com/translate',
         method: 'POST'
       },
-      deepl: {
+      deepL: {
         name: 'DeepL',
         url: 'https://api-free.deepl.com/v2/translate',
+        method: 'POST'
+      },
+      libreTranslate: {
+        name: 'LibreTranslate.com',
+        url: 'https://libretranslate.com/translate',
         method: 'POST'
       }
     };
 
     if (premiumProviders[provider]) {
-      // Add API key and insert premium provider at the beginning
-      const premiumProvider = {
-        ...premiumProviders[provider],
-        apiKey: apiKey
-      };
+      // Save API key
+      this.setApiKey(provider, apiKey);
       
-      // Remove any existing instance of this provider
-      this.providers = this.providers.filter(p => !p.name.toLowerCase().includes(provider));
+      // Add premium provider to the beginning if not already present
+      const existingProvider = this.providers.find(p => p.name === premiumProviders[provider].name);
+      if (!existingProvider) {
+        const premiumProvider = {
+          ...premiumProviders[provider],
+          requiresAuth: true
+        };
+        
+        // Insert at the beginning for priority
+        this.providers.unshift(premiumProvider);
+      }
       
-      // Insert at the beginning for priority
-      this.providers.unshift(premiumProvider);
-      
-      console.log(`Configured ${premiumProvider.name} API key - will be used as primary translation service`);
+      console.log(`Configured ${premiumProviders[provider].name} API key - will be used as primary translation service`);
     } else {
-      console.warn('Unsupported provider. Use: google, microsoft, or deepl');
+      console.warn('Unsupported provider. Use: googleTranslate, microsoftTranslator, deepL, or libreTranslate');
     }
   }
 

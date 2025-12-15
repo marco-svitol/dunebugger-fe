@@ -16,8 +16,12 @@ const SchedulerPage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [lastSavedText, setLastSavedText] = useState("");
+  const [isNextActionsFlashing, setIsNextActionsFlashing] = useState(false);
+  const [isLastExecutedFlashing, setIsLastExecutedFlashing] = useState(false);
   const overlayRef = useRef(null);
   const textareaRef = useRef(null);
+  const nextActionsTimeoutRef = useRef(null);
+  const lastExecutedTimeoutRef = useRef(null);
 
   // Translation hook and text
   const { getTranslation } = useTranslation();
@@ -251,6 +255,56 @@ const SchedulerPage = ({
     }
   }, [scheduleText, lastSavedText, schedule]);
 
+  // Flash effect for next actions changes
+  useEffect(() => {
+    if (nextActions && nextActions.length > 0) {
+      // Clear existing timeout
+      if (nextActionsTimeoutRef.current) {
+        clearTimeout(nextActionsTimeoutRef.current);
+      }
+      
+      // Trigger flash effect
+      setIsNextActionsFlashing(true);
+      
+      // Remove flash after animation completes
+      nextActionsTimeoutRef.current = setTimeout(() => {
+        setIsNextActionsFlashing(false);
+      }, 3000); // 3 seconds for smooth fade
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (nextActionsTimeoutRef.current) {
+        clearTimeout(nextActionsTimeoutRef.current);
+      }
+    };
+  }, [nextActions]);
+
+  // Flash effect for last executed action changes
+  useEffect(() => {
+    if (lastExecutedAction) {
+      // Clear existing timeout
+      if (lastExecutedTimeoutRef.current) {
+        clearTimeout(lastExecutedTimeoutRef.current);
+      }
+      
+      // Trigger flash effect
+      setIsLastExecutedFlashing(true);
+      
+      // Remove flash after animation completes
+      lastExecutedTimeoutRef.current = setTimeout(() => {
+        setIsLastExecutedFlashing(false);
+      }, 3000); // 3 seconds for smooth fade
+    }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (lastExecutedTimeoutRef.current) {
+        clearTimeout(lastExecutedTimeoutRef.current);
+      }
+    };
+  }, [lastExecutedAction]);
+
   // Update overlay when text or editing state changes
   useEffect(() => {
     updateOverlay();
@@ -261,7 +315,7 @@ const SchedulerPage = ({
       <h2>{texts.pageTitle}</h2>
       
       {/* Next Actions Section */}
-      <div className="next-actions-section">
+      <div className={`next-actions-section ${isNextActionsFlashing ? 'panel-flash' : ''}`}>
         <div className="next-actions-header">
           <h3>{texts.nextActionsTitle}</h3>
           <button 
@@ -305,7 +359,7 @@ const SchedulerPage = ({
       </div>
       
       {/* Last Executed Action Section */}
-      <div className="last-executed-section">
+      <div className={`last-executed-section ${isLastExecutedFlashing ? 'panel-flash' : ''}`}>
         <div className="last-executed-header">
           <h3>{texts.lastExecutedTitle}</h3>
           <button 

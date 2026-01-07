@@ -56,7 +56,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
     if (wsClient && isOnline) {
-      wsClient.sendRequest("core.dunebugger_set", "c", connectionId);
+      wsClient.sendRequest("core.dunebugger_set", "sequence start main.seq", connectionId);
       if (showMessage) {
         showMessage(startMessageText, "info");
       }
@@ -66,7 +66,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   // Handler for Stop button (sends "cs" command)
   const handleStop = () => {
     if (wsClient && isOnline) {
-      wsClient.sendRequest("core.dunebugger_set", "cs", connectionId);
+      wsClient.sendRequest("core.dunebugger_set", "sequence stop", connectionId);
       if (showMessage) {
         showMessage(stopMessageText, "info");
       }
@@ -106,7 +106,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               if (wsClient && isOnline) {
                 wsClient.sendRequest(
                   "core.dunebugger_set",
-                  sequenceState?.start_button_enabled ? "dsb" : "esb",
+                  sequenceState?.start_button_enabled ? "start_button disable" : "start_button enable",
                   connectionId
                 );
               }
@@ -126,7 +126,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               if (wsClient && isOnline) {
                 wsClient.sendRequest(
                   "core.dunebugger_set",
-                  sequenceState?.random_actions ? "dr" : "er",
+                  sequenceState?.random_actions ? "random_actions disable" : "random_actions enable",
                   connectionId
                 );
               }
@@ -161,7 +161,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
             <button 
               onClick={() => {
                 if (wsClient) {
-                  wsClient.sendRequest("core.dunebugger_set", "so");
+                  wsClient.sendRequest("core.dunebugger_set", "mode execute spento");
                   if (showMessage) {
                     showMessage(setOffMessageText, "info");
                   }
@@ -174,7 +174,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
             <button 
               onClick={() => {
                 if (wsClient) {
-                  wsClient.sendRequest("core.dunebugger_set", "sb");
+                  wsClient.sendRequest("core.dunebugger_set", "mode execute standby");
                   if (showMessage) {
                     showMessage(setStandbyMessageText, "info");
                   }

@@ -152,14 +152,19 @@ const trackColors = [
       let iconColor = "#007bff"; // Default color for icons
       let tooltipText = `${ev.action} at ${ev.time}s`;
   
-      if (action === "playmusic") {
+      if (action === "play_music") {
         Icon = FaMusic;
-      } else if (action === "playsfx") {
+      } else if (action === "play_sfx") {
         Icon = FaWaveSquare;
         tooltipText += ` (${ev.parameter})`;
       } else if (action === "fadeout") {
         Icon = FaMusic;
         iconColor = "#808080"; // Grey color for fadeout
+      } else {
+        // Handle unknown or mistyped audio commands
+        Icon = FaMusic;
+        iconColor = "#ff0000"; // Red color to indicate unknown command
+        tooltipText += ` (Unknown command)`;
       }
   
       return (
@@ -255,6 +260,11 @@ const trackColors = [
           segmentDuration = duration;
           const percentage = dimmerToPercentage(colorOrDimmer);
           tooltipText += ` to ${percentage}% over ${duration}s at ${ev.time}s`;
+        } else {
+          // Handle unknown or mistyped DMX commands
+          segmentDuration = 1; // Default 1 second
+          segmentColor = '#ff0000'; // Red to indicate unknown command
+          tooltipText += ` (Unknown command: ${ev.action}) at ${ev.time}s`;
         }
 
         const actualEndTime = startTime + segmentDuration;

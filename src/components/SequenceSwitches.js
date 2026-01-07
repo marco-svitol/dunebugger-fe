@@ -7,13 +7,13 @@ function SequenceSwitches({ sequenceState, wsClient, connectionId }) {
 
     switch (key) {
       case "random_actions":
-        command = sequenceState.random_actions ? "dr" : "er"; // Disable or Enable random actions
+        command = sequenceState.random_actions ? "random_actions disable" : "random_actions enable"; // Disable or Enable random actions
         break;
       case "cycle_running":
-        command = sequenceState.cycle_running ? "cs" : "c"; // Cycle stop or start
+        command = sequenceState.cycle_running ? "sequence stop" : "sequence start main.seq"; // Cycle stop or start
         break;
       case "start_button_enabled":
-        command = sequenceState.start_button_enabled ? "dsb" : "esb"; // Custom commands for start button
+        command = sequenceState.start_button_enabled ? "start_button disable" : "start_button enable"; // Custom commands for start button
         break;
       default:
         console.warn("Unknown switch key:", key);

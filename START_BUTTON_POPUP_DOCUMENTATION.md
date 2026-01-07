@@ -43,7 +43,7 @@ When users click action buttons in the ActionBar, they now receive immediate vis
 // Start button with popup feedback
 const handleStart = () => {
   if (wsClient && isOnline) {
-    wsClient.sendRequest("core.dunebugger_set", "c", connectionId);
+    wsClient.sendRequest("core.dunebugger_set", "sequence start main.seq", connectionId);
     if (showMessage) {
       showMessage("Start command sent to DuneBugger device", "info");
     }
@@ -53,7 +53,7 @@ const handleStart = () => {
 // Stop button with popup feedback
 const handleStop = () => {
   if (wsClient && isOnline) {
-    wsClient.sendRequest("core.dunebugger_set", "cs", connectionId);
+    wsClient.sendRequest("core.dunebugger_set", "sequence stop", connectionId);
     if (showMessage) {
       showMessage("Stop command sent to DuneBugger device", "info");
     }

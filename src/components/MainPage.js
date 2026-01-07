@@ -28,7 +28,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
     if (wsClient) {
-      wsClient.sendRequest("core.dunebugger_set", "c", connectionId);
+      wsClient.sendRequest("core.dunebugger_set", "sequence start main.seq", connectionId);
       if (showMessage) {
         showMessage(startMessageText, "info");
       }
@@ -38,7 +38,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
   // Handler for Stop button (sends "cs" command)
   const handleStop = () => {
     if (wsClient) {
-      wsClient.sendRequest("core.dunebugger_set", "cs", connectionId);
+      wsClient.sendRequest("core.dunebugger_set", "sequence stop", connectionId);
       if (showMessage) {
         showMessage(stopMessageText, "info");
       }

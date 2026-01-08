@@ -133,7 +133,7 @@ const SequencePage = ({
   // Handle sequence running state changes for save status
   useEffect(() => {
     if (isSequenceRunning && isEditing) {
-      // If sequence starts while editing, just show warning but keep editing
+      // If sequence plays while editing, just show warning but keep editing
       setSaveStatus("Save disabled - sequence is running. You can save when it stops.");
     } else if (!isSequenceRunning && isEditing && saveStatus.includes("Save disabled")) {
       // If sequence stops while editing, clear the warning

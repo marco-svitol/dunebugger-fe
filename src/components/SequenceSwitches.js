@@ -10,7 +10,7 @@ function SequenceSwitches({ sequenceState, wsClient, connectionId }) {
         command = sequenceState.random_actions ? "random_actions disable" : "random_actions enable"; // Disable or Enable random actions
         break;
       case "cycle_running":
-        command = sequenceState.cycle_running ? "sequence stop" : "sequence start main.seq"; // Cycle stop or start
+        command = sequenceState.cycle_running ? "sequence stop" : "sequence play main.seq"; // Cycle stop or start
         break;
       case "start_button_enabled":
         command = sequenceState.start_button_enabled ? "start_button disable" : "start_button enable"; // Custom commands for start button

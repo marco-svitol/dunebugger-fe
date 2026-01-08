@@ -56,7 +56,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
     if (wsClient && isOnline) {
-      wsClient.sendRequest("core.dunebugger_set", "sequence start main.seq", connectionId);
+      wsClient.sendRequest("core.dunebugger_set", "sequence play main.seq", connectionId);
       if (showMessage) {
         showMessage(startMessageText, "info");
       }
@@ -145,13 +145,14 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
       case "main":
         return (
           <div className="main-controls">
-            <ModifiedSwitches />
+            {/* Empty - no controls on main page */}
           </div>
         );
       case "sequence":
         return (
           <div className="sequence-controls">
             <StartStopButtons />
+            <ModifiedSwitches />
           </div>
         );
       case "gpios":

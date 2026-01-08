@@ -28,7 +28,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
     if (wsClient) {
-      wsClient.sendRequest("core.dunebugger_set", "sequence start main.seq", connectionId);
+      wsClient.sendRequest("core.dunebugger_set", "sequence play main.seq", connectionId);
       if (showMessage) {
         showMessage(startMessageText, "info");
       }

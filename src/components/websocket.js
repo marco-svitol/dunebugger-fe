@@ -14,6 +14,7 @@ class WebSocketManager {
     setLastExecutedAction,
     setPlayingTime,
     setSystemInfo,
+    setModes,
     heartBeatTimeoutRef,
     GROUP_NAME,
     HEARTBEAT_TIMEOUT,
@@ -31,6 +32,7 @@ class WebSocketManager {
     this.setLastExecutedAction = setLastExecutedAction;
     this.setPlayingTime = setPlayingTime;
     this.setSystemInfo = setSystemInfo;
+    this.setModes = setModes;
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
     this.GROUP_NAME = GROUP_NAME;
     this.HEARTBEAT_TIMEOUT = HEARTBEAT_TIMEOUT;
@@ -209,6 +211,13 @@ class WebSocketManager {
 
       case "system_info":
         this.setSystemInfo(message.body);
+        break;
+
+      case "modes_list":
+        console.log("Received modes_list message:", message.body);
+        if (message.body && message.body.modes) {
+          this.setModes(message.body.modes);
+        }
         break;
 
       default:

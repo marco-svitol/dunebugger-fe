@@ -61,6 +61,7 @@ export default function SmartDunebugger() {
   const [schedule, setSchedule] = useState(null);
   const [nextActions, setNextActions] = useState([]);
   const [lastExecutedAction, setLastExecutedAction] = useState(null);
+  const [modes, setModes] = useState([]);
 
   // Debug schedule state changes
   useEffect(() => {
@@ -179,6 +180,7 @@ export default function SmartDunebugger() {
         setLastExecutedAction,
         setPlayingTime,
         setSystemInfo,
+        setModes,
         heartBeatTimeoutRef,
         groupName,
         HEARTBEAT_TIMEOUT,
@@ -277,6 +279,10 @@ export default function SmartDunebugger() {
           sequenceState={sequenceState}
           showMessage={showMessage}
           groupName={groupName}
+          nextActions={nextActions}
+          modes={modes}
+          isOnline={isOnline}
+          systemInfo={systemInfo}
         />;
       case "sequence":
         return (

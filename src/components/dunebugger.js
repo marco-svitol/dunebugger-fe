@@ -66,6 +66,7 @@ export default function SmartDunebugger() {
   const [playingTime, setPlayingTime] = useState(null); // Initialize as null to indicate no time is playing
   const [logs, setLogs] = useState([]);
   const [systemInfo, setSystemInfo] = useState(null);
+  const [ntpAvailable, setNtpAvailable] = useState(true);
   const [connectionId, setConnectionId] = useState(null);
   const [wssUrl, setWssUrl] = useState(null);
   const [groupName, setGroupName] = useState(""); // Default fallback, will be updated from Auth0
@@ -167,6 +168,7 @@ export default function SmartDunebugger() {
         setPlayingTime,
         setSystemInfo,
         setModes,
+        setNtpAvailable,
         heartBeatTimeoutRef,
         groupName,
         HEARTBEAT_TIMEOUT,
@@ -197,6 +199,7 @@ export default function SmartDunebugger() {
         // Send appropriate refresh command based on current page
         if (currentPage === "scheduler") {
           await wsClient.sendRequest("scheduler.refresh", "null");
+          await wsClient.sendRequest("controller.ntp_status", "null");
         } else if (currentPage === "sequence") {
           await wsClient.sendRequest("core.refresh_sequence", "null");
         } else if (currentPage === "system") {
@@ -269,6 +272,7 @@ export default function SmartDunebugger() {
           modes={modes}
           isOnline={isOnline}
           systemInfo={systemInfo}
+          ntpAvailable={ntpAvailable}
         />;
       case "sequence":
         return (
@@ -303,6 +307,7 @@ export default function SmartDunebugger() {
             showMessage={showMessage}
             groupName={groupName}
             isOnline={isOnline}
+            ntpAvailable={ntpAvailable}
           />
         );
       case "analytics":

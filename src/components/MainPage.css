@@ -231,11 +231,11 @@
 }
 
 /* 4. SYSTEM SECTION */
-.system-section {
+.mainpage-system-section {
   background-color: #f0fff4;
 }
 
-.system-content {
+.mainpage-system-content {
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -286,7 +286,31 @@
   background-color: #fef7ff;
 }
 
-.scheduler-content {
+/* Disabled/ghosted state when NTP is unavailable */
+.scheduler-section.scheduler-disabled {
+  opacity: 0.5;
+  background-color: #f5f5f5;
+  position: relative;
+}
+
+.scheduler-section.scheduler-disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.scheduler-section.scheduler-disabled h2,
+.scheduler-section.scheduler-disabled h3 {
+  color: #999;
+}
+
+.mainpage-scheduler-content {
   margin-top: 10px;
 }
 
@@ -300,7 +324,7 @@
   align-items: center;
 }
 
-.action-datetime {
+.mainpage-action-datetime {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -311,32 +335,32 @@
   min-width: 120px;
 }
 
-.action-date {
+.mainpage-action-date {
   font-size: 14px;
   font-weight: 600;
   color: #666;
 }
 
-.action-time {
+.mainpage-action-time {
   font-size: 24px;
   font-weight: bold;
   color: #333;
 }
 
-.action-details {
+.mainpage-action-details {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.action-name {
+.mainpage-action-name {
   font-size: 18px;
   font-weight: bold;
   color: #333;
 }
 
-.action-description {
+.mainpage-action-description {
   font-size: 14px;
   color: #666;
 }
@@ -370,7 +394,7 @@
     align-items: flex-start;
   }
 
-  .action-datetime {
+  .mainpage-action-datetime {
     width: 100%;
   }
 }

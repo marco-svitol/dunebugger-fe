@@ -15,6 +15,7 @@ class WebSocketManager {
     setPlayingTime,
     setSystemInfo,
     setModes,
+    setNtpAvailable,
     heartBeatTimeoutRef,
     GROUP_NAME,
     HEARTBEAT_TIMEOUT,
@@ -33,6 +34,7 @@ class WebSocketManager {
     this.setPlayingTime = setPlayingTime;
     this.setSystemInfo = setSystemInfo;
     this.setModes = setModes;
+    this.setNtpAvailable = setNtpAvailable;
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
     this.GROUP_NAME = GROUP_NAME;
     this.HEARTBEAT_TIMEOUT = HEARTBEAT_TIMEOUT;
@@ -217,6 +219,13 @@ class WebSocketManager {
         console.log("Received modes_list message:", message.body);
         if (message.body && message.body.modes) {
           this.setModes(message.body.modes);
+        }
+        break;
+
+      case "ntp_status":
+        console.log("Received ntp_status message:", message.body);
+        if (message.body && message.body.ntp_available !== undefined) {
+          this.setNtpAvailable(message.body.ntp_available);
         }
         break;
 

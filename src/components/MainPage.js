@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./MainPage.css";
 import { useTranslatedText } from "../hooks/useTranslation";
 
-const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState, showMessage, groupName, nextActions, modes: modesProp, isOnline, systemInfo }) => {
+const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState, showMessage, groupName, nextActions, modes: modesProp, isOnline, mainPageSystemInfo, ntpAvailable }) => {
   const [cycleStatus, setCycleStatus] = useState("Cycle not running");
   const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
   const [progress, setProgress] = useState(0);
@@ -10,7 +10,6 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
   const [modes, setModes] = useState([]);
   const [connectionType, setConnectionType] = useState("internet"); // "internet" or "lan"
   const [lanIp, setLanIp] = useState("192.168.1.100");
-  const [ntpAvailable, setNtpAvailable] = useState(true);
 
   // Reset component state when device (groupName) changes
   useEffect(() => {
@@ -40,21 +39,16 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
 
   // Update system info when systemInfo changes
   useEffect(() => {
-    if (systemInfo) {
-      // Parse system info to extract connection type, IP, and NTP status
-      // This is placeholder logic - adjust based on actual systemInfo structure
-      if (systemInfo.connectionType) {
-        setConnectionType(systemInfo.connectionType);
+    if (mainPageSystemInfo) {
+      // Parse system info to extract connection type and IP
+      if (mainPageSystemInfo.connectionType) {
+        setConnectionType(mainPageSystemInfo.connectionType);
       }
-      if (systemInfo.ip) {
-        setLanIp(systemInfo.ip);
-      }
-      if (systemInfo.ntpAvailable !== undefined) {
-        setNtpAvailable(systemInfo.ntpAvailable);
+      if (mainPageSystemInfo.ip) {
+        setLanIp(mainPageSystemInfo.ip);
       }
     }
-  }, [systemInfo]);
-
+  }, [mainPageSystemInfo]);
   // Request data on mount and when connection is established
   useEffect(() => {
     if (wsClient && connectionId && isOnline) {
@@ -64,8 +58,8 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
       // Request next scheduled actions
       wsClient.sendRequest("scheduler.get_next_actions", "null", connectionId);
       
-      // Request system info
-      wsClient.sendRequest("controller.system_info", "refresh", connectionId);
+      // Request ntp status
+      wsClient.sendRequest("controller.ntp_status", "null", connectionId);
     }
   }, [wsClient, connectionId, isOnline, groupName]);
 
@@ -236,9 +230,9 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
         </div>
 
         {/* 4. SYSTEM SECTION */}
-        <div className="section system-section">
+        <div className="section mainpage-system-section">
           <h2>{systemText}</h2>
-          <div className="system-content">
+          <div className="mainpage-system-content">
             <div className="system-item">
               <span className="system-label">Connection Type:</span>
               <span className="system-value">{connectionType === "internet" ? "Internet" : "LAN"}</span>
@@ -268,21 +262,21 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
         </div>
 
         {/* 5. SCHEDULER SECTION */}
-        <div className="section scheduler-section">
+        <div className={`section scheduler-section ${!ntpAvailable ? 'scheduler-disabled' : ''}`}>
           <h2>{schedulerText}</h2>
-          <div className="scheduler-content">
+          <div className="mainpage-scheduler-content">
             <h3>{nextActionText}</h3>
             {!isOnline ? (
               <div className="waiting-data">{waitingForDataText}</div>
             ) : nextActions && nextActions.length > 0 ? (
               <div className="next-action-card">
-                <div className="action-datetime">
-                  <div className="action-date">{nextActions[0].date}</div>
-                  <div className="action-time">{nextActions[0].time}</div>
+                <div className="mainpage-action-datetime">
+                  <div className="mainpage-action-date">{nextActions[0].date}</div>
+                  <div className="mainpage-action-time">{nextActions[0].time}</div>
                 </div>
-                <div className="action-details">
-                  <div className="action-name">{nextActions[0].action}</div>
-                  <div className="action-description">{nextActions[0].description}</div>
+                <div className="mainpage-action-details">
+                  <div className="mainpage-action-name">{nextActions[0].action}</div>
+                  <div className="mainpage-action-description">{nextActions[0].description}</div>
                 </div>
               </div>
             ) : (

@@ -262,7 +262,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
         </div>
 
         {/* 5. SCHEDULER SECTION */}
-        <div className={`section scheduler-section ${!ntpAvailable ? 'scheduler-disabled' : ''}`}>
+        <div className={`section scheduler-section ${isOnline && !ntpAvailable ? 'scheduler-disabled' : ''}`}>
           <h2>{schedulerText}</h2>
           <div className="mainpage-scheduler-content">
             <h3>{nextActionText}</h3>

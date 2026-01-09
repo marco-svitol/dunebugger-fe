@@ -154,6 +154,9 @@ export default function SmartDunebugger() {
         setConnectionId(null);
       }
 
+      // Reset ntpAvailable to default state when switching devices
+      setNtpAvailable(true);
+
       const webSocketClient = new WebSocketManager(
         wssUrl,
         setConnectionId,

@@ -63,20 +63,6 @@ export default function SmartDunebugger() {
   const [lastExecutedAction, setLastExecutedAction] = useState(null);
   const [modes, setModes] = useState([]);
 
-  // Debug schedule state changes
-  useEffect(() => {
-    console.log("Dunebugger: schedule state changed:", schedule);
-  }, [schedule]);
-
-  // Debug next actions state changes
-  useEffect(() => {
-    console.log("Dunebugger: nextActions state changed:", nextActions);
-  }, [nextActions]);
-
-  // Debug last executed action state changes
-  useEffect(() => {
-    console.log("Dunebugger: lastExecutedAction state changed:", lastExecutedAction);
-  }, [lastExecutedAction]);
   const [playingTime, setPlayingTime] = useState(null); // Initialize as null to indicate no time is playing
   const [logs, setLogs] = useState([]);
   const [systemInfo, setSystemInfo] = useState(null);

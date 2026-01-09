@@ -93,7 +93,7 @@ const SchedulerPage = ({
 
   // Handle schedule data when received from WebSocket
   useEffect(() => {
-    console.log("SchedulerPage: schedule prop changed:", schedule, "type:", typeof schedule);
+    console.log("SchedulerPage: schedule prop changed: receing all schedule");
     if (schedule) {
       let scheduleString = schedule;
       
@@ -114,7 +114,6 @@ const SchedulerPage = ({
         scheduleString = String(schedule);
       }
       
-      console.log("SchedulerPage: Setting schedule text:", scheduleString);
       setScheduleText(scheduleString);
       setLastSavedText(scheduleString);
       setSaveStatus("Schedule loaded from device");

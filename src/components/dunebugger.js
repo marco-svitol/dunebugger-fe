@@ -135,28 +135,12 @@ export default function SmartDunebugger() {
     }
   }, [isAuthenticated]);
 
-  // Sync selectedDevice with groupName when selectedDevice is restored from localStorage
-  useEffect(() => {
-    if (selectedDevice && selectedDevice !== groupName) {
-      setGroupName(selectedDevice);
-    }
-  }, [selectedDevice, groupName]);
-
+  // Initialize WebSocket connection once when wssUrl is available
   useEffect(() => {
     let currentClient = null;
 
-    if (wssUrl && groupName) {
-      // Cleanup previous connection if exists
-      if (wsClient) {
-        wsClient.cleanup();
-        setWSClient(null);
-        setIsOnline(false);
-        setConnectionId(null);
-      }
-
-      // Reset ntpAvailable to default state when switching devices
-      setNtpAvailable(null);
-
+    if (wssUrl && !wsClient) {
+      // Only create a new WebSocketManager if we don't have one yet
       const webSocketClient = new WebSocketManager(
         wssUrl,
         setConnectionId,
@@ -173,22 +157,49 @@ export default function SmartDunebugger() {
         setModes,
         setNtpAvailable,
         heartBeatTimeoutRef,
-        groupName,
+        selectedDevice || groupName, // Use selectedDevice if available
         HEARTBEAT_TIMEOUT,
         showMessageRef
       );
       
       currentClient = webSocketClient;
       setWSClient(webSocketClient);
+      
+      // Set the initial groupName
+      if (selectedDevice && selectedDevice !== groupName) {
+        setGroupName(selectedDevice);
+      }
     }
     
-    // Cleanup function for when component unmounts or dependencies change
+    // Cleanup function for when component unmounts
     return () => {
       if (currentClient) {
         currentClient.cleanup();
       }
     };
-  }, [wssUrl, groupName]);
+  }, [wssUrl]); // Only depend on wssUrl, not groupName
+
+  // Handle device switching using the switchDevice method
+  useEffect(() => {
+    if (wsClient && selectedDevice && selectedDevice !== groupName) {
+      console.log(`Switching device from ${groupName} to ${selectedDevice}`);
+      
+      // Reset ntpAvailable to default state when switching devices
+      setNtpAvailable(null);
+      
+      wsClient.switchDevice(selectedDevice)
+        .then(() => {
+          setGroupName(selectedDevice);
+          console.log(`Device switch complete: ${selectedDevice}`);
+        })
+        .catch((error) => {
+          console.error("Failed to switch device:", error);
+          if (showMessageRef.current) {
+            showMessageRef.current("Failed to switch device", "error");
+          }
+        });
+    }
+  }, [selectedDevice, wsClient]);
 
   useEffect(() => {
     if (logsEndRef.current) {

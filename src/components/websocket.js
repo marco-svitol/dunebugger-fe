@@ -61,6 +61,7 @@ class WebSocketManager {
     this.client.on("disconnected", () => {
       // Don't cleanup if we're in the middle of switching devices
       if (!this.isSwitchingDevice) {
+        console.log("Disconnected from WebSocket.");
         this.setIsOnline(false);
         this.setConnectionId(null);
         this.cleanup();

@@ -230,33 +230,37 @@ export default function SmartDunebugger() {
     }
   };
 
-  const handleDeviceChange = (device) => {
+  const handleDeviceChange = async (device) => {
     // Only proceed if a different device is actually selected
     if (device === selectedDevice || device === groupName) {
       return; // No change needed, avoid unnecessary reconnection
     }
 
-    setSelectedDevice(device);
-    saveDeviceSelection(device); // Persist device selection
-    
-    // Reset all state variables to initial values when changing device
-    setIsOnline(false);
-    setGpioStates({});
-    setSequenceState({
-      random_actions: false,
-      cycle_running: false,
-      start_button_enabled: false,
-    });
-    setSequence([]);
-    setSchedule(null);
-    setNextActions([]);
-    setLastExecutedAction(null);
-    setPlayingTime(null);
-    setLogs([]);
-    setSystemInfo(null);
-    setConnectionId(null);
-    
-    setGroupName(device); // This will trigger WebSocket reconnection via useEffect
+    // Check if wsClient exists
+    if (!wsClient) {
+      console.error("WebSocket client not initialized");
+      return;
+    }
+
+    try {
+      // Use the WebSocketManager's switchDevice method instead of recreating the connection
+      await wsClient.switchDevice(device);
+      
+      // Update state after successful device switch
+      // Note: We DON'T update groupName here to avoid triggering the useEffect
+      // The wsClient already switched groups internally
+      setSelectedDevice(device);
+      saveDeviceSelection(device); // Persist device selection
+      
+      if (showMessageRef.current) {
+        showMessageRef.current(`Switched to device: ${device}`, "success");
+      }
+    } catch (error) {
+      console.error("Failed to switch device:", error);
+      if (showMessageRef.current) {
+        showMessageRef.current(`Failed to switch to device: ${device}`, "error");
+      }
+    }
   };
 
   // Render the current page based on the navigation state

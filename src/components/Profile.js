@@ -9,7 +9,6 @@ const Profile = ({ setWssUrl, setGroupName, setAvailableDevices, setSelectedDevi
       setWssUrl(user.wss_url);
     }
     if (isAuthenticated && user.devices) {
-      // ws_group_name is already an array like ['vialeborri', 'velasquez']
       const devices = Array.isArray(user.devices) ? user.devices : [user.devices];
       const validDevices = devices.filter(device => device && device.trim() !== '');
       setAvailableDevices(validDevices);
@@ -33,7 +32,6 @@ const Profile = ({ setWssUrl, setGroupName, setAvailableDevices, setSelectedDevi
   }
 
   // Check if user is authenticated but has no device associated
-  // ws_group_name is an array like ['vialeborri', 'velasquez']
   const hasNoDevice = isAuthenticated && (!user.devices || 
     (Array.isArray(user.devices) ? user.devices.length === 0 : !user.devices));
 

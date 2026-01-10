@@ -156,37 +156,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
           </div>
         );
       case "gpios":
-        return (
-          <div className="gpios-controls">
-            <StartStopButtons />
-            <button 
-              onClick={() => {
-                if (wsClient) {
-                  wsClient.sendRequest("core.dunebugger_set", "mode execute spento");
-                  if (showMessage) {
-                    showMessage(setOffMessageText, "info");
-                  }
-                }
-              }}
-              disabled={!isOnline}
-            >
-              {offText}
-            </button>
-            <button 
-              onClick={() => {
-                if (wsClient) {
-                  wsClient.sendRequest("core.dunebugger_set", "mode execute standby");
-                  if (showMessage) {
-                    showMessage(setStandbyMessageText, "info");
-                  }
-                }
-              }}
-              disabled={!isOnline}
-            >
-              {standbyText}
-            </button>
-          </div>
-        );
+        return null;
       case "scheduler":
         return (
           <div className="scheduler-controls">

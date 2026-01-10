@@ -69,9 +69,10 @@ export default function SmartDunebugger() {
   const [ntpAvailable, setNtpAvailable] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
   const [wssUrl, setWssUrl] = useState(null);
-  const [groupName, setGroupName] = useState(""); // Default fallback, will be updated from Auth0
+  const storedDevice = getStoredDeviceSelection() || "";
+  const [groupName, setGroupName] = useState(storedDevice); // Initialize with stored device
   const [availableDevices, setAvailableDevices] = useState([]);
-  const [selectedDevice, setSelectedDevice] = useState(() => getStoredDeviceSelection() || "");
+  const [selectedDevice, setSelectedDevice] = useState(storedDevice);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -157,18 +158,13 @@ export default function SmartDunebugger() {
         setModes,
         setNtpAvailable,
         heartBeatTimeoutRef,
-        selectedDevice || groupName, // Use selectedDevice if available
+        groupName, // Use groupName which is already initialized with stored device
         HEARTBEAT_TIMEOUT,
         showMessageRef
       );
       
       currentClient = webSocketClient;
       setWSClient(webSocketClient);
-      
-      // Set the initial groupName
-      if (selectedDevice && selectedDevice !== groupName) {
-        setGroupName(selectedDevice);
-      }
     }
     
     // Cleanup function for when component unmounts
@@ -180,26 +176,16 @@ export default function SmartDunebugger() {
   }, [wssUrl]); // Only depend on wssUrl, not groupName
 
   // Handle device switching using the switchDevice method
+  // This effect is intentionally simplified - device switching is now handled
+  // through handleDeviceChange function which is called by the DeviceSelector
   useEffect(() => {
-    if (wsClient && selectedDevice && selectedDevice !== groupName) {
-      console.log(`Switching device from ${groupName} to ${selectedDevice}`);
-      
-      // Reset ntpAvailable to default state when switching devices
-      setNtpAvailable(null);
-      
-      wsClient.switchDevice(selectedDevice)
-        .then(() => {
-          setGroupName(selectedDevice);
-          console.log(`Device switch complete: ${selectedDevice}`);
-        })
-        .catch((error) => {
-          console.error("Failed to switch device:", error);
-          if (showMessageRef.current) {
-            showMessageRef.current("Failed to switch device", "error");
-          }
-        });
+    // Only handle the case where selectedDevice changes but we haven't initialized wsClient yet
+    // This can happen when devices are loaded from Auth0 and we need to update groupName
+    if (!wsClient && selectedDevice && selectedDevice !== groupName) {
+      console.log(`Updating groupName to match selectedDevice: ${selectedDevice}`);
+      setGroupName(selectedDevice);
     }
-  }, [selectedDevice, wsClient]);
+  }, [selectedDevice, wsClient, groupName]);
 
   useEffect(() => {
     if (logsEndRef.current) {
@@ -258,9 +244,8 @@ export default function SmartDunebugger() {
       await wsClient.switchDevice(device);
       
       // Update state after successful device switch
-      // Note: We DON'T update groupName here to avoid triggering the useEffect
-      // The wsClient already switched groups internally
       setSelectedDevice(device);
+      setGroupName(device); // Update groupName to keep it in sync
       saveDeviceSelection(device); // Persist device selection
       
       if (showMessageRef.current) {
@@ -289,7 +274,7 @@ export default function SmartDunebugger() {
           nextActions={nextActions}
           modes={modes}
           isOnline={isOnline}
-          systemInfo={systemInfo}
+          mainPageSystemInfo={systemInfo}
           ntpAvailable={ntpAvailable}
         />;
       case "sequence":

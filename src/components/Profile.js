@@ -13,12 +13,21 @@ const Profile = ({ setWssUrl, setGroupName, setAvailableDevices, setSelectedDevi
       const validDevices = devices.filter(device => device && device.trim() !== '');
       setAvailableDevices(validDevices);
       
-      // Set the first device as default selected
-      if (validDevices.length > 0) {
-        const defaultDevice = validDevices[0];
-        setSelectedDevice(defaultDevice);
-        setGroupName(defaultDevice);
-      }
+      // Only set default device if no device is currently selected
+      // This prevents overwriting a device selection restored from localStorage
+      setSelectedDevice(prevSelected => {
+        // If there's already a selected device and it's in the valid devices list, keep it
+        if (prevSelected && validDevices.includes(prevSelected)) {
+          return prevSelected;
+        }
+        // Otherwise, set the first device as default
+        if (validDevices.length > 0) {
+          const defaultDevice = validDevices[0];
+          setGroupName(defaultDevice);
+          return defaultDevice;
+        }
+        return prevSelected;
+      });
     } else if (isAuthenticated) {
       // User is authenticated but has no devices
       setAvailableDevices([]);

@@ -66,7 +66,7 @@ export default function SmartDunebugger() {
   const [playingTime, setPlayingTime] = useState(null); // Initialize as null to indicate no time is playing
   const [logs, setLogs] = useState([]);
   const [systemInfo, setSystemInfo] = useState(null);
-  const [ntpAvailable, setNtpAvailable] = useState(true);
+  const [ntpAvailable, setNtpAvailable] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
   const [wssUrl, setWssUrl] = useState(null);
   const [groupName, setGroupName] = useState(""); // Default fallback, will be updated from Auth0
@@ -155,7 +155,7 @@ export default function SmartDunebugger() {
       }
 
       // Reset ntpAvailable to default state when switching devices
-      setNtpAvailable(true);
+      setNtpAvailable(null);
 
       const webSocketClient = new WebSocketManager(
         wssUrl,

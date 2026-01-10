@@ -245,7 +245,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
             )}
             <div className="system-item">
               <span className="system-label">Time Sync Available:</span>
-              {!isOnline ? (
+              {!isOnline || ntpAvailable === null ? (
                 <span className="system-value">{waitingForDataText}</span>
               ) : (
                 <span className={`system-value ${ntpAvailable ? 'status-ok' : 'status-warning'}`}>
@@ -253,7 +253,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
                 </span>
               )}
             </div>
-            {isOnline && !ntpAvailable && (
+            {isOnline && ntpAvailable === false && (
               <div className="system-warning">
                 ⚠️ Scheduler is disabled. DuneBugger needs manual intervention to switch between modes.
               </div>
@@ -262,7 +262,7 @@ const MainPage = ({ wsClient, connectionId, sequence, playingTime, sequenceState
         </div>
 
         {/* 5. SCHEDULER SECTION */}
-        <div className={`section scheduler-section ${isOnline && !ntpAvailable ? 'scheduler-disabled' : ''}`}>
+        <div className={`section scheduler-section ${isOnline && ntpAvailable === false ? 'scheduler-disabled' : ''}`}>
           <h2>{schedulerText}</h2>
           <div className="mainpage-scheduler-content">
             <h3>{nextActionText}</h3>

@@ -312,11 +312,11 @@ const SchedulerPage = ({
   }, [scheduleText, isEditing]);
 
   return (
-    <div className={`scheduler-page ${!ntpAvailable ? 'scheduler-disabled' : ''}`}>
+    <div className={`scheduler-page ${ntpAvailable === false ? 'scheduler-disabled' : ''}`}>
       <h2>{texts.pageTitle}</h2>
       
       {/* NTP Warning Banner */}
-      {!ntpAvailable && (
+      {ntpAvailable === false && (
         <div className="scheduler-warning-banner">
           {texts.ntpDisabledWarning}
         </div>

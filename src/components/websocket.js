@@ -180,7 +180,7 @@ class WebSocketManager {
     this.setPlayingTime(null);
     this.setSystemInfo(null);
     this.setModes([]);
-    this.setNtpAvailable(true);
+    this.setNtpAvailable(null);
     this.setIsOnline(false);
     this.setLogs([]);
   }

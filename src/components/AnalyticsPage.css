@@ -2,11 +2,29 @@
   padding: 15px;
 }
 
+.analytics-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 15px;
+}
+
+.analytics-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.analytics-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
 .analytics-page-content {
   display: flex;
   flex-direction: column;
   gap: 30px;
-  margin-top: 20px;
 }
 
 /* Waiting for data state */
@@ -50,6 +68,7 @@
   transition: all 0.3s ease;
   font-family: inherit;
   outline: none;
+  box-sizing: border-box;
 }
 
 .analytics-stat-clickable:hover {
@@ -63,10 +82,14 @@
   transform: scale(1.05);
 }
 
+.analytics-stat-clickable.primary-stat.active {
+  transform: scale(1.0);
+}
+
 .analytics-stat-clickable.primary-stat {
   grid-column: 1 / -1;
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  padding: 25px;
+  padding: 20px;
 }
 
 .analytics-stat-clickable.primary-stat .stat-value {

@@ -6,6 +6,7 @@ const AnalyticsPage = ({ groupName, analyticsMetrics, isOnline }) => {
   const [selectedPeriod, setSelectedPeriod] = useState("all");
   
   const { translatedText: waitingForDataText } = useTranslatedText("⏳ Waiting for data...");
+  const { translatedText: analyticsText } = useTranslatedText("Analytics");
   
   // Calculate execution counts for different time periods
   const calculateTimePeriodCounts = (timestamps) => {
@@ -183,6 +184,12 @@ const AnalyticsPage = ({ groupName, analyticsMetrics, isOnline }) => {
 
   return (
     <div className="analytics-page">
+      <div className="analytics-header">
+        <div className="analytics-header-top">
+          <h2>{analyticsText}</h2>
+        </div>
+      </div>
+
       <div className="analytics-page-content">
         
         {!isOnline ? (

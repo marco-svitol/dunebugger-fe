@@ -186,7 +186,7 @@
 .analytics-stat.primary-stat {
   grid-column: 1 / -1;
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  padding: 25px;
+  padding: 20px;
 }
 
 .analytics-stat.primary-stat .stat-value {

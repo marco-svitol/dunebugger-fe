@@ -149,12 +149,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
           </div>
         );
       case "sequence":
-        return (
-          <div className="sequence-controls">
-            <StartStopButtons />
-            <ModifiedSwitches />
-          </div>
-        );
+        return null; // Controls moved to SequencePage
       case "gpios":
         return null;
       case "scheduler":

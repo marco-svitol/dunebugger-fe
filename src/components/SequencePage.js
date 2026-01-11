@@ -16,6 +16,8 @@ const SequencePage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [lastSavedText, setLastSavedText] = useState("");
+  const [lastPlayingTimeUpdate, setLastPlayingTimeUpdate] = useState(Date.now());
+  const [cycleStatus, setCycleStatus] = useState("Cycle not running");
 
   // Translation hooks
   const { translatedText: sequenceTitle } = useTranslatedText("Sequence");
@@ -47,6 +49,13 @@ const SequencePage = ({
   const { translatedText: sequenceLoadedText } = useTranslatedText("✓ Sequence Loaded");
   const { translatedText: waitingWebSocketText } = useTranslatedText("⏳ Waiting for data from the device...");
   const { translatedText: sequenceRunningText } = useTranslatedText("▶️ Sequence Running");
+  const { translatedText: startText } = useTranslatedText("Start");
+  const { translatedText: stopText } = useTranslatedText("Stop");
+  const { translatedText: physicalStartButtonText } = useTranslatedText("Physical Start Button Enabled");
+  const { translatedText: randomActionsText } = useTranslatedText("Random Actions Enabled");
+  const { translatedText: startMessageText } = useTranslatedText("Start command sent to DuneBugger device");
+  const { translatedText: stopMessageText } = useTranslatedText("Stop command sent to DuneBugger device");
+  const { translatedText: controlsText } = useTranslatedText("Sequence Controls");
 
   // Reset component state when device (groupName) changes
   useEffect(() => {
@@ -54,10 +63,59 @@ const SequencePage = ({
     setIsEditing(false);
     setSaveStatus("");
     setLastSavedText("");
+    setLastPlayingTimeUpdate(Date.now());
+    setCycleStatus("Cycle not running");
   }, [groupName]);
+
+  // Calculate total sequence length
+  const getTotalCycleLength = () => {
+    if (!sequence || !sequence.sequence || sequence.sequence.length === 0) return 0;
+    return Math.max(...sequence.sequence.map((ev) => parseFloat(ev.time)));
+  };
+
+  // Update cycle status based on playing time
+  useEffect(() => {
+    if (playingTime > 0 && playingTime !== undefined && playingTime !== null) {
+      setLastPlayingTimeUpdate(Date.now());
+      const cycleLength = getTotalCycleLength();
+      const countdown = cycleLength - playingTime;
+      setCycleStatus(`${countdown.toFixed(1)}s remaining`);
+    }
+  }, [playingTime, sequence]);
+
+  // Check for timeout on playing time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (Date.now() - lastPlayingTimeUpdate > 15000) {
+        setCycleStatus("Cycle not running");
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lastPlayingTimeUpdate]);
 
   // Determine if sequence is currently running
   const isSequenceRunning = sequenceState?.cycle_running || (playingTime > 0 && playingTime !== undefined && playingTime !== null);
+  const isCycleRunning = !cycleStatus.includes("Cycle not running");
+
+  // Handler for Start button
+  const handleStart = () => {
+    if (wsClient && connectionId) {
+      wsClient.sendRequest("core.dunebugger_set", "sequence play main.seq", connectionId);
+      if (showMessage) {
+        showMessage(startMessageText, "info");
+      }
+    }
+  };
+  
+  // Handler for Stop button
+  const handleStop = () => {
+    if (wsClient && connectionId) {
+      wsClient.sendRequest("core.dunebugger_set", "sequence stop", connectionId);
+      if (showMessage) {
+        showMessage(stopMessageText, "info");
+      }
+    }
+  };
 
   // Convert sequence object to readable text format
   const sequenceToText = (seq) => {
@@ -226,6 +284,71 @@ const SequencePage = ({
             <span className="refresh-icon">🔄</span>
             {refreshText}
           </button>
+        </div>
+      </div>
+
+      {/* Sequence Controls Box */}
+      <div className="sequence-controls-box">
+        <h3>{controlsText}</h3>
+        <div className="controls-content">
+          <div className="start-stop-buttons">
+            <button 
+              className="start-button" 
+              onClick={handleStart} 
+              disabled={!wsClient || !connectionId || isCycleRunning}
+            >
+              {startText}
+            </button>
+            <button 
+              className="stop-button" 
+              onClick={handleStop} 
+              disabled={!wsClient || !connectionId || !isCycleRunning}
+            >
+              {stopText}
+            </button>
+          </div>
+          <div className="sequence-switches">
+            <div className="switch-container">
+              <label>{physicalStartButtonText}</label>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={sequenceState?.start_button_enabled || false}
+                  onChange={() => {
+                    if (wsClient && connectionId) {
+                      wsClient.sendRequest(
+                        "core.dunebugger_set",
+                        sequenceState?.start_button_enabled ? "start_button disable" : "start_button enable",
+                        connectionId
+                      );
+                    }
+                  }}
+                  disabled={!wsClient || !connectionId}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+            <div className="switch-container">
+              <label>{randomActionsText}</label>
+              <label className="switch">
+                <input
+                  type="checkbox"
+                  checked={sequenceState?.random_actions || false}
+                  onChange={() => {
+                    if (wsClient && connectionId) {
+                      wsClient.sendRequest(
+                        "core.dunebugger_set",
+                        sequenceState?.random_actions ? "random_actions disable" : "random_actions enable",
+                        connectionId
+                      );
+                    }
+                  }}
+                  disabled={!wsClient || !connectionId}
+                />
+                <span className="slider"></span>
+              </label>
+            </div>
+          </div>
         </div>
       </div>
       

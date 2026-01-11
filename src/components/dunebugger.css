@@ -86,7 +86,7 @@ button:disabled {
 
 .content {
   margin: 0; /* Remove any existing margin */
-  padding-top: 124px; /* Updated: 64px header + 60px action bar */
+  padding-top: 64px; /* Header only (action bar removed) */
   display: flex;
   flex: 1;
   overflow: hidden;
@@ -445,7 +445,7 @@ button:disabled {
   
   /* Update content padding for mobile */
   .content {
-    padding-top: 116px; /* 56px mobile header + 60px action bar */
+    padding-top: 56px; /* Mobile header only (action bar removed) */
   }
   
   /* Analytics page mobile styling */

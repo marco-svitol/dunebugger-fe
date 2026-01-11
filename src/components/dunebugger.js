@@ -12,7 +12,6 @@ import GPIOsPage from "./GPIOsPage";
 import SchedulerPage from "./SchedulerPage";
 import AnalyticsPage from "./AnalyticsPage";
 import SystemPage from "./SystemPage";
-import ActionBar from "./ActionBar"; // Import the ActionBar component
 import MessagesContainer from "./MessagesContainer"; // Import the MessagesContainer component
 import UserDropdown from "./UserDropdown"; // Import the UserDropdown component
 
@@ -374,19 +373,6 @@ export default function SmartDunebugger() {
                 />
               </div>
             </header>
-
-            {/* Action Bar */}
-            <ActionBar 
-              currentPage={currentPage} 
-              wsClient={wsClient} 
-              connectionId={connectionId} 
-              sequenceState={sequenceState}
-              isOnline={isOnline}
-              showMessage={showMessage}
-              playingTime={playingTime}
-              sequence={sequence}
-              groupName={groupName}
-            />
 
             {/* Navigation Menu */}
             <Menu

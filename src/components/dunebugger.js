@@ -67,6 +67,7 @@ export default function SmartDunebugger() {
   const [logs, setLogs] = useState([]);
   const [systemInfo, setSystemInfo] = useState(null);
   const [ntpAvailable, setNtpAvailable] = useState(null);
+  const [analyticsMetrics, setAnalyticsMetrics] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
   const [wssUrl, setWssUrl] = useState(null);
   const storedDevice = getStoredDeviceSelection() || "";
@@ -157,6 +158,7 @@ export default function SmartDunebugger() {
         setSystemInfo,
         setModes,
         setNtpAvailable,
+        setAnalyticsMetrics,
         heartBeatTimeoutRef,
         groupName, // Use groupName which is already initialized with stored device
         HEARTBEAT_TIMEOUT,
@@ -276,6 +278,7 @@ export default function SmartDunebugger() {
           isOnline={isOnline}
           mainPageSystemInfo={systemInfo}
           ntpAvailable={ntpAvailable}
+          analyticsMetrics={analyticsMetrics}
         />;
       case "sequence":
         return (

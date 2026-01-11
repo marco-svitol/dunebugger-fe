@@ -16,6 +16,7 @@ class WebSocketManager {
     setSystemInfo,
     setModes,
     setNtpAvailable,
+    setAnalyticsMetrics,
     heartBeatTimeoutRef,
     GROUP_NAME,
     HEARTBEAT_TIMEOUT,
@@ -35,6 +36,7 @@ class WebSocketManager {
     this.setSystemInfo = setSystemInfo;
     this.setModes = setModes;
     this.setNtpAvailable = setNtpAvailable;
+    this.setAnalyticsMetrics = setAnalyticsMetrics;
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
     this.GROUP_NAME = GROUP_NAME;
     this.HEARTBEAT_TIMEOUT = HEARTBEAT_TIMEOUT;
@@ -182,6 +184,7 @@ class WebSocketManager {
     this.setSystemInfo(null);
     this.setModes([]);
     this.setNtpAvailable(null);
+    this.setAnalyticsMetrics(null);
     this.setIsOnline(false);
     this.setLogs([]);
   }
@@ -310,6 +313,11 @@ class WebSocketManager {
         if (message.body && message.body.ntp_available !== undefined) {
           this.setNtpAvailable(message.body.ntp_available);
         }
+        break;
+
+      case "analytics_metrics":
+        console.log("Received analytics_metrics message:", message.body);
+        this.setAnalyticsMetrics(message.body);
         break;
 
       default:

@@ -148,15 +148,49 @@
   gap: 25px;
 }
 
+.analytics-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+}
+
+@media (max-width: 1024px) {
+  .analytics-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .analytics-stat {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   padding: 20px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 8px;
   color: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.analytics-stat:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.analytics-stat.primary-stat {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  padding: 25px;
+}
+
+.analytics-stat.primary-stat .stat-value {
+  font-size: 48px;
 }
 
 .stat-label {
@@ -167,7 +201,7 @@
 }
 
 .stat-value {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: bold;
 }
 
@@ -228,6 +262,180 @@
 .bar-value {
   font-size: 11px;
   color: #999;
+}
+
+/* Execution Timeline Chart - Line Chart */
+.execution-timeline-chart {
+  display: flex;
+  gap: 10px;
+  padding: 20px 10px;
+  min-height: 300px;
+}
+
+.chart-y-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 5px;
+  min-width: 40px;
+}
+
+.y-axis-label {
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
+  text-align: right;
+}
+
+.chart-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.line-chart-container {
+  height: 250px;
+  padding: 10px;
+  background: linear-gradient(180deg, rgba(102, 126, 234, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  position: relative;
+  overflow: visible;
+}
+
+.line-chart-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.grid-line {
+  stroke: #e9ecef;
+  stroke-width: 1;
+  stroke-dasharray: 5, 5;
+}
+
+.line-path {
+  stroke: #667eea;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.3));
+  animation: drawLine 1s ease-out;
+}
+
+@keyframes drawLine {
+  from {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+  }
+}
+
+.line-area {
+  fill: url(#areaGradient);
+  opacity: 0.3;
+  animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.3;
+  }
+}
+
+/* Add gradient definition inline or via CSS */
+.line-area {
+  fill: rgba(102, 126, 234, 0.2);
+}
+
+.data-point {
+  fill: #764ba2;
+  stroke: white;
+  stroke-width: 2;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.data-point:hover {
+  r: 6;
+  fill: #667eea;
+  filter: drop-shadow(0 0 6px rgba(102, 126, 234, 0.6));
+}
+
+.chart-x-axis {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+  border-top: 2px solid #e9ecef;
+  padding-top: 10px;
+  position: relative;
+  height: 40px;
+}
+
+.x-axis-tick {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.x-axis-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  position: absolute;
+}
+
+.hour-label {
+  font-size: 10px;
+  color: #666;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.day-label {
+  font-size: 9px;
+  color: #999;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.no-data {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .execution-timeline-chart {
+    flex-direction: column;
+  }
+  
+  .chart-y-axis {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .y-axis-label {
+    text-align: center;
+  }
 }
 
 /* 4. SYSTEM SECTION */

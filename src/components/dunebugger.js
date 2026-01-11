@@ -210,8 +210,9 @@ export default function SmartDunebugger() {
           await wsClient.sendRequest("core.refresh_gpios", "null");
         } else if (currentPage === "main") {
           await wsClient.sendRequest("core.refresh_sequence", "null");
+        } else if (currentPage === "analytics") {
+          await wsClient.sendRequest("core.analytics_command", "get_metrics");
         }
-        // Note: analytics page doesn't need refresh as it doesn't use real-time data
       };
 
       fetchStates();
@@ -317,7 +318,11 @@ export default function SmartDunebugger() {
           />
         );
       case "analytics":
-        return <AnalyticsPage groupName={groupName} />;
+        return <AnalyticsPage 
+          groupName={groupName} 
+          analyticsMetrics={analyticsMetrics}
+          isOnline={isOnline}
+        />;
       case "system":
         return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} groupName={groupName} showMessage={showMessage} />;
       default:

@@ -8,7 +8,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
   
   // Page texts
   const texts = {
-    pageTitle: getTranslation("System Information"),
+    pageTitle: getTranslation("System"),
     refreshButton: getTranslation("Refresh"),
     refreshButtonTitle: getTranslation("Refresh system information"),
     refreshMessageText: getTranslation("System info refresh request sent"),
@@ -61,7 +61,15 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
     systemLogs: getTranslation("System Logs"),
     noLogsAvailable: getTranslation("No logs available"),
     unknown: getTranslation("Unknown"),
-    invalidDate: getTranslation("Invalid date")
+    invalidDate: getTranslation("Invalid date"),
+    upToDate: getTranslation("Up to Date"),
+    newVersionAvailable: getTranslation("New version available"),
+    updateComponents: getTranslation("Update Components"),
+    updateConfirmTitle: getTranslation("Confirm Component Update"),
+    updateConfirmMessage: getTranslation("⚠️ Component Update Warning\n\nIt is highly recommended that this update is performed while connected locally to the device.\n\nThe update process will most likely cause:\n• A system reset\n• Temporary switching off and on of all relays and connected devices\n• A brief disconnection from the user interface\n\nDo you want to proceed with the update?"),
+    updateConfirm: getTranslation("Proceed with Update"),
+    updateCancel: getTranslation("Cancel"),
+    updateStarted: getTranslation("Component update started")
   };
   // Note: System page doesn't have local state to reset,
   // it relies on systemInfo and logs props which are reset in parent component
@@ -82,6 +90,31 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
   React.useEffect(() => {
     handleRefresh(false);
   }, [connectionId]);
+  
+  // Check if any components have updates available
+  const hasUpdatesAvailable = () => {
+    if (!systemInfo?.system_info?.dunebugger_components) return false;
+    return systemInfo.system_info.dunebugger_components.some(
+      component => component.last_available_version && 
+                   component.version !== component.last_available_version
+    );
+  };
+  
+  // Handle component update with confirmation
+  const handleUpdateComponents = () => {
+    const confirmed = window.confirm(texts.updateConfirmMessage);
+    
+    if (confirmed && wsClient && connectionId) {
+      try {
+        wsClient.sendRequest("updater.update", "manual_confirmation");
+        if (showMessage) {
+          showMessage(texts.updateStarted, "info");
+        }
+      } catch (error) {
+        console.error("Failed to send update request:", error);
+      }
+    }
+  };
   const renderDunebuggerComponents = () => {
     if (!systemInfo?.system_info.dunebugger_components) return null;
 
@@ -99,10 +132,33 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
               </div>
               <div className="component-details">
                 <p><strong>{texts.versionLabel}:</strong> {component.version}</p>
+                {component.last_available_version && component.version !== component.last_available_version && (
+                  <p className="version-status update-available">
+                    <strong>{texts.newVersionAvailable}:</strong> {component.last_available_version}
+                  </p>
+                )}
+                {component.last_available_version && component.version === component.last_available_version && (
+                  <p className="version-status up-to-date">
+                    <strong>{texts.upToDate}</strong>
+                  </p>
+                )}
               </div>
             </div>
           ))}
         </div>
+        {hasUpdatesAvailable() && (
+          <div className="update-button-container">
+            <button 
+              className="update-components-button"
+              onClick={handleUpdateComponents}
+              disabled={!wsClient || !connectionId}
+              title={texts.updateComponents}
+            >
+              <span className="update-icon">⬆️</span>
+              {texts.updateComponents}
+            </button>
+          </div>
+        )}
       </div>
     );
   };

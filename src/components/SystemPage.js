@@ -77,6 +77,8 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
   };
   // Note: System page doesn't have local state to reset,
   // it relies on systemInfo and logs props which are reset in parent component
+  const [updatingComponents, setUpdatingComponents] = React.useState({});
+
   const handleRefresh = async (showPopup = true) => {
     if (wsClient && connectionId) {
       try {
@@ -111,11 +113,13 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
     if (confirmed && wsClient && connectionId) {
       try {
         wsClient.sendRequest("updater.update", componentName);
+        setUpdatingComponents(prev => ({ ...prev, [componentName]: true }));
         if (showMessage) {
           showMessage(texts.updateStarted, "info");
         }
       } catch (error) {
         console.error("Failed to send update request:", error);
+        setUpdatingComponents(prev => ({ ...prev, [componentName]: false }));
       }
     }
   };
@@ -174,18 +178,21 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
                     disabled={
                       !wsClient || 
                       !connectionId || 
+                      updatingComponents[component.name] ||
                       (hasDunebuggerRemoteUpdate() && component.name.toLowerCase() !== 'dunebugger-remote')
                     }
                     title={
-                      component.name.toLowerCase() === 'dunebugger-remote' && hasDunebuggerRemoteUpdate()
+                      updatingComponents[component.name]
+                        ? `Updating ${component.name}...`
+                        : component.name.toLowerCase() === 'dunebugger-remote' && hasDunebuggerRemoteUpdate()
                         ? `${texts.updateComponents} ${component.name} - After this update, other component updates will be available`
                         : hasDunebuggerRemoteUpdate() && component.name.toLowerCase() !== 'dunebugger-remote'
                         ? texts.updateRemoteFirst
                         : `${texts.updateComponents} ${component.name}`
                     }
                   >
-                    <span className="update-icon">⬆️</span>
-                    Update
+                    <span className="update-icon">{updatingComponents[component.name] ? '⏳' : '⬆️'}</span>
+                    {updatingComponents[component.name] ? 'Updating...' : 'Update'}
                   </button>
                 )}
               </div>

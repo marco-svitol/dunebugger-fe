@@ -320,6 +320,13 @@ class WebSocketManager {
         this.setAnalyticsMetrics(message.body);
         break;
 
+      case "updater_progress":
+        console.log("Received updater_progress message:", message.body);
+        if (this.showMessageRef?.current && message.body?.message) {
+          this.showMessageRef.current(message.body.message, "info");
+        }
+        break;
+
       default:
         console.warn("Unknown message subject:", message);
     }

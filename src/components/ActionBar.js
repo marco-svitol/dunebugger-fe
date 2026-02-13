@@ -56,7 +56,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   // Handler for Start button (sends "c" command)
   const handleStart = () => {
     if (wsClient && isOnline) {
-      wsClient.sendRequest("core.dunebugger_set", "c", connectionId);
+      wsClient.sendRequest("core.dunebugger_set", "sequence play main.seq", connectionId);
       if (showMessage) {
         showMessage(startMessageText, "info");
       }
@@ -66,7 +66,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
   // Handler for Stop button (sends "cs" command)
   const handleStop = () => {
     if (wsClient && isOnline) {
-      wsClient.sendRequest("core.dunebugger_set", "cs", connectionId);
+      wsClient.sendRequest("core.dunebugger_set", "sequence stop", connectionId);
       if (showMessage) {
         showMessage(stopMessageText, "info");
       }
@@ -106,7 +106,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               if (wsClient && isOnline) {
                 wsClient.sendRequest(
                   "core.dunebugger_set",
-                  sequenceState?.start_button_enabled ? "dsb" : "esb",
+                  sequenceState?.start_button_enabled ? "start_button disable" : "start_button enable",
                   connectionId
                 );
               }
@@ -126,7 +126,7 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
               if (wsClient && isOnline) {
                 wsClient.sendRequest(
                   "core.dunebugger_set",
-                  sequenceState?.random_actions ? "dr" : "er",
+                  sequenceState?.random_actions ? "random_actions disable" : "random_actions enable",
                   connectionId
                 );
               }
@@ -145,47 +145,13 @@ const ActionBar = ({ currentPage, wsClient, connectionId, sequenceState, isOnlin
       case "main":
         return (
           <div className="main-controls">
-            <ModifiedSwitches />
+            {/* Empty - no controls on main page */}
           </div>
         );
       case "sequence":
-        return (
-          <div className="sequence-controls">
-            <StartStopButtons />
-          </div>
-        );
+        return null; // Controls moved to SequencePage
       case "gpios":
-        return (
-          <div className="gpios-controls">
-            <StartStopButtons />
-            <button 
-              onClick={() => {
-                if (wsClient) {
-                  wsClient.sendRequest("core.dunebugger_set", "so");
-                  if (showMessage) {
-                    showMessage(setOffMessageText, "info");
-                  }
-                }
-              }}
-              disabled={!isOnline}
-            >
-              {offText}
-            </button>
-            <button 
-              onClick={() => {
-                if (wsClient) {
-                  wsClient.sendRequest("core.dunebugger_set", "sb");
-                  if (showMessage) {
-                    showMessage(setStandbyMessageText, "info");
-                  }
-                }
-              }}
-              disabled={!isOnline}
-            >
-              {standbyText}
-            </button>
-          </div>
-        );
+        return null;
       case "scheduler":
         return (
           <div className="scheduler-controls">

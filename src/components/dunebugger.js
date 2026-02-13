@@ -12,7 +12,6 @@ import GPIOsPage from "./GPIOsPage";
 import SchedulerPage from "./SchedulerPage";
 import AnalyticsPage from "./AnalyticsPage";
 import SystemPage from "./SystemPage";
-import ActionBar from "./ActionBar"; // Import the ActionBar component
 import MessagesContainer from "./MessagesContainer"; // Import the MessagesContainer component
 import UserDropdown from "./UserDropdown"; // Import the UserDropdown component
 
@@ -61,29 +60,19 @@ export default function SmartDunebugger() {
   const [schedule, setSchedule] = useState(null);
   const [nextActions, setNextActions] = useState([]);
   const [lastExecutedAction, setLastExecutedAction] = useState(null);
+  const [modes, setModes] = useState([]);
 
-  // Debug schedule state changes
-  useEffect(() => {
-    console.log("Dunebugger: schedule state changed:", schedule);
-  }, [schedule]);
-
-  // Debug next actions state changes
-  useEffect(() => {
-    console.log("Dunebugger: nextActions state changed:", nextActions);
-  }, [nextActions]);
-
-  // Debug last executed action state changes
-  useEffect(() => {
-    console.log("Dunebugger: lastExecutedAction state changed:", lastExecutedAction);
-  }, [lastExecutedAction]);
   const [playingTime, setPlayingTime] = useState(null); // Initialize as null to indicate no time is playing
   const [logs, setLogs] = useState([]);
   const [systemInfo, setSystemInfo] = useState(null);
+  const [ntpAvailable, setNtpAvailable] = useState(null);
+  const [analyticsMetrics, setAnalyticsMetrics] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
   const [wssUrl, setWssUrl] = useState(null);
-  const [groupName, setGroupName] = useState(""); // Default fallback, will be updated from Auth0
+  const storedDevice = getStoredDeviceSelection() || "";
+  const [groupName, setGroupName] = useState(storedDevice); // Initialize with stored device
   const [availableDevices, setAvailableDevices] = useState([]);
-  const [selectedDevice, setSelectedDevice] = useState(() => getStoredDeviceSelection() || "");
+  const [selectedDevice, setSelectedDevice] = useState(storedDevice);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState("main");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -147,25 +136,12 @@ export default function SmartDunebugger() {
     }
   }, [isAuthenticated]);
 
-  // Sync selectedDevice with groupName when selectedDevice is restored from localStorage
-  useEffect(() => {
-    if (selectedDevice && selectedDevice !== groupName) {
-      setGroupName(selectedDevice);
-    }
-  }, [selectedDevice, groupName]);
-
+  // Initialize WebSocket connection once when wssUrl is available
   useEffect(() => {
     let currentClient = null;
 
-    if (wssUrl && groupName) {
-      // Cleanup previous connection if exists
-      if (wsClient) {
-        wsClient.cleanup();
-        setWSClient(null);
-        setIsOnline(false);
-        setConnectionId(null);
-      }
-
+    if (wssUrl && !wsClient) {
+      // Only create a new WebSocketManager if we don't have one yet
       const webSocketClient = new WebSocketManager(
         wssUrl,
         setConnectionId,
@@ -179,8 +155,11 @@ export default function SmartDunebugger() {
         setLastExecutedAction,
         setPlayingTime,
         setSystemInfo,
+        setModes,
+        setNtpAvailable,
+        setAnalyticsMetrics,
         heartBeatTimeoutRef,
-        groupName,
+        groupName, // Use groupName which is already initialized with stored device
         HEARTBEAT_TIMEOUT,
         showMessageRef
       );
@@ -189,13 +168,25 @@ export default function SmartDunebugger() {
       setWSClient(webSocketClient);
     }
     
-    // Cleanup function for when component unmounts or dependencies change
+    // Cleanup function for when component unmounts
     return () => {
       if (currentClient) {
         currentClient.cleanup();
       }
     };
-  }, [wssUrl, groupName]);
+  }, [wssUrl]); // Only depend on wssUrl, not groupName
+
+  // Handle device switching using the switchDevice method
+  // This effect is intentionally simplified - device switching is now handled
+  // through handleDeviceChange function which is called by the DeviceSelector
+  useEffect(() => {
+    // Only handle the case where selectedDevice changes but we haven't initialized wsClient yet
+    // This can happen when devices are loaded from Auth0 and we need to update groupName
+    if (!wsClient && selectedDevice && selectedDevice !== groupName) {
+      console.log(`Updating groupName to match selectedDevice: ${selectedDevice}`);
+      setGroupName(selectedDevice);
+    }
+  }, [selectedDevice, wsClient, groupName]);
 
   useEffect(() => {
     if (logsEndRef.current) {
@@ -209,6 +200,7 @@ export default function SmartDunebugger() {
         // Send appropriate refresh command based on current page
         if (currentPage === "scheduler") {
           await wsClient.sendRequest("scheduler.refresh", "null");
+          await wsClient.sendRequest("controller.ntp_status", "null");
         } else if (currentPage === "sequence") {
           await wsClient.sendRequest("core.refresh_sequence", "null");
         } else if (currentPage === "system") {
@@ -217,8 +209,9 @@ export default function SmartDunebugger() {
           await wsClient.sendRequest("core.refresh_gpios", "null");
         } else if (currentPage === "main") {
           await wsClient.sendRequest("core.refresh_sequence", "null");
+        } else if (currentPage === "analytics") {
+          await wsClient.sendRequest("core.analytics_command", "get_metrics");
         }
-        // Note: analytics page doesn't need refresh as it doesn't use real-time data
       };
 
       fetchStates();
@@ -236,33 +229,36 @@ export default function SmartDunebugger() {
     }
   };
 
-  const handleDeviceChange = (device) => {
+  const handleDeviceChange = async (device) => {
     // Only proceed if a different device is actually selected
     if (device === selectedDevice || device === groupName) {
       return; // No change needed, avoid unnecessary reconnection
     }
 
-    setSelectedDevice(device);
-    saveDeviceSelection(device); // Persist device selection
-    
-    // Reset all state variables to initial values when changing device
-    setIsOnline(false);
-    setGpioStates({});
-    setSequenceState({
-      random_actions: false,
-      cycle_running: false,
-      start_button_enabled: false,
-    });
-    setSequence([]);
-    setSchedule(null);
-    setNextActions([]);
-    setLastExecutedAction(null);
-    setPlayingTime(null);
-    setLogs([]);
-    setSystemInfo(null);
-    setConnectionId(null);
-    
-    setGroupName(device); // This will trigger WebSocket reconnection via useEffect
+    // Check if wsClient exists
+    if (!wsClient) {
+      console.error("WebSocket client not initialized");
+      return;
+    }
+
+    try {
+      // Use the WebSocketManager's switchDevice method instead of recreating the connection
+      await wsClient.switchDevice(device);
+      
+      // Update state after successful device switch
+      setSelectedDevice(device);
+      setGroupName(device); // Update groupName to keep it in sync
+      saveDeviceSelection(device); // Persist device selection
+      
+      if (showMessageRef.current) {
+        showMessageRef.current(`Switched to device: ${device}`, "success");
+      }
+    } catch (error) {
+      console.error("Failed to switch device:", error);
+      if (showMessageRef.current) {
+        showMessageRef.current(`Failed to switch to device: ${device}`, "error");
+      }
+    }
   };
 
   // Render the current page based on the navigation state
@@ -277,6 +273,12 @@ export default function SmartDunebugger() {
           sequenceState={sequenceState}
           showMessage={showMessage}
           groupName={groupName}
+          nextActions={nextActions}
+          modes={modes}
+          isOnline={isOnline}
+          mainPageSystemInfo={systemInfo}
+          ntpAvailable={ntpAvailable}
+          analyticsMetrics={analyticsMetrics}
         />;
       case "sequence":
         return (
@@ -311,10 +313,15 @@ export default function SmartDunebugger() {
             showMessage={showMessage}
             groupName={groupName}
             isOnline={isOnline}
+            ntpAvailable={ntpAvailable}
           />
         );
       case "analytics":
-        return <AnalyticsPage groupName={groupName} />;
+        return <AnalyticsPage 
+          groupName={groupName} 
+          analyticsMetrics={analyticsMetrics}
+          isOnline={isOnline}
+        />;
       case "system":
         return <SystemPage systemInfo={systemInfo} logs={logs} wsClient={wsClient} connectionId={connectionId} groupName={groupName} showMessage={showMessage} />;
       default:
@@ -366,19 +373,6 @@ export default function SmartDunebugger() {
                 />
               </div>
             </header>
-
-            {/* Action Bar */}
-            <ActionBar 
-              currentPage={currentPage} 
-              wsClient={wsClient} 
-              connectionId={connectionId} 
-              sequenceState={sequenceState}
-              isOnline={isOnline}
-              showMessage={showMessage}
-              playingTime={playingTime}
-              sequence={sequence}
-              groupName={groupName}
-            />
 
             {/* Navigation Menu */}
             <Menu

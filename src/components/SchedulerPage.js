@@ -10,7 +10,8 @@ const SchedulerPage = ({
   connectionId,
   showMessage,
   groupName,
-  isOnline
+  isOnline,
+  ntpAvailable
 }) => {
   const [scheduleText, setScheduleText] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -59,7 +60,8 @@ const SchedulerPage = ({
     refreshCommandSent: getTranslation("Refresh command sent"),
     scheduleRefreshSent: getTranslation("Schedule refresh command sent"),
     noConnectionRefresh: getTranslation("No connection - cannot refresh"),
-    loadingPlaceholder: getTranslation("Loading schedule from device...")
+    loadingPlaceholder: getTranslation("Loading schedule from device..."),
+    ntpDisabledWarning: getTranslation("⚠️ Scheduler is disabled. Time synchronization is not available. DuneBugger needs manual intervention to switch between modes.")
   };
 
   // Format text for overlay display
@@ -93,7 +95,7 @@ const SchedulerPage = ({
 
   // Handle schedule data when received from WebSocket
   useEffect(() => {
-    console.log("SchedulerPage: schedule prop changed:", schedule, "type:", typeof schedule);
+    console.log("SchedulerPage: schedule prop changed: receing all schedule");
     if (schedule) {
       let scheduleString = schedule;
       
@@ -114,7 +116,6 @@ const SchedulerPage = ({
         scheduleString = String(schedule);
       }
       
-      console.log("SchedulerPage: Setting schedule text:", scheduleString);
       setScheduleText(scheduleString);
       setLastSavedText(scheduleString);
       setSaveStatus("Schedule loaded from device");
@@ -311,8 +312,15 @@ const SchedulerPage = ({
   }, [scheduleText, isEditing]);
 
   return (
-    <div className="scheduler-page">
+    <div className={`scheduler-page ${ntpAvailable === false ? 'scheduler-disabled' : ''}`}>
       <h2>{texts.pageTitle}</h2>
+      
+      {/* NTP Warning Banner */}
+      {ntpAvailable === false && (
+        <div className="scheduler-warning-banner">
+          {texts.ntpDisabledWarning}
+        </div>
+      )}
       
       {/* Next Actions Section */}
       <div className={`next-actions-section ${isNextActionsFlashing ? 'panel-flash' : ''}`}>

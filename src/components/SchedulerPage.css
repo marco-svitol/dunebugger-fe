@@ -2,6 +2,40 @@
   padding: 15px;
 }
 
+/* Disabled state for scheduler when NTP is unavailable */
+.scheduler-page.scheduler-disabled {
+  opacity: 0.6;
+  pointer-events: auto; /* Keep interactive to allow editing */
+}
+
+.scheduler-page.scheduler-disabled .next-actions-section,
+.scheduler-page.scheduler-disabled .last-executed-section,
+.scheduler-page.scheduler-disabled .scheduler-text-section {
+  background-color: #f5f5f5;
+  opacity: 0.7;
+}
+
+.scheduler-page.scheduler-disabled h2,
+.scheduler-page.scheduler-disabled h3 {
+  color: #999;
+}
+
+/* Warning banner for disabled scheduler */
+.scheduler-warning-banner {
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  background-color: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  color: #856404;
+  font-weight: 600;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+}
+
 .scheduler-content {
   margin-top: 20px;
   display: flex;

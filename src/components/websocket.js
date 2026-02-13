@@ -14,6 +14,9 @@ class WebSocketManager {
     setLastExecutedAction,
     setPlayingTime,
     setSystemInfo,
+    setModes,
+    setNtpAvailable,
+    setAnalyticsMetrics,
     heartBeatTimeoutRef,
     GROUP_NAME,
     HEARTBEAT_TIMEOUT,
@@ -31,11 +34,15 @@ class WebSocketManager {
     this.setLastExecutedAction = setLastExecutedAction;
     this.setPlayingTime = setPlayingTime;
     this.setSystemInfo = setSystemInfo;
+    this.setModes = setModes;
+    this.setNtpAvailable = setNtpAvailable;
+    this.setAnalyticsMetrics = setAnalyticsMetrics;
     this.heartBeatTimeoutRef = heartBeatTimeoutRef;
     this.GROUP_NAME = GROUP_NAME;
     this.HEARTBEAT_TIMEOUT = HEARTBEAT_TIMEOUT;
     this.showMessageRef = showMessageRef;
-    this.client = new WebPubSubClient(this.wssUrl, { autoRejoinGroups: true });
+    this.isSwitchingDevice = false; // Track device switching state
+    this.client = new WebPubSubClient(this.wssUrl, { autoRejoinGroups: false });
     this.startWebSocket();
   }
 
@@ -54,9 +61,13 @@ class WebSocketManager {
     });
 
     this.client.on("disconnected", () => {
-      this.setIsOnline(false);
-      this.setConnectionId(null);
-      this.cleanup();
+      // Don't cleanup if we're in the middle of switching devices
+      if (!this.isSwitchingDevice) {
+        console.log("Disconnected from WebSocket.");
+        this.setIsOnline(false);
+        this.setConnectionId(null);
+        this.cleanup();
+      }
     });
 
     this.client.on("group-message", (message) => {
@@ -90,7 +101,10 @@ class WebSocketManager {
           { noEcho: true }
         );
       } catch (error) {
-        console.error(`Failed to send request: ${subject}`, error);
+        // Only log if it's not a "not connected" error
+        if (!error.message || !error.message.includes("not connected")) {
+          console.error(`Failed to send request: ${subject}`, error);
+        }
       }
     }
   }
@@ -101,6 +115,82 @@ class WebSocketManager {
     } catch (error) {
       console.error("Failed to join group:", error);
     }
+  }
+
+  async switchDevice(newDeviceName) {
+    if (this.GROUP_NAME === newDeviceName) {
+      console.log(`Already connected to device: ${newDeviceName}`);
+      return; // Already viewing this device
+    }
+
+    try {
+      // Set flag to prevent cleanup during switch
+      this.isSwitchingDevice = true;
+      
+      // Leave current device group
+      console.log(`Switching from group ${this.GROUP_NAME} to ${newDeviceName}`);
+      await this.client.leaveGroup(this.GROUP_NAME);
+
+      // Update to new group name
+      this.GROUP_NAME = newDeviceName;
+
+      // Join new device group
+      await this.client.joinGroup(this.GROUP_NAME);
+      
+      // Clear old device state
+      this.clearDeviceState();
+      
+      // Restart heartbeat listener for new device
+      this.listenHeartBeat();
+      
+      console.log(`Successfully switched to device: ${newDeviceName}`);
+      
+      // Wait a moment for the group connection to stabilize, then send requests
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Now send requests
+      this.sendRequest("controller.heartbeat", "I am here");
+      this.sendRequest("controller.get_system_info", null);
+      this.sendRequest("controller.get_current_schedule", null);
+      this.sendRequest("controller.get_modes_list", null);
+      this.sendRequest("controller.get_gpio_state", null);
+      this.sendRequest("controller.get_sequence_state", null);
+      this.sendRequest("controller.get_sequence", null);
+      this.sendRequest("controller.get_ntp_status", null);
+      
+      // Clear switching flag
+      this.isSwitchingDevice = false;
+      
+    } catch (error) {
+      this.isSwitchingDevice = false;
+      console.error("Failed to switch device:", error);
+      throw error;
+    }
+  }
+
+  clearDeviceState() {
+    console.log("Clearing device state");
+    this.setGpioStates({});
+    this.setSequenceState({
+      random_actions: false,
+      cycle_running: false,
+      start_button_enabled: false,
+    });
+    this.setSequence([]);
+    this.setSchedule(null);
+    this.setNextActions([]);
+    this.setLastExecutedAction(null);
+    this.setPlayingTime(null);
+    this.setSystemInfo(null);
+    this.setModes([]);
+    this.setNtpAvailable(null);
+    this.setAnalyticsMetrics(null);
+    this.setIsOnline(false);
+    this.setLogs([]);
+  }
+
+  getCurrentDevice() {
+    return this.GROUP_NAME;
   }
 
   listenHeartBeat() {
@@ -137,7 +227,7 @@ class WebSocketManager {
     }
 
     // Handle different message subjects
-    console.log("Received WebSocket message with subject:", message.subject);
+    console.log(`Received WebSocket message with subject: ${message.subject} from group: ${eventData["message"]["group"]} and connectionId: ${incomingConnectionId}`);
     switch (message.subject) {
       case "log":
         this.setLogs((prev) => [...prev, message.body]);
@@ -211,12 +301,38 @@ class WebSocketManager {
         this.setSystemInfo(message.body);
         break;
 
+      case "modes_list":
+        console.log("Received modes_list message:", message.body);
+        if (message.body && message.body.modes) {
+          this.setModes(message.body.modes);
+        }
+        break;
+
+      case "ntp_status":
+        console.log("Received ntp_status message:", message.body);
+        if (message.body && message.body.ntp_available !== undefined) {
+          this.setNtpAvailable(message.body.ntp_available);
+        }
+        break;
+
+      case "analytics_metrics":
+        console.log("Received analytics_metrics message:", message.body);
+        this.setAnalyticsMetrics(message.body);
+        break;
+
+      case "updater_progress":
+        console.log("Received updater_progress message:", message.body);
+        if (this.showMessageRef?.current && message.body?.message) {
+          this.showMessageRef.current(message.body.message, "info");
+        }
+        break;
+
       default:
         console.warn("Unknown message subject:", message);
     }
   }
 
-  cleanup() {
+  cleanup(skipLeaveGroup = false) {
     if (this.heartBeatTimeoutRef.current) {
       clearInterval(this.heartBeatTimeoutRef.current);
       this.heartBeatTimeoutRef.current = null;
@@ -224,6 +340,17 @@ class WebSocketManager {
     
     if (this.client) {
       try {
+        // Only leave group if not skipping (skip when called during device switch)
+        if (!skipLeaveGroup) {
+          console.log(`Leaving group: ${this.GROUP_NAME}`);
+          this.client.leaveGroup(this.GROUP_NAME).catch(err => {
+            // Ignore "not connected" errors as they're expected during cleanup
+            if (!err.message || !err.message.includes("not connected")) {
+              console.warn("Error leaving group during cleanup:", err);
+            }
+          });
+        }
+        
         this.client.stop();
       } catch (error) {
         console.error("Error stopping WebSocket client:", error);

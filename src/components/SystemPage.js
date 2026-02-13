@@ -8,7 +8,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
   
   // Page texts
   const texts = {
-    pageTitle: getTranslation("System Information"),
+    pageTitle: getTranslation("System"),
     refreshButton: getTranslation("Refresh"),
     refreshButtonTitle: getTranslation("Refresh system information"),
     refreshMessageText: getTranslation("System info refresh request sent"),
@@ -61,10 +61,24 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
     systemLogs: getTranslation("System Logs"),
     noLogsAvailable: getTranslation("No logs available"),
     unknown: getTranslation("Unknown"),
-    invalidDate: getTranslation("Invalid date")
+    invalidDate: getTranslation("Invalid date"),
+    upToDate: getTranslation("Up to Date"),
+    newVersionAvailable: getTranslation("New version available"),
+    updateComponents: getTranslation("Update Dunebugger"),
+    updateConfirmTitle: getTranslation("Confirm Component Update"),
+    updateConfirmMessage: getTranslation("The Dunebugger components with an available update, will be updated and restarted. Other components could require a restart as well. The update could require up to 5 minutes of downtime."),
+    updateConfirm: getTranslation("Proceed with Update"),
+    updateCancel: getTranslation("Cancel"),
+    updateStarted: getTranslation("Component update started"),
+    updateRemoteFirst: getTranslation("Update dunebugger-remote first to unlock other component updates"),
+    checkUpdates: getTranslation("Check Updates"),
+    checkUpdatesTitle: getTranslation("Check for available component updates"),
+    checkUpdatesRequested: getTranslation("Checking for updates...")
   };
   // Note: System page doesn't have local state to reset,
   // it relies on systemInfo and logs props which are reset in parent component
+  const [updatingComponents, setUpdatingComponents] = React.useState({});
+
   const handleRefresh = async (showPopup = true) => {
     if (wsClient && connectionId) {
       try {
@@ -82,26 +96,119 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
   React.useEffect(() => {
     handleRefresh(false);
   }, [connectionId]);
+  
+  // Check if dunebugger-remote has an update available
+  const hasDunebuggerRemoteUpdate = () => {
+    if (!systemInfo?.system_info?.dunebugger_components) return false;
+    const remoteComponent = systemInfo.system_info.dunebugger_components.find(
+      component => component.name.toLowerCase() === 'dunebugger-remote'
+    );
+    return remoteComponent?.update_available === true;
+  };
+  
+  // Handle component update with confirmation
+  const handleUpdateComponent = (componentName) => {
+    const confirmed = window.confirm(texts.updateConfirmMessage);
+    
+    if (confirmed && wsClient && connectionId) {
+      try {
+        wsClient.sendRequest("updater.update", componentName);
+        setUpdatingComponents(prev => ({ ...prev, [componentName]: true }));
+        if (showMessage) {
+          showMessage(texts.updateStarted, "info");
+        }
+      } catch (error) {
+        console.error("Failed to send update request:", error);
+        setUpdatingComponents(prev => ({ ...prev, [componentName]: false }));
+      }
+    }
+  };
+
+  // Handle check updates request
+  const handleCheckUpdates = async () => {
+    if (wsClient && connectionId) {
+      try {
+        await wsClient.sendRequest("updater.check_updates", "null");
+        if (showMessage) {
+          showMessage(texts.checkUpdatesRequested, "info");
+        }
+      } catch (error) {
+        console.error("Failed to send check updates request:", error);
+      }
+    }
+  };
   const renderDunebuggerComponents = () => {
     if (!systemInfo?.system_info.dunebugger_components) return null;
 
     return (
       <div className="system-section">
-        <h3>{texts.dunebuggerComponents}</h3>
+        <h3>🧩 {texts.dunebuggerComponents}</h3>
         <div className="components-grid">
           {systemInfo.system_info.dunebugger_components.map((component, index) => (
-            <div key={index} className="component-card">
+            <div key={index} className={`component-card ${component.running ? 'component-running' : 'component-stopped'}`}>
               <div className="component-header">
                 <h4>{component.name}</h4>
-                <span className={`status-badge ${component.state}`}>
-                  {component.state}
+                <span className={`status-badge ${component.running ? 'running' : 'stopped'}`}>
+                  {component.running ? 'Running' : 'Stopped'}
                 </span>
               </div>
               <div className="component-details">
-                <p><strong>{texts.versionLabel}:</strong> {component.version}</p>
+                <p><strong>{texts.versionLabel}:</strong> {component.current_version}</p>
+                {component.update_available && (
+                  <p className="version-status update-available">
+                    {component.release_url ? (
+                      <strong><a href={component.release_url} target="_blank" rel="noopener noreferrer">{texts.newVersionAvailable}: {component.latest_version}</a></strong>
+                    ) : (
+                      <><strong>{texts.newVersionAvailable}:</strong> {component.latest_version}</>
+                    )}
+                  </p>
+                )}
+                {!component.update_available && component.latest_version && (
+                  <p className="version-status up-to-date">
+                    <strong>{texts.upToDate}</strong>
+                  </p>
+                )}
+                {component.last_checked && (
+                  <p><strong>Last Checked:</strong> {formatTimestamp(component.last_checked)}</p>
+                )}
+                {component.update_available && (
+                  <button 
+                    className="update-component-button"
+                    onClick={() => handleUpdateComponent(component.name)}
+                    disabled={
+                      !wsClient || 
+                      !connectionId || 
+                      updatingComponents[component.name] ||
+                      (hasDunebuggerRemoteUpdate() && component.name.toLowerCase() !== 'dunebugger-remote')
+                    }
+                    title={
+                      updatingComponents[component.name]
+                        ? `Updating ${component.name}...`
+                        : component.name.toLowerCase() === 'dunebugger-remote' && hasDunebuggerRemoteUpdate()
+                        ? `${texts.updateComponents} ${component.name} - After this update, other component updates will be available`
+                        : hasDunebuggerRemoteUpdate() && component.name.toLowerCase() !== 'dunebugger-remote'
+                        ? texts.updateRemoteFirst
+                        : `${texts.updateComponents} ${component.name}`
+                    }
+                  >
+                    <span className="update-icon">{updatingComponents[component.name] ? '⏳' : '⬆️'}</span>
+                    {updatingComponents[component.name] ? 'Updating...' : 'Update'}
+                  </button>
+                )}
               </div>
             </div>
           ))}
+        </div>
+        <div className="check-updates-button-container">
+          <button 
+            className="check-updates-button"
+            onClick={handleCheckUpdates}
+            disabled={!wsClient || !connectionId}
+            title={texts.checkUpdatesTitle}
+          >
+            <span className="check-updates-icon">🔍</span>
+            {texts.checkUpdates}
+          </button>
         </div>
       </div>
     );
@@ -113,7 +220,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
     const { hardware } = systemInfo.system_info;
     return (
       <div className="system-section">
-        <h3>{texts.hardwareInfo}</h3>
+        <h3>🖥️ {texts.hardwareInfo}</h3>
         <div className="hardware-grid">
           <div className="hardware-card">
             <h4>{texts.deviceLabel}</h4>
@@ -168,7 +275,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
     const { os } = systemInfo.system_info;
     return (
       <div className="system-section">
-        <h3>{texts.operatingSystem}</h3>
+        <h3>💻 {texts.operatingSystem}</h3>
         <div className="os-card">
           <p><strong>{texts.nameLabel}:</strong> {os.name}</p>
           <p><strong>{texts.versionOsLabel}:</strong> {os.version}</p>
@@ -185,7 +292,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
     const { network } = systemInfo.system_info;
     return (
       <div className="system-section">
-        <h3>{texts.networkInfo}</h3>
+        <h3>🌐 {texts.networkInfo}</h3>
         <div className="network-info">
           <div className="network-card">
             <h4>{texts.generalLabel}</h4>
@@ -243,7 +350,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
     const { location } = systemInfo.system_info;
     return (
       <div className="system-section">
-        <h3>{texts.physicalLocation}</h3>
+        <h3>📍 {texts.physicalLocation}</h3>
         <div className="location-card">
           <p><strong>{texts.addressLabel}:</strong> {location.address}</p>
           <p><strong>{texts.descriptionLabel}:</strong> {location.description}</p>
@@ -255,7 +362,7 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
   const renderSystemLogs = () => {
     return (
       <div className="system-section">
-        <h3>{texts.systemLogs}</h3>
+        <h3>📋 {texts.systemLogs}</h3>
         <div className="logs-container">
           <textarea
             className="logs-textarea"
@@ -305,7 +412,6 @@ const SystemPage = ({ systemInfo, logs, wsClient, connectionId, groupName, showM
         {systemInfo && (
           <div className="system-meta">
             <p><strong>{texts.deviceIdLabel}:</strong> {systemInfo.system_info.device_id?.replace(/"/g, '') || systemInfo.system_info.device_id}</p>
-            <p><strong>{texts.lastUpdatedLabel}:</strong> {formatTimestamp(systemInfo.system_info.timestamp)}</p>
           </div>
         )}
       </div>

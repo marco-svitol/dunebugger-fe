@@ -4,10 +4,11 @@ import { useTranslation } from "../contexts/TranslationContext";
 
 // Define initial column visibility
 const initialColumns = {
-  pin: true,
   label: true,
+  logic: true,
+  pin: false,
   mode: true,
-  state: true,
+  state: false,
   switch: true,
 };
 
@@ -22,7 +23,7 @@ const getInitialVisibleColumns = () => {
 
 function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
   const [sortedData, setSortedData] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [sortConfig, setSortConfig] = useState({ key: "logic", direction: "asc" });
   const [visibleColumns, setVisibleColumns] = useState(getInitialVisibleColumns());
 
   // Translation hook and text
@@ -30,8 +31,9 @@ function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
   
   // Table texts
   const texts = {
-    pin: getTranslation("Pin"),
     label: getTranslation("Label"),
+    logic: getTranslation("Logic"),
+    pin: getTranslation("Pin"),
     mode: getTranslation("Mode"),
     state: getTranslation("State"),
     switch: getTranslation("Switch"),
@@ -41,14 +43,19 @@ function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
   // Reset sorting and data when device (groupName) changes
   useEffect(() => {
     setSortedData([]);
-    setSortConfig({ key: null, direction: "asc" });
+    setSortConfig({ key: "logic", direction: "asc" });
     // Note: We keep visibleColumns as they are user preferences
   }, [groupName]);
 
   // Update sortedData whenever gpioStates changes
   useEffect(() => {
     if (Array.isArray(gpioStates)) {
-      setSortedData(gpioStates);
+      const sorted = [...gpioStates].sort((a, b) => {
+        if (a.logic < b.logic) return -1;
+        if (a.logic > b.logic) return 1;
+        return 0;
+      });
+      setSortedData(sorted);
     }
   }, [gpioStates]);
 
@@ -76,7 +83,7 @@ function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
   const handleSwitchToggle = (index) => {
     const gpio = sortedData[index];
     const newSwitchState = gpio.switch === "ON" ? "OFF" : "ON";
-    const command = `sw ${gpio.pin} ${newSwitchState.toLowerCase()}`;
+    const command = `switch ${gpio.pin} ${newSwitchState.toLowerCase()}`;
 
     // Send the command to the group
     if (wsClient) {
@@ -122,14 +129,19 @@ function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
         <table>
           <thead>
             <tr>
-              {visibleColumns.pin && (
-                <th className={`sortable ${sortConfig.key === "pin" ? sortConfig.direction : ""}`} onClick={() => handleSort("pin")}>
-                  {texts.pin}
-                </th>
-              )}
               {visibleColumns.label && (
                 <th className={`sortable ${sortConfig.key === "label" ? sortConfig.direction : ""}`} onClick={() => handleSort("label")}>
                   {texts.label}
+                </th>
+              )}
+              {visibleColumns.logic && (
+                <th className={`sortable ${sortConfig.key === "logic" ? sortConfig.direction : ""}`} onClick={() => handleSort("logic")}>
+                  {texts.logic}
+                </th>
+              )}
+              {visibleColumns.pin && (
+                <th className={`sortable ${sortConfig.key === "pin" ? sortConfig.direction : ""}`} onClick={() => handleSort("pin")}>
+                  {texts.pin}
                 </th>
               )}
               {visibleColumns.mode && (
@@ -150,10 +162,13 @@ function GpioTable({ gpioStates, wsClient, connectionId, groupName }) {
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((gpio, index) => (
+            {sortedData
+              .filter((gpio) => gpio.logic !== "_not_found_")
+              .map((gpio, index) => (
               <tr key={index}>
-                {visibleColumns.pin && <td>{gpio.pin}</td>}
                 {visibleColumns.label && <td>{gpio.label}</td>}
+                {visibleColumns.logic && <td>{gpio.logic}</td>}
+                {visibleColumns.pin && <td>{gpio.pin}</td>}
                 {visibleColumns.mode && <td>{gpio.mode}</td>}
                 {visibleColumns.state && <td>{gpio.state}</td>}
                 {visibleColumns.switch && (
